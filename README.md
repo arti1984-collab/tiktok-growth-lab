@@ -45,6 +45,12 @@ npm run dist
 Ergebnis: `release/TikTok-Growth-Lab.exe` – eine einzelne Datei, die du per Doppelklick startest und beliebig
 verschieben kannst (kein Installer, keine Admin-Rechte).
 
+**Windows-Warnung beim Start (SmartScreen):** Eine frische, unsignierte exe aus dem Internet wird angehalten mit
+„Der Computer wurde durch Windows geschützt“. Deshalb signiert `npm run dist` die Datei am Ende automatisch über
+`scripts/sign-exe.ps1`: Beim ersten Lauf entsteht ein eigenes Code-Signing-Zertifikat, das nur für den angemeldeten
+Windows-Benutzer als vertrauenswürdig eingetragen wird. Danach startet die App ohne Rückfrage. Auf einem **anderen**
+Rechner ist dieses Zertifikat unbekannt; dort hilft nur ein gekauftes Code-Signing-Zertifikat, nicht die lokale Variante.
+
 Was die Desktop-Version anders macht:
 
 - **Eigenes Fenster** mit Icon, Titel „TikTok Growth Lab" und fester Mindestgröße statt Browser-Tab
