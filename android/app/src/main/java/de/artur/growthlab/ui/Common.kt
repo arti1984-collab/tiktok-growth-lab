@@ -77,7 +77,7 @@ fun InsightRow(kind: String, title: String, text: String) {
     val tone = when (kind) {
         "good" -> GoodColor
         "warn" -> WarnColor
-        else -> Cyan
+        else -> Accent
     }
     Row(verticalAlignment = Alignment.Top) {
         Surface(color = tone, shape = RoundedCornerShape(50)) {

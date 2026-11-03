@@ -104,7 +104,7 @@ fun GrowthScreen(state: LabState) {
             Text(if (state.busy) "Messe…" else "Alle messen")
         }
 
-        addError?.let { Text(it, color = Pink, fontSize = 12.sp) }
+        addError?.let { Text(it, color = Danger, fontSize = 12.sp) }
 
         if (state.accounts.isEmpty()) {
             CardBox {

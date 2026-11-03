@@ -111,7 +111,7 @@ fun ScanScreen(state: LabState) {
 
         state.error?.let { message ->
             CardBox {
-                Text("Das hat nicht geklappt", color = Pink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("Das hat nicht geklappt", color = Danger, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 Text(message, fontSize = 12.sp, color = MutedColor)
             }
         }
