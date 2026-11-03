@@ -45,8 +45,16 @@ export default function App() {
       <header className="header">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            <span />
-            <span />
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M3 18 L9 12 L13 14.5 L21 5.5"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="21" cy="5.5" r="2.2" fill="currentColor" />
+            </svg>
           </span>
           <div>
             <h1>TikTok Growth Lab</h1>

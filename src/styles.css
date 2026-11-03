@@ -7,9 +7,9 @@
   --border-strong: rgba(255, 255, 255, 0.14);
   --text: #f2f2f6;
   --muted: #9797ab;
-  --accent: #fe2c55;
-  --accent-soft: rgba(254, 44, 85, 0.14);
-  --cyan: #25f4ee;
+  --accent: #e8b34b;
+  --accent-soft: rgba(232, 179, 75, 0.14);
+  --info: #8fa3b8;
   --good: #37d399;
   --warn: #f5b544;
   --bad: #f27171;
@@ -25,10 +25,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background:
-    radial-gradient(900px 500px at 15% -10%, rgba(254, 44, 85, 0.16), transparent 60%),
-    radial-gradient(700px 400px at 90% 0%, rgba(37, 244, 238, 0.09), transparent 55%),
-    var(--bg);
+  /* One warm light from the top left marks where the app begins;
+     the two competing colour orbs before it decorated without a job. */
+  background: radial-gradient(900px 480px at 18% -18%, rgba(232, 179, 75, 0.07), transparent 60%), var(--bg);
   color: var(--text);
   font-family: "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
   font-size: 15px;
@@ -66,7 +65,7 @@ a {
 }
 
 a:hover {
-  color: var(--cyan);
+  color: var(--accent);
 }
 
 code {
@@ -140,31 +139,20 @@ code {
 }
 
 .brand-mark {
-  position: relative;
   width: 38px;
   height: 38px;
   border-radius: 12px;
-  background: linear-gradient(140deg, var(--cyan), var(--accent));
+  background: var(--card-2);
+  border: 1px solid var(--border-strong);
   display: grid;
   place-items: center;
-  box-shadow: 0 8px 24px rgba(254, 44, 85, 0.35);
+  color: var(--accent);
   flex: none;
 }
 
-.brand-mark span {
-  position: absolute;
-  width: 9px;
-  height: 18px;
-  border-radius: 3px;
-  background: #0a0a0f;
-}
-
-.brand-mark span:first-child {
-  transform: translate(-6px, -2px) rotate(12deg);
-}
-
-.brand-mark span:last-child {
-  transform: translate(6px, 2px) rotate(-12deg);
+.brand-mark svg {
+  width: 24px;
+  height: 24px;
 }
 
 .status-row {
@@ -228,7 +216,7 @@ code {
 .tab.active {
   color: var(--text);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px rgba(254, 44, 85, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(232, 179, 75, 0.35);
 }
 
 .container {
@@ -363,8 +351,8 @@ input:focus,
 textarea:focus,
 select:focus {
   outline: none;
-  border-color: rgba(254, 44, 85, 0.6);
-  box-shadow: 0 0 0 3px rgba(254, 44, 85, 0.12);
+  border-color: rgba(232, 179, 75, 0.6);
+  box-shadow: 0 0 0 3px rgba(232, 179, 75, 0.12);
 }
 
 input[type="range"] {
@@ -377,7 +365,7 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-runnable-track {
   height: 5px;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  background: linear-gradient(90deg, var(--accent), rgba(232, 179, 75, 0.2));
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -449,14 +437,15 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), #ff5b7d);
+  background: var(--accent);
   border-color: transparent;
-  color: #fff;
-  box-shadow: 0 10px 26px rgba(254, 44, 85, 0.3);
+  color: #1a1206;
+  font-weight: 650;
+  box-shadow: 0 10px 26px rgba(232, 179, 75, 0.22);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ff3b60, #ff6f8d);
+  background: #f0c163;
 }
 
 .btn-ghost {
@@ -523,8 +512,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .alert-info {
-  background: rgba(37, 244, 238, 0.06);
-  border-color: rgba(37, 244, 238, 0.24);
+  background: rgba(232, 179, 75, 0.06);
+  border-color: rgba(232, 179, 75, 0.24);
   color: #cdfdfb;
 }
 
@@ -558,14 +547,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .badge-info {
-  color: var(--cyan);
-  border-color: rgba(37, 244, 238, 0.35);
-  background: rgba(37, 244, 238, 0.08);
+  color: var(--info);
+  border-color: rgba(143, 163, 184, 0.35);
+  background: rgba(143, 163, 184, 0.08);
 }
 
 .badge-accent {
-  color: #ff8ba0;
-  border-color: rgba(254, 44, 85, 0.4);
+  color: #f3cf8e;
+  border-color: rgba(232, 179, 75, 0.4);
   background: var(--accent-soft);
 }
 
@@ -766,8 +755,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .insight-info .dot {
-  background: var(--cyan);
-  box-shadow: 0 0 12px rgba(37, 244, 238, 0.45);
+  background: var(--info);
+  box-shadow: 0 0 12px rgba(143, 163, 184, 0.4);
 }
 
 .insight strong {
@@ -821,7 +810,7 @@ input[type="range"]::-webkit-slider-thumb {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  background: linear-gradient(90deg, var(--accent), rgba(232, 179, 75, 0.2));
 }
 
 /* ----------------------------------------------------------------- chips */
@@ -1031,7 +1020,7 @@ details summary:hover {
 }
 
 .mode-tile.active {
-  border-color: rgba(254, 44, 85, 0.55);
+  border-color: rgba(232, 179, 75, 0.55);
   background: var(--accent-soft);
 }
 
@@ -1202,8 +1191,8 @@ details summary:hover {
 }
 
 .provider.provider-active {
-  border-color: rgba(37, 244, 238, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(37, 244, 238, 0.25);
+  border-color: rgba(232, 179, 75, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(232, 179, 75, 0.25);
 }
 
 .provider-head {
@@ -1236,9 +1225,9 @@ details summary:hover {
 }
 
 .chip-btn.chip-btn-active {
-  background: rgba(37, 244, 238, 0.14);
-  border-color: var(--cyan);
-  color: var(--cyan);
+  background: rgba(232, 179, 75, 0.14);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .provider-actions {
@@ -1247,7 +1236,7 @@ details summary:hover {
 }
 
 .provider-key {
-  color: var(--cyan);
+  color: var(--accent);
   font-size: 0.8rem;
   font-weight: 550;
 }
@@ -1290,8 +1279,8 @@ details summary:hover {
 }
 
 .value-btn:hover {
-  color: var(--cyan);
-  border-bottom-color: var(--cyan);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .row.spread {
@@ -1361,8 +1350,8 @@ details summary:hover {
 }
 
 .metric-tile.metric-tile-active {
-  border-color: var(--cyan);
-  box-shadow: inset 0 0 0 1px rgba(37, 244, 238, 0.25);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(232, 179, 75, 0.25);
 }
 
 .metric-tile strong {

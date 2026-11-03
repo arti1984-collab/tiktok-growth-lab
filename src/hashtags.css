@@ -1,0 +1,83 @@
+/* ------------------------------------------------------------ hashtag area */
+
+.hashtag-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-2);
+}
+
+.hashtag-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.hashtag-head h3 {
+  font-size: 0.95rem;
+}
+
+.hashtag-head p {
+  margin-top: 2px;
+}
+
+.hashtag-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hashtag-group-name {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.hashtag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.82rem;
+  /* 44 px is the minimum tap target, so a tag stays easy to hit on a phone. */
+  min-height: 44px;
+  padding: 11px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 179, 75, 0.35);
+  background: rgba(232, 179, 75, 0.1);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.hashtag-chip:hover {
+  background: rgba(232, 179, 75, 0.2);
+  border-color: rgba(232, 179, 75, 0.6);
+}
+
+.hashtag-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hashtag-copied {
+  font-size: 0.68rem;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 560px) {
+  .hashtag-head {
+    flex-direction: column;
+  }
+
+  .hashtag-head .btn {
+    width: 100%;
+  }
+}

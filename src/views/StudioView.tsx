@@ -3,6 +3,7 @@ import { ApiError, api } from "../api";
 import type { AiMode, AiResponse, ScanResult, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { JsonView } from "../components/JsonView";
+import { HashtagPanel } from "../components/HashtagPanel";
 
 const MODES: { id: AiMode; label: string; description: string }[] = [
   { id: "strategy", label: "30-Tage-Strategie", description: "Positionierung, Content-Säulen, Posting-Plan, KPI-Ziele" },
@@ -172,6 +173,7 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </button>
           }
         >
+          <HashtagPanel result={response.result} />
           <JsonView data={response.result} />
         </Section>
       )}

@@ -164,7 +164,7 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
   const count = Math.max(1, Math.min(20, payload.count ?? 5));
   switch (mode) {
     case "strategy":
-      return `Erstelle eine vollständige 30-Tage-Wachstumsstrategie. Nutze die echten besten Zeitfenster aus den Metriken. Der Posting-Plan enthält 7 Einträge (eine Woche).`;
+      return `Erstelle eine vollständige 30-Tage-Wachstumsstrategie. Nutze die echten besten Zeitfenster aus den Metriken. Der Posting-Plan enthält 7 Einträge (eine Woche). Fülle hashtagStrategie vollständig: 5 bis 8 Nischen-Tags, 5 bis 8 Reichweiten-Tags und 2 bis 4 Marken-Tags, jeweils mit #, in Kleinbuchstaben, ohne Duplikate zwischen den Gruppen.`;
     case "audit":
       return `Mache ein schonungsloses Profil-Audit. Bewerte Score 0-100 auf Basis der gelieferten Daten. Nenne die 3 Maßnahmen mit dem besten Wirkung/Aufwand-Verhältnis zuerst.`;
     case "ideas":
