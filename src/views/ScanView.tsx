@@ -38,7 +38,7 @@ export function ScanView({
     return () => clearInterval(timer);
   }, [loading]);
 
-  const estimatedSeconds = Math.round(((videoUrls.length + 1) * (status?.scraping.minDelayMs ?? 1200)) / 1000) + 2;
+  const estimatedSeconds = Math.round(((videoUrls.length + 2) * (status?.scraping.minDelayMs ?? 1200)) / 1000) + 2;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -88,7 +88,8 @@ export function ScanView({
                 spellCheck={false}
               />
               <small className="muted">
-                {videoUrls.length} Link(s). Mehr Links = genauere Analyse. In TikTok: Video → Teilen → Link kopieren.
+                {videoUrls.length} Link(s) zusätzlich. Die neuesten 15 Videos liest der Scan selbst von TikTok, hier nur
+                ältere Videos einfügen (in TikTok: Video → Teilen → Link kopieren).
               </small>
             </label>
           </div>
@@ -122,7 +123,7 @@ export function ScanView({
       {!scan && !loading && (
         <EmptyState
           title="Noch keine Analyse"
-          text="TikTok zeigt Profil-Statistiken öffentlich. Post-Details (Views, Saves, Uhrzeiten) liefert TikTok nur noch pro Video – deshalb der Link-Block. Ohne Links funktionieren alle Profil-Funktionen trotzdem."
+          text="Ein Name genügt: Der Scan liest Profil und die neuesten 15 Videos mit Views, Likes, Kommentaren, Shares, Saves und Uhrzeiten direkt von tiktok.com. Für ältere Videos kannst du zusätzlich Links einfügen."
         />
       )}
 
@@ -302,6 +303,7 @@ export function ScanView({
                           <th className="right">Saves</th>
                           <th className="right">Länge</th>
                           <th>Sound</th>
+                          <th>Video-URL</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -322,6 +324,11 @@ export function ScanView({
                               <td className="right">{formatNumber(video.saves)}</td>
                               <td className="right">{formatDuration(video.durationSec)}</td>
                               <td className="nowrap">{video.originalSound ? "Originalton" : video.music || "–"}</td>
+                              <td className="nowrap small">
+                                <a href={video.url} target="_blank" rel="noreferrer">
+                                  {video.url.replace("https://www.tiktok.com/", "")}
+                                </a>
+                              </td>
                             </tr>
                           ))}
                       </tbody>
@@ -356,11 +363,10 @@ export function ScanView({
               </Section>
             </>
           ) : (
-            <Section title="Post-Daten fehlen" subtitle="Profil-Stats oben sind live von TikTok">
+            <Section title="Keine Videos geliefert" subtitle="Profil-Stats oben sind live von TikTok">
               <p className="muted">
-                Engagement, beste Posting-Zeiten und Top-Videos brauchen einzelne Video-Links, weil TikTok die Post-Liste nicht
-                mehr serverseitig ausliefert. Kopiere 5–30 Links deiner letzten Videos in das Feld oben und starte den Scan
-                erneut.
+                TikTok hat für dieses Profil keine Videoliste herausgegeben. Bei einem privaten Konto bleibt es beim Profil.
+                Sonst starte den Scan später erneut oder füge einzelne Video-Links oben ein.
               </p>
               <div className="row gap wrap">
                 <button className="btn btn-primary" onClick={() => onOpenStudio("strategy")}>

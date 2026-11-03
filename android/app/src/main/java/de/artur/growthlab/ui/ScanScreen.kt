@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.artur.growthlab.LabState
@@ -67,7 +68,7 @@ fun ScanScreen(state: LabState) {
             modifier = Modifier.fillMaxWidth(),
         )
         Text(
-            "TikTok gibt die Post-Liste ohne Login nicht heraus. Profil-Zahlen kommen immer; für Engagement, beste Zeiten und Top-Videos 5–40 Video-Links einfügen.",
+            "Die neuesten 15 Videos liest der Scan selbst von TikTok, mit Views, Likes und Uhrzeiten. Für ältere Videos Links einfügen, einen pro Zeile.",
             fontSize = 11.sp,
             color = MutedColor,
         )
@@ -169,7 +170,7 @@ private fun ScanResultView(scan: ScanResult) {
         CardBox {
             Text("Nur Profil-Zahlen", fontWeight = FontWeight.Bold, fontSize = 14.sp)
             Text(
-                "Für Engagement, Score und beste Zeiten fehlen Video-Links. Kopiere in TikTok ein Video → Teilen → Link kopieren und füge 5–40 Links ein.",
+                "TikTok hat keine Videos zurückgegeben. Bei einem privaten Konto bleibt es beim Profil, sonst starte den Scan später erneut.",
                 fontSize = 12.sp,
                 color = MutedColor,
             )
@@ -210,6 +211,13 @@ private fun VideoRow(video: VideoSummary) {
             "${num(video.views)} Views · ${num(video.likes)} Likes · ${dec(video.engagementRate)} % · ${video.durationSec}s · ${dateOnly(video.createdAt * 1000)}",
             fontSize = 11.sp,
             color = MutedColor,
+        )
+        Text(
+            video.url.removePrefix("https://www.tiktok.com/"),
+            fontSize = 10.sp,
+            color = Accent,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
