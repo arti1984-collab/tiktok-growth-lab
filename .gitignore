@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+release/
+data/
+.env
+*.local
+probe*.mjs
+.install-electron.log
+.electron-*.log
+*.tmp
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/keystore.jks
+android/keystore.properties
+.tools/
