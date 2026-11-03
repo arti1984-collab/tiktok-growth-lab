@@ -1,17 +1,24 @@
 /**
- * Builds build/icon.ico from scratch (a 256×256 PNG inside an ICO container)
- * so the .exe and the Android launcher get a real icon without image tooling.
+ * Builds build/icon.ico and build/icon.png from scratch, without image tooling.
  *
- * The mark is a rising line with an end point: this product measures growth
- * over time, so the icon shows the shape of its own data. No platform trade
- * dress, so it still works when Instagram, YouTube and others are added.
+ * The mark is a rising line with an end point: the product measures growth over
+ * time, so the icon shows the shape of its own data. No platform trade dress, so
+ * it still works when Instagram, YouTube and others are added.
+ *
+ * The ICO carries every size Windows asks for (16 to 256 px). Small sizes are
+ * stored as plain bitmaps and only 128/256 as PNG, because Explorer older than
+ * Windows 10 renders PNG entries in the taskbar and list views poorly.
  */
 import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
-const SIZE = 256;
+/** All geometry below is written in a 256 unit square and scaled per size. */
+const UNIT = 256;
+const BITMAP_SIZES = [16, 24, 32, 48, 64];
+const PNG_SIZES = [128, 256];
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = path.join(ROOT, "build");
 
@@ -19,7 +26,20 @@ const CARD = [16, 21, 28, 255];
 const EDGE = [38, 47, 60, 255];
 const GOLD = [232, 179, 75, 255];
 
-function insideRoundedRect(x, y, left, top, right, bottom, radius) {
+const LINE = [
+  [58, 190],
+  [104, 142],
+  [140, 160],
+  [198, 74],
+];
+const STROKE = 12;
+const DOT = 16;
+
+const OUTER = { left: 6, top: 6, right: UNIT - 6, bottom: UNIT - 6, radius: 54 };
+const INNER = { left: 9, top: 9, right: UNIT - 9, bottom: UNIT - 9, radius: 51 };
+
+function insideRoundedRect(x, y, rect) {
+  const { left, top, right, bottom, radius } = rect;
   if (x < left || y < top || x >= right || y >= bottom) return false;
   const cx = Math.min(Math.max(x, left + radius), right - radius);
   const cy = Math.min(Math.max(y, top + radius), bottom - radius);
@@ -30,22 +50,14 @@ function insideRoundedRect(x, y, left, top, right, bottom, radius) {
 
 function distanceToSegment(px, py, ax, ay, bx, by) {
   const lengthSquared = (bx - ax) ** 2 + (by - ay) ** 2;
-  const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / lengthSquared));
+  const t =
+    lengthSquared === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / lengthSquared));
   const cx = ax + t * (bx - ax);
   const cy = ay + t * (by - ay);
   return Math.hypot(px - cx, py - cy);
 }
-
-// The line: three steps up, ending in a point. Coordinates are drawn from the
-// bottom left to the top right so it reads as growth in any context.
-const LINE = [
-  [58, 190],
-  [104, 142],
-  [140, 160],
-  [198, 74],
-];
-const STROKE = 12;
-const DOT = 16;
 
 function blend(base, over, coverage) {
   if (coverage <= 0) return base;
@@ -58,43 +70,41 @@ function blend(base, over, coverage) {
   ];
 }
 
-function pixel(x, y) {
-  const inCard = insideRoundedRect(x, y, 6, 6, SIZE - 6, SIZE - 6, 54);
-  if (!inCard) return [0, 0, 0, 0];
+/** `soft` widens the edge by one pixel of the target size, so 16 px stays clean. */
+function pixelAt(x, y, soft) {
+  if (!insideRoundedRect(x, y, OUTER)) return [0, 0, 0, 0];
 
-  let color = CARD;
-  if (!insideRoundedRect(x, y, 9, 9, SIZE - 9, SIZE - 9, 51)) color = EDGE;
+  const color = insideRoundedRect(x, y, INNER) ? CARD : EDGE;
 
   let coverage = 0;
   for (let index = 0; index < LINE.length - 1; index += 1) {
     const [ax, ay] = LINE[index];
     const [bx, by] = LINE[index + 1];
     const distance = distanceToSegment(x, y, ax, ay, bx, by);
-    coverage = Math.max(coverage, Math.min(1, STROKE + 0.5 - distance));
+    coverage = Math.max(coverage, Math.min(1, STROKE + soft - distance));
   }
 
   const [dotX, dotY] = LINE[LINE.length - 1];
-  const dotDistance = Math.hypot(x - dotX, y - dotY);
-  coverage = Math.max(coverage, Math.min(1, DOT + 0.5 - dotDistance));
+  const dotCoverage = Math.min(1, DOT + soft - Math.hypot(x - dotX, y - dotY));
 
-  return blend(color, GOLD, coverage);
+  return blend(color, GOLD, Math.max(coverage, dotCoverage));
 }
 
-function buildRawImage() {
-  const stride = SIZE * 4;
-  const raw = Buffer.alloc((stride + 1) * SIZE);
-  for (let y = 0; y < SIZE; y += 1) {
-    raw[y * (stride + 1)] = 0;
-    for (let x = 0; x < SIZE; x += 1) {
-      const [r, g, b, a] = pixel(x, y);
-      const offset = y * (stride + 1) + 1 + x * 4;
-      raw[offset] = r;
-      raw[offset + 1] = g;
-      raw[offset + 2] = b;
-      raw[offset + 3] = a;
+function renderRgba(size) {
+  const scale = UNIT / size;
+  const soft = 0.5 * scale;
+  const rgba = Buffer.alloc(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const [r, g, b, a] = pixelAt((x + 0.5) * scale, (y + 0.5) * scale, soft);
+      const offset = (y * size + x) * 4;
+      rgba[offset] = r;
+      rgba[offset + 1] = g;
+      rgba[offset + 2] = b;
+      rgba[offset + 3] = a;
     }
   }
-  return raw;
+  return rgba;
 }
 
 const CRC_TABLE = (() => {
@@ -122,40 +132,98 @@ function pngChunk(type, data) {
   return Buffer.concat([length, typeAndData, crc]);
 }
 
-function encodePng() {
+function encodePng(rgba, size) {
+  const stride = size * 4;
+  const raw = Buffer.alloc((stride + 1) * size);
+  for (let y = 0; y < size; y += 1) {
+    raw[y * (stride + 1)] = 0;
+    rgba.copy(raw, y * (stride + 1) + 1, y * stride, y * stride + stride);
+  }
+
   const header = Buffer.alloc(13);
-  header.writeUInt32BE(SIZE, 0);
-  header.writeUInt32BE(SIZE, 4);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
   header[8] = 8;
   header[9] = 6;
+
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     pngChunk("IHDR", header),
-    pngChunk("IDAT", zlib.deflateSync(buildRawImage(), { level: 9 })),
+    pngChunk("IDAT", zlib.deflateSync(raw, { level: 9 })),
     pngChunk("IEND", Buffer.alloc(0)),
   ]);
 }
 
-function wrapIco(png) {
+/** 32 bit DIB as used inside ICO files: header, bottom-up pixels, AND mask. */
+function encodeDib(rgba, size) {
+  const maskStride = Math.ceil(size / 32) * 4;
+  const mask = Buffer.alloc(maskStride * size);
+
+  const pixels = Buffer.alloc(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    const sourceRow = size - 1 - y;
+    for (let x = 0; x < size; x += 1) {
+      const from = (sourceRow * size + x) * 4;
+      const to = (y * size + x) * 4;
+      pixels[to] = rgba[from + 2];
+      pixels[to + 1] = rgba[from + 1];
+      pixels[to + 2] = rgba[from];
+      pixels[to + 3] = rgba[from + 3];
+      if (rgba[from + 3] === 0) mask[y * maskStride + (x >> 3)] |= 0x80 >> (x & 7);
+    }
+  }
+
+  const header = Buffer.alloc(40);
+  header.writeUInt32LE(40, 0);
+  header.writeInt32LE(size, 4);
+  header.writeInt32LE(size * 2, 8);
+  header.writeUInt16LE(1, 12);
+  header.writeUInt16LE(32, 14);
+  header.writeUInt32LE(0, 16);
+  header.writeUInt32LE(size * size * 4 + mask.length, 20);
+
+  return Buffer.concat([header, pixels, mask]);
+}
+
+function buildIco(entries) {
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0);
   header.writeUInt16LE(1, 2);
-  header.writeUInt16LE(1, 4);
+  header.writeUInt16LE(entries.length, 4);
 
-  const entry = Buffer.alloc(16);
-  entry[0] = 0;
-  entry[1] = 0;
-  entry[2] = 0;
-  entry[3] = 0;
-  entry.writeUInt16LE(1, 4);
-  entry.writeUInt16LE(32, 6);
-  entry.writeUInt32LE(png.length, 8);
-  entry.writeUInt32LE(22, 12);
-  return Buffer.concat([header, entry, png]);
+  let offset = 6 + entries.length * 16;
+  const directory = entries.map((entry) => {
+    const item = Buffer.alloc(16);
+    item[0] = entry.size >= 256 ? 0 : entry.size;
+    item[1] = entry.size >= 256 ? 0 : entry.size;
+    item.writeUInt16LE(1, 4);
+    item.writeUInt16LE(32, 6);
+    item.writeUInt32LE(entry.data.length, 8);
+    item.writeUInt32LE(offset, 12);
+    offset += entry.data.length;
+    return item;
+  });
+
+  return Buffer.concat([header, ...directory, ...entries.map((entry) => entry.data)]);
 }
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
-const png = encodePng();
-fs.writeFileSync(path.join(OUT_DIR, "icon.png"), png);
-fs.writeFileSync(path.join(OUT_DIR, "icon.ico"), wrapIco(png));
-console.log(`icon.ico geschrieben (${fs.statSync(path.join(OUT_DIR, "icon.ico")).size} Bytes)`);
+
+const entries = [];
+for (const size of [...BITMAP_SIZES, ...PNG_SIZES]) {
+  const rgba = renderRgba(size);
+  entries.push({
+    size,
+    data: size <= 64 ? encodeDib(rgba, size) : encodePng(rgba, size),
+  });
+}
+
+const png256 = entries.find((entry) => entry.size === 256).data;
+const ico = buildIco(entries);
+
+fs.writeFileSync(path.join(OUT_DIR, "icon.png"), png256);
+fs.writeFileSync(path.join(OUT_DIR, "icon.ico"), ico);
+
+console.log(
+  `icon.ico geschrieben (${ico.length} Bytes, Groessen: ${entries.map((e) => e.size).join(", ")})`,
+);
