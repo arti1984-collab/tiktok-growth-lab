@@ -1,0 +1,64 @@
+{
+  "name": "tiktok-growth-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TikTok Growth Lab – Scraping-Dashboard mit KI-Coach für mehr Follower und Reichweite",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "dev": "tsx watch server/dev.ts",
+    "build": "vite build",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=build/server/index.mjs",
+    "build:app": "node scripts/make-icon.mjs && npm run build && npm run build:server",
+    "desktop": "npm run build:app && electron .",
+    "dist": "npm run build:app && electron-builder --win portable",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "express": "^4.21.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.0"
+  },
+  "build": {
+    "appId": "de.artur.tiktokgrowthlab",
+    "productName": "TikTok Growth Lab",
+    "asar": false,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "build/server/**/*",
+      "build/icon.ico",
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "TikTok-Growth-Lab.exe"
+    }
+  }
+}

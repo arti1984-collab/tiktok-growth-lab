@@ -1,0 +1,176 @@
+export type Profile = {
+  id: string;
+  handle: string;
+  nickname: string;
+  bio: string;
+  avatar: string;
+  verified: boolean;
+  privateAccount: boolean;
+  region: string;
+  secUid: string;
+  followers: number;
+  following: number;
+  hearts: number;
+  videos: number;
+  url: string;
+  scrapedAt: number;
+};
+
+export type Video = {
+  id: string;
+  url: string;
+  desc: string;
+  createdAt: number;
+  durationSec: number;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  author: string;
+  authorFollowers: number;
+  music: string;
+  originalSound: boolean;
+  hashtags: string[];
+  thumbnail: string;
+  isAd: boolean;
+};
+
+export type VideoSummary = {
+  id: string;
+  url: string;
+  desc: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  createdAt: number;
+  durationSec: number;
+  engagementRate: number;
+  thumbnail: string;
+  multipleOfMedian: number;
+};
+
+export type Insight = { kind: "good" | "warn" | "info"; title: string; text: string };
+
+export type Metrics = {
+  hasData: boolean;
+  sampleSize: number;
+  score: number | null;
+  engagementRate: number | null;
+  likeRate: number | null;
+  commentRate: number | null;
+  shareRate: number | null;
+  saveRate: number | null;
+  avgViews: number;
+  medianViews: number;
+  totalViews: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  totalSaves: number;
+  viewsPerFollower: number | null;
+  postsPerWeek: number | null;
+  avgDaysBetweenPosts: number | null;
+  daysSinceLastPost: number | null;
+  avgDuration: number;
+  bestSlots: { weekday: number; hour: number; avgViews: number; posts: number }[];
+  weekdayPerf: { weekday: number; avgViews: number; posts: number }[];
+  hourPerf: { hour: number; avgViews: number; posts: number }[];
+  durationBuckets: { label: string; avgViews: number; posts: number; avgEngagement: number }[];
+  hashtags: { tag: string; posts: number; avgViews: number }[];
+  topVideos: VideoSummary[];
+  flopVideos: VideoSummary[];
+  outliers: { count: number; bestMultiple: number };
+  hookSignals: {
+    avgDescLength: number;
+    questionShare: number;
+    emojiShare: number;
+    avgHashtags: number;
+    originalSoundShare: number;
+  };
+  insights: Insight[];
+};
+
+export type ScanResult = {
+  profile: Profile;
+  videos: Video[];
+  metrics: Metrics;
+  warnings: string[];
+  durationMs: number;
+  scannedAt: number;
+  timezone: string;
+};
+
+export type Status = {
+  ok: boolean;
+  version: string;
+  timezone: string;
+  ai: { configured: boolean; baseUrl: string; model: string };
+  server: { host: string; localOnly: boolean };
+  scraping: { minDelayMs: number; cookieSet: boolean; cacheEntries: number };
+};
+
+export type Snapshot = {
+  at: number;
+  followers: number;
+  following: number;
+  hearts: number;
+  videos: number;
+  engagementRate: number | null;
+  score: number | null;
+};
+
+export type Account = {
+  handle: string;
+  nickname: string;
+  avatar: string;
+  addedAt: number;
+  latest: Snapshot | null;
+  first: Snapshot | null;
+  delta7: number | null;
+  deltaAll: number | null;
+  points: { at: number; followers: number }[];
+  history: Snapshot[];
+};
+
+export type PublicSettings = {
+  aiBaseUrl: string;
+  aiModel: string;
+  hasApiKey: boolean;
+  apiKeySource: "ui" | "env" | "none";
+  cookieSet: boolean;
+  cookieSource: "ui" | "env" | "none";
+  minDelayMs: number;
+  timezone: string;
+};
+
+export type ProviderModel = {
+  id: string;
+  label: string;
+  note: string;
+  json: "gut" | "ok";
+};
+
+export type Provider = {
+  id: string;
+  name: string;
+  baseUrl: string;
+  keyUrl: string;
+  free: boolean;
+  recommended?: boolean;
+  local?: boolean;
+  freeNote: string;
+  limits: string;
+  models: ProviderModel[];
+};
+
+export type AiResponse = {
+  mode: string;
+  model: string;
+  parsed: boolean;
+  result: unknown;
+};
+
+export type AiMode = "strategy" | "audit" | "ideas" | "caption" | "hooks" | "calendar";
