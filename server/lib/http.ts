@@ -49,12 +49,15 @@ function pickUserAgent(seed: string) {
   return USER_AGENTS[hash % USER_AGENTS.length];
 }
 
-function buildHeaders(url: string, referer?: string): Record<string, string> {
+const HTML_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+const JSON_ACCEPT = "application/json, text/plain, */*";
+
+function buildHeaders(url: string, referer: string | undefined, accept: string): Record<string, string> {
   const settings = effectiveSettings();
   const headers: Record<string, string> = {
     "user-agent": pickUserAgent(url),
     "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
-    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    accept,
     "cache-control": "no-cache",
     "sec-fetch-site": referer ? "same-origin" : "none",
   };
@@ -63,14 +66,14 @@ function buildHeaders(url: string, referer?: string): Record<string, string> {
   return headers;
 }
 
-async function fetchWithRetries(url: string, referer?: string): Promise<string> {
+async function fetchWithRetries(url: string, referer: string | undefined, accept: string): Promise<string> {
   const attempts = 3;
   let lastError: Error = new HttpError(0, "Unbekannter Fehler");
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       const response = await fetch(url, {
-        headers: buildHeaders(url, referer),
+        headers: buildHeaders(url, referer, accept),
         redirect: "follow",
         signal: AbortSignal.timeout(25_000),
       });
@@ -132,7 +135,21 @@ export function cacheSize() {
 /** Fetches a TikTok page politely (throttled + retried + cached). */
 export async function fetchHtml(url: string, referer?: string): Promise<string> {
   const ttl = effectiveSettings().cacheTtlMs;
-  return cached(`html:${url}`, ttl, () => limiter.run(() => fetchWithRetries(url, referer)));
+  return cached(`html:${url}`, ttl, () => limiter.run(() => fetchWithRetries(url, referer, HTML_ACCEPT)));
+}
+
+/**
+ * JSON from TikTok's own API. Same throttle, retries and cache as pages, so a
+ * scan never fires more requests than the rate limit allows.
+ */
+export async function fetchJson<T>(url: string, referer?: string): Promise<T> {
+  const ttl = effectiveSettings().cacheTtlMs;
+  return cached(`json:${url}`, ttl, () =>
+    limiter.run(async () => {
+      const text = await fetchWithRetries(url, referer, JSON_ACCEPT);
+      return JSON.parse(text) as T;
+    }),
+  );
 }
 
 /** JSON request for OpenAI-compatible endpoints – no TikTok throttling. */

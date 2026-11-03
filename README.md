@@ -97,7 +97,7 @@ Zertifikat lässt sich eine neue APK über eine installierte kopieren – ohne s
 
 **1. Scan & Analyse**
 - Profil live von TikTok: Follower, Likes gesamt, Videoanzahl, Bio, Avatar, Verifizierung
-- Post-Performance aus Video-Links: Views, Likes, Kommentare, Shares, **Saves**, Videolänge, Sound, Hashtags, Datum
+- Post-Performance der neuesten 15 Videos, automatisch beim Scan: Views, Likes, Kommentare, Shares, **Saves**, Videolänge, Sound, Hashtags, Datum
 - Kennzahlen: Engagement-Rate (inkl. Aufschlüsselung), Views pro Follower, Median-Views, Posting-Rhythmus, Growth-Score 0–100
 - Beste Zeitfenster (Wochentag + Stunde, umgerechnet in deine Zeitzone)
 - Performance nach Videolänge, Hashtag-Nutzung, Hook-Signale (Caption-Länge, Fragen, Emojis, Originalton)
@@ -176,10 +176,14 @@ das TikTok in jede öffentliche Seite einbettet:
 |---|---|---|
 | `tiktok.com/@name` | `__UNIVERSAL_DATA_FOR_REHYDRATION__ → webapp.user-detail` | Profil + Follower-/Like-/Video-Zähler |
 | `tiktok.com/@name/video/ID` | `webapp.video-detail → itemInfo.itemStruct` | Views, Likes, Kommentare, Shares, Saves, Länge, Sound, Hashtags |
+| `tiktok.com/api/creator/item_list/` | JSON mit `itemList` | die neuesten 15 Videos samt Stats, ohne Signatur nutzbar |
 
-**Warum Video-Links nötig sind:** die Post-Liste eines Profils wird nicht mehr ohne Signatur ausgeliefert
-(`userInfo.itemList` ist leer). Deshalb fügst du im Scan-Formular 5–40 Links deiner (oder fremder) Videos ein – daraus
-entsteht die Performance-Analyse. Kurzlinks (`vm.tiktok.com/…`) werden automatisch aufgelöst.
+**Die Videoliste kommt automatisch:** Nach dem Profil fragt der Scan `api/creator/item_list/` mit der `secUid` ab und
+bekommt die neuesten 15 Videos mit allen Zahlen. Die signierte `post/item_list/` der Web-App antwortet ohne `X-Gnarly`
+nur mit einem leeren Body und wird deshalb nicht verwendet. Ein Name genügt also für die komplette Auswertung; ältere
+Videos lassen sich zusätzlich als Links einfügen, Kurzlinks (`vm.tiktok.com/…`) werden automatisch aufgelöst.
+
+Mehr als 15 Videos pro Anfrage lehnt die API mit `statusCode 10201` ab, deshalb bleibt es bei einer Seite.
 
 Der Scraper ist bewusst höflich: **eine Anfrage gleichzeitig**, mindestens 1,2 s Abstand (einstellbar), 3 Versuche mit
 Backoff, 15 Minuten Cache pro URL, Stopp bei `ratelimit triggered`. Bei Blockade: Abstand erhöhen, kurz warten oder
@@ -256,7 +260,7 @@ data/store.json       lokal erzeugt, nicht versioniert
 |---|---|
 | „TikTok drosselt die Anfragen“ | Rate-Limit. 1–2 Minuten warten, Abstand in den Einstellungen erhöhen. |
 | „TikTok blockt diese Anfrage (403)“ | IP/Captcha. tiktok.com im Browser öffnen, Captcha lösen, Cookies hinterlegen. |
-| Profil ja, aber keine Metriken | Video-Links fehlen – TikTok liefert die Post-Liste nicht mehr. |
+| Profil ja, aber keine Metriken | TikTok lieferte keine Videoliste (privat, gesperrt oder gedrosselt). Scan später wiederholen oder Video-Links einfügen. |
 | KI: „Kein KI-Key hinterlegt“ | Key unter Einstellungen eintragen – kostenlos bei Gemini, Groq oder OpenRouter. |
 | KI: 404 / Modell nicht gefunden | Basis-URL prüfen und „Modelle laden“ nutzen – Modellnamen wechseln häufig. |
 | KI: 429 | Free-Tier-Limit erreicht (Groq/OpenRouter sind schnell ausgeschöpft). Warten oder Anbieter wechseln. |

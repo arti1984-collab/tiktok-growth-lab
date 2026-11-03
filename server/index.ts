@@ -3,7 +3,15 @@ import path from "node:path";
 import express from "express";
 import { DIST_DIR, HOST, IS_DEV, PORT, ROOT, isLoopbackHost } from "./config.ts";
 import { computeMetrics, type Metrics } from "./lib/metrics.ts";
-import { getProfile, normalizeHandle, scrapeVideos, TikTokError, type Profile, type Video } from "./lib/tiktok.ts";
+import {
+  getProfile,
+  getUserVideos,
+  normalizeHandle,
+  scrapeVideos,
+  TikTokError,
+  type Profile,
+  type Video,
+} from "./lib/tiktok.ts";
 import { AI_MODES, generate, type AiMode, type AiPayload } from "./lib/prompts.ts";
 import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
 import {
@@ -136,27 +144,44 @@ app.post(
     const profile = await getProfile(handle);
     const warnings: string[] = [];
 
+    // The newest videos come straight from TikTok, manual links add older ones.
+    let automatic: Video[] = [];
+    try {
+      automatic = await getUserVideos(profile);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unbekannter Fehler";
+      warnings.push(`Videoliste von TikTok nicht lesbar: ${message}`);
+    }
+
     const scraped = urls.length > 0 ? await scrapeVideos(urls) : { videos: [] as Video[], warnings: [] as string[] };
     warnings.push(...scraped.warnings);
 
-    const own = scraped.videos.filter((video) => video.author.toLowerCase() === profile.handle.toLowerCase());
-    if (scraped.videos.length > 0 && own.length === 0) {
-      warnings.push("Kein Video gehört zu diesem Profil – die Analyse zeigt trotzdem die Performance der verlinkten Videos.");
-    } else if (own.length > 0 && own.length < scraped.videos.length) {
-      warnings.push(`${scraped.videos.length - own.length} Video(s) anderer Creator wurden nicht in die Metriken gerechnet.`);
+    const seen = new Set<string>();
+    const videos: Video[] = [];
+    for (const video of [...scraped.videos, ...automatic]) {
+      if (!video.id || seen.has(video.id)) continue;
+      seen.add(video.id);
+      videos.push(video);
     }
 
-    const metrics = computeMetrics(profile, own.length > 0 ? own : scraped.videos, timezone);
+    const own = videos.filter((video) => video.author.toLowerCase() === profile.handle.toLowerCase());
+    if (videos.length > 0 && own.length === 0) {
+      warnings.push("Kein Video gehört zu diesem Profil – die Analyse zeigt trotzdem die Performance der verlinkten Videos.");
+    } else if (own.length > 0 && own.length < videos.length) {
+      warnings.push(`${videos.length - own.length} Video(s) anderer Creator wurden nicht in die Metriken gerechnet.`);
+    }
 
-    if (urls.length === 0) {
+    const metrics = computeMetrics(profile, own.length > 0 ? own : videos, timezone);
+
+    if (videos.length === 0) {
       warnings.push(
-        "TikTok liefert die Post-Liste nicht mehr ohne Signatur. Profil-Stats wurden live gelesen – für Engagement, beste Zeiten und Top-Videos 5–40 Video-Links einfügen.",
+        "TikTok hat zu diesem Profil keine Videos geliefert. Private Konten geben keine heraus, sonst später erneut scannen oder Video-Links einfügen.",
       );
     }
 
     const result: ScanResult = {
       profile,
-      videos: scraped.videos,
+      videos,
       metrics,
       warnings,
       durationMs: Date.now() - started,

@@ -1,4 +1,4 @@
-import { HttpError, fetchHtml, limiter, sleep } from "./http.ts";
+import { HttpError, fetchHtml, fetchJson, limiter, sleep } from "./http.ts";
 
 const WEB = "https://www.tiktok.com";
 
@@ -199,6 +199,45 @@ export async function getProfile(rawHandle: string): Promise<Profile> {
     url: `${WEB}/@${toString(user.uniqueId) || handle}`,
     scrapedAt: Date.now(),
   };
+}
+
+/**
+ * The public creator list answers without a signature and returns up to 15 of
+ * the newest videos with full stats. The list the web app itself calls
+ * (post/item_list) is signed with X-Gnarly and answers with an empty body here.
+ */
+const CREATOR_LIST_LIMIT = 15;
+
+export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT): Promise<Video[]> {
+  if (!profile.secUid) {
+    throw new TikTokError(
+      "PARSE",
+      "Dieses Profil liefert keine secUid.",
+      "Starte den Scan erneut. Bleibt es dabei, ist das Profil gesperrt oder privat.",
+    );
+  }
+
+  const count = Math.max(1, Math.min(CREATOR_LIST_LIMIT, Math.round(limit)));
+  const url =
+    `${WEB}/api/creator/item_list/?aid=1988` +
+    `&secUid=${encodeURIComponent(profile.secUid)}&type=1&count=${count}&cursor=0`;
+
+  let payload: { itemList?: Json[]; statusCode?: number };
+  try {
+    payload = await fetchJson<{ itemList?: Json[]; statusCode?: number }>(url, profile.url);
+  } catch (error) {
+    wrapHttpError(error, `die Videoliste von @${profile.handle}`);
+  }
+
+  const items = Array.isArray(payload!.itemList) ? payload!.itemList! : [];
+  if (items.length === 0) {
+    throw new TikTokError(
+      "PARSE",
+      `TikTok liefert für @${profile.handle} gerade keine Videoliste.`,
+      "Private Konten liefern keine Videos. Sonst später erneut scannen oder Links einfügen.",
+    );
+  }
+  return items.map((item) => mapVideo(item, profile.handle)).filter((video) => video.id);
 }
 
 function mapVideo(item: Json, fallbackHandle: string): Video {
