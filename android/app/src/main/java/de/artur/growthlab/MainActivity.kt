@@ -45,6 +45,7 @@ import de.artur.growthlab.data.Profile
 import de.artur.growthlab.data.Reminders
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
+import de.artur.growthlab.data.TikTok
 import de.artur.growthlab.data.TrackedAccount
 import de.artur.growthlab.data.Update
 import de.artur.growthlab.data.tr
@@ -77,6 +78,11 @@ class MainActivity : ComponentActivity() {
 /** Everything the screens share; persists settings and history as it changes. */
 class LabState(private val context: Context) {
     var settings by mutableStateOf(Store.loadSettings(context))
+
+    init {
+        // The scraper reads the cookie on every request, so it only has to follow the settings.
+        TikTok.cookie = settings.cookie
+    }
     var accounts by mutableStateOf(Store.loadAccounts(context))
     var scan by mutableStateOf<ScanResult?>(null)
     var plan by mutableStateOf(Store.loadPlan(context))
@@ -87,6 +93,7 @@ class LabState(private val context: Context) {
 
     fun saveSettings(next: AiSettings) {
         settings = next
+        TikTok.cookie = next.cookie
         Store.saveSettings(context, next)
     }
 

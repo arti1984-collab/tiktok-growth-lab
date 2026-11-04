@@ -119,6 +119,8 @@ data class AiSettings(
     /** Ziel-Rechner: Follower-Ziel und Datum, 0 heißt kein Ziel. */
     val goalFollowers: Int = 0,
     val goalDate: String = "",
+    /** Optionaler Session-Cookie aus dem Browser, hebt die 15-Video-Grenze an. */
+    val cookie: String = "",
 )
 
 /** Ein Termin im Wochenplan: Datum und Uhrzeit lokal, Video-URL nach dem Posten. */

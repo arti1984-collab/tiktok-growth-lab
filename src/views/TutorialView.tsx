@@ -277,6 +277,13 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
+        label: ["Browser-Notausgang", "Browser fallback"],
+        text: [
+          "Nur in der Desktop-App: Wenn TikTok die Anfrage blockt oder eine Bestätigung verlangt, öffnet sich ein Fenster mit der echten Seite. Du löst das Captcha einmal, danach übernimmt der Scan die Cookies aus diesem Fenster und läuft weiter. In der Web-Version gibt es diesen Weg nicht.",
+          "Desktop app only: when TikTok blocks the request or asks for a confirmation, a window with the real page opens. You solve the captcha once, then the scan takes the cookies from that window and keeps going. The web version has no such route.",
+        ],
+      },
+      {
         label: ["Systemstatus", "System status"],
         text: [
           "Version, Speicherort der Daten, Anzahl der Cache-Einträge und ob ein KI-Key gesetzt ist.",

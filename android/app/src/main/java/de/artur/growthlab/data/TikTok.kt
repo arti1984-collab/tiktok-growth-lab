@@ -1,11 +1,13 @@
 package de.artur.growthlab.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.net.URLEncoder
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class TikTokException(
@@ -23,6 +25,16 @@ object TikTok {
     private const val UA =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
+    /** Filled from the settings, empty means the plain visit without login. */
+    @Volatile
+    var cookie: String = ""
+
+    /** Ten minutes of memory: a second look at the same profile spares TikTok a request. */
+    private const val CACHE_TTL_MS = 10 * 60 * 1000L
+    private val cache = ConcurrentHashMap<String, Pair<Long, String>>()
+
+    fun clearCache() = cache.clear()
+
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
@@ -35,17 +47,28 @@ object TikTok {
         "<script id=\"__UNIVERSAL_DATA_FOR_REHYDRATION__\" type=\"application/json\">([\\s\\S]*?)</script>",
     )
 
-    private suspend fun fetch(url: String): String = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
+    private suspend fun fetch(url: String): String = getText(url, "text/html,application/xhtml+xml,*/*;q=0.8", null)
+
+    private suspend fun getText(url: String, accept: String, referer: String?): String = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        cache[url]?.let { (expires, body) -> if (expires > now) return@withContext body }
+
+        val builder = Request.Builder()
             .url(url)
             .header("User-Agent", UA)
             .header("Accept-Language", "de-DE,de;q=0.9,en;q=0.8")
-            .build()
+            .header("Accept", accept)
+        if (!referer.isNullOrBlank()) builder.header("Referer", referer)
+        if (cookie.isNotBlank()) builder.header("Cookie", cookie)
+        val request = builder.build()
 
         try {
             client.newCall(request).execute().use { response ->
                 val body = response.body?.string().orEmpty()
-                if (response.isSuccessful) return@withContext body
+                if (response.isSuccessful) {
+                    cache[url] = (System.currentTimeMillis() + CACHE_TTL_MS) to body
+                    return@withContext body
+                }
                 when (response.code) {
                     404 -> throw TikTokException(
                         "NOT_FOUND",
@@ -150,45 +173,46 @@ object TikTok {
      * 15 of the newest videos. The list the web app itself calls is signed and
      * answers with an empty body here.
      */
-    private suspend fun fetchCreatorList(secUid: String, referer: String, count: Int): List<JSONObject> =
-        withContext(Dispatchers.IO) {
-            val url = "https://www.tiktok.com/api/creator/item_list/?aid=1988" +
+    /** Both app ids answer this route; the second one is tried when the first stays empty. */
+    private val creatorAids = listOf(1988, 1180)
+
+    private suspend fun fetchCreatorList(secUid: String, referer: String, count: Int): List<JSONObject> {
+        var lastError: Exception? = null
+        for ((index, aid) in creatorAids.withIndex()) {
+            val url = "https://www.tiktok.com/api/creator/item_list/?aid=$aid" +
                 "&secUid=${URLEncoder.encode(secUid, "UTF-8")}&type=1&count=$count&cursor=0"
-            val request = Request.Builder()
-                .url(url)
-                .header("User-Agent", UA)
-                .header("Accept", "application/json, text/plain, */*")
-                .header("Referer", referer)
-                .build()
-
-            val body = try {
-                client.newCall(request).execute().use { response ->
-                    val text = response.body?.string().orEmpty()
-                    if (response.code == 429) {
-                        throw TikTokException("RATE_LIMIT", "TikTok drosselt gerade die Anfragen.")
-                    }
-                    if (text.isBlank()) {
-                        throw TikTokException("PARSE", "TikTok liefert gerade keine Videoliste.")
-                    }
-                    text
+            try {
+                val body = getText(url, "application/json, text/plain, */*", referer)
+                val payload = try {
+                    JSONObject(body)
+                } catch (error: Exception) {
+                    throw TikTokException("PARSE", tr("TikTok liefert gerade keine Videoliste.", "TikTok is returning no video list right now."))
                 }
-            } catch (error: TikTokException) {
-                throw error
+                if (payload.optInt("statusCode", 0) != 0) {
+                    throw TikTokException(
+                        "PARSE",
+                        tr("TikTok liefert für diesen Account gerade keine Videoliste.", "TikTok is returning no video list for this account right now."),
+                    )
+                }
+                val items = payload.optJSONArray("itemList")
+                val list = if (items == null) emptyList() else (0 until items.length()).mapNotNull { items.optJSONObject(it) }
+                if (list.isNotEmpty()) return list
+                lastError = TikTokException(
+                    "PARSE",
+                    tr("TikTok liefert gerade keine Videoliste.", "TikTok is returning no video list right now."),
+                )
             } catch (error: Exception) {
-                throw TikTokException("NETWORK", "Keine Verbindung zu TikTok.", error.message?.take(140).orEmpty())
+                lastError = error
+                if (error is TikTokException && (error.code == "NOT_FOUND" || error.code == "BLOCKED")) throw error
             }
-
-            val payload = try {
-                JSONObject(body)
-            } catch (error: Exception) {
-                throw TikTokException("PARSE", "TikTok liefert gerade keine Videoliste.")
-            }
-            if (payload.optInt("statusCode", 0) != 0) {
-                throw TikTokException("PARSE", "TikTok liefert für diesen Account gerade keine Videoliste.")
-            }
-            val items = payload.optJSONArray("itemList") ?: return@withContext emptyList()
-            (0 until items.length()).mapNotNull { items.optJSONObject(it) }
+            if (index < creatorAids.lastIndex) delay(2500)
         }
+        throw lastError ?: TikTokException(
+            "PARSE",
+            tr("TikTok liefert gerade keine Videoliste.", "TikTok is returning no video list right now."),
+            tr("Später erneut versuchen oder Links einfügen.", "Try again later or add links."),
+        )
+    }
 
     suspend fun getUserVideos(profile: Profile, count: Int = 15): List<Video> {
         if (profile.secUid.isBlank()) throw TikTokException("PARSE", "Dieses Profil liefert keine secUid.")

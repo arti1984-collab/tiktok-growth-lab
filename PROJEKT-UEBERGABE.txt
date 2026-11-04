@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.1.0, Branch main
+Stand: 04.11.2026, Version 2.2.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
