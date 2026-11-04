@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.6.0, Branch main
+Stand: 04.11.2026, Version 2.7.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -197,6 +197,13 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.7.0  Modell-Scanner: POST /api/ai/scan-free liest die Modellliste und
+       ordnet "kostenlos" zu (Preis 0 pro Token bei OpenRouter, Free-Tier
+       bei Gemini und Groq, lokal bei Ollama, sonst :free-Kennung). Bis zu
+       zehn Kandidaten werden mit einer Anfrage von einem Token getestet,
+       das Ergebnis zehn Minuten zwischengespeichert
+       (server/lib/modelScan.ts). Einstellungen: Knopf "Kostenlose
+       pruefen" mit Liste, Status und "verwenden". Version 2.7.0.
 2.6.0  KI-Fehler 404 aufgeloest: die Basis-URL wird normalisiert, ein
        angehaengtes /chat/completions oder /models faellt weg, ein
        models/-Praefix im Modellnamen auch. Antwortet der Anbieter mit

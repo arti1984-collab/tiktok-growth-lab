@@ -215,4 +215,24 @@ export type AiResponse = {
   note?: string;
 };
 
+export type FreeModel = {
+  id: string;
+  free: boolean | null;
+  works: boolean | null;
+  ms: number | null;
+  note: string;
+};
+
+/** Ergebnis des Modell-Scanners: was kostenlos ist und was antwortet. */
+export type FreeScan = {
+  provider: string;
+  baseUrl: string;
+  rule: "pricing" | "tier" | "local" | "paid" | "unknown";
+  checkedAt: number;
+  total: number;
+  probed: number;
+  freeCount: number;
+  models: FreeModel[];
+};
+
 export type AiMode = "strategy" | "audit" | "ideas" | "caption" | "hooks" | "calendar" | "hashtags";

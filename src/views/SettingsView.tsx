@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import { useT } from "../lang";
-import type { Provider, PublicSettings, Status, UpdateInfo } from "../types";
+import type { FreeScan, Provider, PublicSettings, Status, UpdateInfo } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { formatDecimal } from "../format";
 
@@ -30,6 +30,8 @@ export function SettingsView({
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [restarting, setRestarting] = useState(false);
+  const [scan, setScan] = useState<FreeScan | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info" | "warn"; text: string } | null>(null);
 
   useEffect(() => {
@@ -164,6 +166,20 @@ export function SettingsView({
     } catch (caught) {
       setRestarting(false);
       setMessage({ kind: "error", text: (caught as ApiError).message });
+    }
+  }
+
+  async function checkFreeModels() {
+    setScanning(true);
+    setMessage(null);
+    try {
+      const data = await api.scanFree({ aiBaseUrl: baseUrl.trim(), aiApiKey: apiKey.trim() || undefined });
+      setScan(data);
+    } catch (caught) {
+      setScan(null);
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setScanning(false);
     }
   }
 
@@ -527,11 +543,73 @@ export function SettingsView({
             </small>
           </label>
           <div className="field align-end">
-            <button className="btn" onClick={() => void loadModels()} disabled={busy !== null}>
-              {busy === "models" ? <Spinner label={t("Lade…", "Loading…")} /> : t("Modelle laden", "Load models")}
-            </button>
+            <div className="row gap-sm wrap">
+              <button className="btn" onClick={() => void loadModels()} disabled={busy !== null}>
+                {busy === "models" ? <Spinner label={t("Lade…", "Loading…")} /> : t("Modelle laden", "Load models")}
+              </button>
+              <button className="btn" onClick={() => void checkFreeModels()} disabled={busy !== null || scanning}>
+                {scanning ? <Spinner label={t("Prüfe…", "Checking…")} /> : t("Kostenlose prüfen", "Check free models")}
+              </button>
+            </div>
           </div>
         </div>
+
+        {scan && (
+          <div className="model-scan">
+            <p className="muted small">
+              {t(
+                String(scan.freeCount) +
+                  " kostenlose Modelle bei " +
+                  scan.provider +
+                  ", " +
+                  String(scan.probed) +
+                  " davon mit einer Anfrage von einem Token getestet. Ein Free-Tier ist kein Freibrief, die Tageslimits gelten weiter.",
+                String(scan.freeCount) +
+                  " free models at " +
+                  scan.provider +
+                  ", " +
+                  String(scan.probed) +
+                  " of them checked with a one-token request. A free tier still has daily limits.",
+              )}
+            </p>
+            {scan.models
+              .filter((entry) => entry.free === true)
+              .slice(0, 12)
+              .map((entry) => (
+                <div key={entry.id} className="model-scan-row">
+                  <code>{entry.id}</code>
+                  <span className="muted small">{entry.note}</span>
+                  <span className="row gap-sm wrap">
+                    {entry.works === true && (
+                      <Badge tone="good">
+                        {t("antwortet", "answers")}
+                        {entry.ms !== null ? ` ${entry.ms} ms` : ""}
+                      </Badge>
+                    )}
+                    {entry.works === false && <Badge tone="warn">{t("antwortet nicht", "no answer")}</Badge>}
+                    {entry.works === null && <Badge>{t("nicht getestet", "not tested")}</Badge>}
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setModel(entry.id);
+                        setMessage({
+                          kind: "info",
+                          text: t(`Modell ${entry.id} gewählt, noch speichern.`, `Model ${entry.id} picked, still needs saving.`),
+                        });
+                      }}
+                    >
+                      {t("verwenden", "use")}
+                    </button>
+                  </span>
+                </div>
+              ))}
+            {scan.freeCount === 0 && (
+              <p className="muted small">
+                {t("Der Anbieter meldet kein kostenloses Modell.", "The provider reports no free model.")}
+              </p>
+            )}
+          </div>
+        )}
       </Section>
 
       <Section
