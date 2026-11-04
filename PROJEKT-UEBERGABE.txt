@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.7.0, Branch main
+Stand: 04.11.2026, Version 2.8.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -38,6 +38,7 @@ Befehle (Projektwurzel):
   npm run build:server   Server fuer Electron nach build/server/index.mjs
   npm run dist           Web + Server + portable exe nach release/ + Signatur
   npm run typecheck      tsc --noEmit
+  npm test               Tests fuer Schema, JSON-Rettung, Scan-Eingabe
 
 
 3. AUFBAU
@@ -53,6 +54,13 @@ server/
   lib/http.ts       Anfragen mit Cache, Pausen, Browser-Kopfzeilen
   lib/providers.ts  Vorschlaege fuer kostenlose Anbieter
   lib/fsAtomic.ts   Schreiben ohne halbe Dateien
+  lib/schema.ts     Erwartete Felder je KI-Modus, checkSchema
+  lib/scanInput.ts  Handle und Video-Links normalisieren, MAX_BATCH 40
+  lib/quality.ts    Datenlage bewerten (score, missing, confidence)
+  lib/stats.ts      Zaehler fuer Scans, Rate-Limits, KI-Antworten
+
+test/               node:test gegen die reinen Server-Module
+.github/workflows/ci.yml  npm ci, typecheck, test, build bei jedem Push
 
 src/
   App.tsx           Rahmen: Kopfzeile, Reiter, Fusszeile, Statusabruf
@@ -92,6 +100,9 @@ Wichtige Routen (Details in server/index.ts):
   GET  /api/last-scan      letzter Scan im Speicher (nach Neustart leer)
   POST /api/ai             KI-Antwort erzeugen
   GET  /api/ai/models      verfuegbare Modelle des Anbieters
+  POST /api/ai/scan-free   Modellliste nach kostenlosen Modellen filtern
+  GET  /api/update         neueste Veroeffentlichung, laedt exe im Hintergrund
+  POST /api/update/restart tauscht die exe beim Beenden, dann Neustart
   GET/POST /api/watchlist  Account verfolgen, messen, entfernen
   GET/POST /api/settings   Einstellungen lesen und schreiben
 
@@ -197,6 +208,26 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.8.0  Roadmap-Punkte 1 bis 9:
+       - Schema-Wache: checkSchema vergleicht KI-Antworten mit den
+         erwarteten Feldern je Modus, Abweichungen stehen als issues unter
+         der Antwort statt die Antwort zu verwerfen (server/lib/schema.ts).
+       - Tests: npm test mit node:test fuer JSON-Rettung, Schema und
+         Scan-Eingabe (test/), dazu CI (npm ci, typecheck, test, build).
+       - Scan-Eingabe: Handle aus Profil-URL oder mit @, Video-Links nur
+         von tiktok.com, Dubletten und Unsinn raus, Liste auf 40 begrenzt,
+         abgelehnte Links erscheinen als Hinweis (server/lib/scanInput.ts).
+       - Datenlage: assessQuality zaehlt fehlende Felder und Confidence,
+         unter 70 Prozent zeigt der Scan eine Warnzeile.
+       - Zaehler: Scans, Fehlschläge, Rate-Limits und KI-Antworten stehen
+         unter diagnostics in /api/status (server/lib/stats.ts).
+       - Druck: A4 mit 14 mm Rand, Tabellenzeilen und Ueberschriften
+         brechen nicht ueber die Seitenkante.
+       - Closed Loop: Plan-Eintraege speichern postedAt, actualViews und
+         actualLikes, im Plan laesst sich die View-Zahl eintragen und der
+         Anteil am Median ablesen. store.json wandert auf Version 2 und
+         alte Eintraege werden beim Start ergaenzt.
+       Version 2.8.0.
 2.7.0  Modell-Scanner: POST /api/ai/scan-free liest die Modellliste und
        ordnet "kostenlos" zu (Preis 0 pro Token bei OpenRouter, Free-Tier
        bei Gemini und Groq, lokal bei Ollama, sonst :free-Kennung). Bis zu

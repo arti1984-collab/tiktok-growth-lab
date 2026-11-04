@@ -1,4 +1,6 @@
 import { chat, extractJson } from "./ai.ts";
+import { checkSchema } from "./schema.ts";
+import { recordAiCall } from "./stats.ts";
 import { WEEKDAYS, type Metrics } from "./metrics.ts";
 import { getLang, tr } from "./lang.ts";
 
@@ -234,11 +236,14 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
   );
 
   const parsed = extractJson(text);
+  recordAiCall(parsed === null);
+  const issues = parsed === null ? [] : checkSchema(mode, parsed).slice(0, 6);
   return {
     mode,
     model,
     usage,
     note,
+    issues,
     parsed: parsed !== null,
     result: parsed ?? { rohtext: text },
   };

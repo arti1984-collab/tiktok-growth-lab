@@ -123,6 +123,9 @@ export type PlanItem = {
   status: PlanStatus;
   videoUrl: string;
   createdAt: number;
+  postedAt: number;
+  actualViews: number;
+  actualLikes: number;
 };
 
 /** Der Hintergrund-Download der neuen Windows-Datei. */
@@ -213,6 +216,8 @@ export type AiResponse = {
   parsed: boolean;
   result: unknown;
   note?: string;
+  /** Abweichungen vom erwarteten Schema, leer heisst: passt. */
+  issues?: string[];
 };
 
 export type FreeModel = {

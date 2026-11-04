@@ -43,10 +43,15 @@ export type PlanItem = {
   status: PlanStatus;
   videoUrl: string;
   createdAt: number;
+  /** Wann der Post wirklich rausging, 0 wenn unbekannt. */
+  postedAt: number;
+  /** Zahlen von Hand, falls der naechste Scan den Post noch nicht kennt. */
+  actualViews: number;
+  actualLikes: number;
 };
 
 type StoreShape = {
-  version: 1;
+  version: 2;
   accounts: TrackedAccount[];
   settings: Settings;
   plan: PlanItem[];
@@ -54,26 +59,48 @@ type StoreShape = {
 
 const MAX_SNAPSHOTS = 200;
 
+const STORE_VERSION = 2;
+
 function emptyStore(): StoreShape {
-  return { version: 1, accounts: [], settings: {}, plan: [] };
+  return { version: STORE_VERSION, accounts: [], settings: {}, plan: [] };
 }
 
-function load(): StoreShape {
+/** Ein Eintrag aus Version 1 bekommt die neuen Felder, ohne Daten zu verlieren. */
+function normalizePlanItem(raw: Partial<PlanItem>): PlanItem {
+  return {
+    id: String(raw.id ?? ""),
+    date: typeof raw.date === "string" ? raw.date : "",
+    time: typeof raw.time === "string" ? raw.time : "",
+    note: typeof raw.note === "string" ? raw.note : "",
+    status: raw.status === "done" || raw.status === "skipped" ? raw.status : "planned",
+    videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : "",
+    createdAt: Number(raw.createdAt) || Date.now(),
+    postedAt: Number(raw.postedAt) || 0,
+    actualViews: Number(raw.actualViews) || 0,
+    actualLikes: Number(raw.actualLikes) || 0,
+  };
+}
+
+function load(): { store: StoreShape; migrated: boolean } {
   try {
     const raw = fs.readFileSync(STORE_FILE, "utf8");
     const parsed = JSON.parse(raw) as Partial<StoreShape>;
     return {
-      version: 1,
-      accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
-      settings: parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {},
-      plan: Array.isArray(parsed.plan) ? (parsed.plan as PlanItem[]) : [],
+      migrated: parsed.version !== STORE_VERSION,
+      store: {
+        version: STORE_VERSION,
+        accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
+        settings: parsed.settings && typeof parsed.settings === "object" ? parsed.settings : {},
+        plan: Array.isArray(parsed.plan) ? parsed.plan.map(normalizePlanItem) : [],
+      },
     };
   } catch {
-    return emptyStore();
+    return { store: emptyStore(), migrated: false };
   }
 }
 
-let data: StoreShape = load();
+const loaded = load();
+let data: StoreShape = loaded.store;
 let saveTimer: NodeJS.Timeout | null = null;
 
 function persistNow() {
@@ -85,12 +112,13 @@ function persistNow() {
   } catch (error) {
     console.error("[store] could not save:", (error as Error).message);
   }
-}
+}  function persist() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistNow, 150);
+  }
 
-function persist() {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(persistNow, 150);
-}
+  // Ein altes store.json bekommt beim Start einmal die neuen Felder.
+  if (loaded.migrated) persistNow();
 
 export function getSettings(): Settings {
   return { ...data.settings };
@@ -198,6 +226,9 @@ export function addPlan(entries: { date?: string; time?: string; note?: string }
       status: "planned",
       videoUrl: "",
       createdAt: Date.now(),
+      postedAt: 0,
+      actualViews: 0,
+      actualLikes: 0,
     });
   }
   data.plan = trimPlan([...data.plan, ...created]);
@@ -207,11 +238,23 @@ export function addPlan(entries: { date?: string; time?: string; note?: string }
 
 export function updatePlanEntry(
   id: string,
-  patch: { status?: PlanStatus; note?: string; videoUrl?: string; date?: string; time?: string },
+  patch: {
+    status?: PlanStatus;
+    note?: string;
+    videoUrl?: string;
+    date?: string;
+    time?: string;
+    postedAt?: number;
+    actualViews?: number;
+    actualLikes?: number;
+  },
 ): PlanItem[] {
   const entry = data.plan.find((item) => item.id === id);
   if (entry) {
     if (patch.status === "planned" || patch.status === "done" || patch.status === "skipped") entry.status = patch.status;
+    if (typeof patch.postedAt === "number" && Number.isFinite(patch.postedAt)) entry.postedAt = Math.max(0, Math.round(patch.postedAt));
+    if (typeof patch.actualViews === "number" && Number.isFinite(patch.actualViews)) entry.actualViews = Math.max(0, Math.round(patch.actualViews));
+    if (typeof patch.actualLikes === "number" && Number.isFinite(patch.actualLikes)) entry.actualLikes = Math.max(0, Math.round(patch.actualLikes));
     if (typeof patch.note === "string") entry.note = patch.note.slice(0, 300);
     if (typeof patch.videoUrl === "string") entry.videoUrl = patch.videoUrl.trim().slice(0, 300);
     if (typeof patch.date === "string" && DATE_PATTERN.test(patch.date)) entry.date = patch.date;

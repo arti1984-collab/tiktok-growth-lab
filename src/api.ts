@@ -92,7 +92,19 @@ export const api = {
   addPlan: (items: { date?: string; time?: string; note?: string }[]) =>
     request<{ items: PlanItem[] }>("/api/plan", { method: "POST", body: JSON.stringify({ items }) }),
 
-  updatePlan: (id: string, patch: { status?: PlanStatus; note?: string; videoUrl?: string; date?: string; time?: string }) =>
+  updatePlan: (
+    id: string,
+    patch: {
+      status?: PlanStatus;
+      note?: string;
+      videoUrl?: string;
+      date?: string;
+      time?: string;
+      postedAt?: number;
+      actualViews?: number;
+      actualLikes?: number;
+    },
+  ) =>
     request<{ items: PlanItem[] }>(`/api/plan/${encodeURIComponent(id)}`, {
       method: "PUT",
       body: JSON.stringify(patch),
