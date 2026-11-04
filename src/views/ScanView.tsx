@@ -4,6 +4,8 @@ import { awayFromNow, formatCompact, formatDate, formatDecimal, formatDuration, 
 import { useT } from "../lang";
 import type { AiMode, ScanResult, Status } from "../types";
 import { Alert, Badge, EmptyState, ProgressBar, Section, Spinner, Stat } from "../components/ui";
+import { VideoCheck } from "../components/VideoCheck";
+import { ReportOverlay } from "../components/ReportOverlay";
 
 export function ScanView({
   scan,
@@ -18,6 +20,7 @@ export function ScanView({
 }) {
   const t = useT();
   const [handle, setHandle] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
   const [videoInput, setVideoInput] = useState("");
   const [track, setTrack] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -135,6 +138,9 @@ export function ScanView({
         )}
       </Section>
 
+      <VideoCheck scan={scan} />
+      {reportOpen && scan && <ReportOverlay scan={scan} onClose={() => setReportOpen(false)} />}
+
       {!scan && !loading && (
         <EmptyState
           title={t("Noch keine Analyse", "No analysis yet")}
@@ -180,6 +186,9 @@ export function ScanView({
                 </div>
               </div>
               <div className="score-box">
+                <button className="btn btn-sm" onClick={() => setReportOpen(true)}>
+                  {t("Wochenbericht", "Weekly report")}
+                </button>
                 <span className="score-value">{metrics.score ?? "–"}</span>
                 <span className="score-label">{t("Growth-Score von 100", "growth score out of 100")}</span>
                 <div className="score-meter" aria-hidden>

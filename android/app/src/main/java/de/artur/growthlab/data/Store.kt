@@ -24,6 +24,8 @@ object Store {
                 apiKey = json.optString("apiKey", ""),
                 language = json.optString("language", "de"),
                 githubToken = json.optString("githubToken", ""),
+                goalFollowers = json.optInt("goalFollowers", 0),
+                goalDate = json.optString("goalDate", ""),
             )
         } catch (error: Exception) {
             AiSettings()
@@ -37,6 +39,8 @@ object Store {
             .put("apiKey", settings.apiKey)
             .put("language", settings.language)
             .put("githubToken", settings.githubToken)
+            .put("goalFollowers", settings.goalFollowers)
+            .put("goalDate", settings.goalDate)
         prefs(context).edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
 

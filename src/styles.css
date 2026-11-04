@@ -313,6 +313,101 @@ select:disabled {
   gap: 16px;
 }
 
+/* Erinnerung: gleiche Leiste wie der Update-Hinweis, nur ruhiger. */
+.reminder-bar {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--accent) 6%, var(--card));
+}
+
+/* Wochenbericht: Overlay, das beim Drucken zum Blatt wird. */
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: color-mix(in srgb, #000 55%, transparent);
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.report-sheet {
+  background: var(--card);
+  color: var(--ink);
+  width: min(820px, 100%);
+  padding: 28px 32px 32px;
+  display: grid;
+  gap: 18px;
+}
+
+.report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.report-stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.report-stats span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.report-stats strong {
+  font-size: 1.2rem;
+}
+
+.report-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .report-overlay,
+  .report-overlay * {
+    visibility: visible;
+  }
+
+  .report-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    padding: 0;
+  }
+
+  .report-sheet {
+    box-shadow: none;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
 /* Wochenplan: eine Zeile pro Termin, ruhig und ohne Karten im Kartenstapel. */
 .plan-list {
   list-style: none;

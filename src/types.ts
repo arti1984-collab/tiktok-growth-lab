@@ -173,6 +173,8 @@ export type PublicSettings = {
   cookieSource: "ui" | "env" | "none";
   minDelayMs: number;
   timezone: string;
+  goalFollowers: number;
+  goalDate: string;
 };
 
 export type ProviderModel = {

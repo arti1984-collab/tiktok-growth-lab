@@ -42,6 +42,7 @@ import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.Metrics
 import de.artur.growthlab.data.PlanItem
 import de.artur.growthlab.data.Profile
+import de.artur.growthlab.data.Reminders
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
 import de.artur.growthlab.data.TrackedAccount
@@ -130,6 +131,38 @@ fun Root(context: Context) {
     // One check per start, so a new release shows up without opening the setup tab.
     LaunchedEffect(Unit) { state.update = Update.check(state.settings.githubToken) }
 
+    // Permission once; without it the line inside the app still shows up.
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= 33 && !Reminders.allowed(context)) {
+            (context as? android.app.Activity)?.requestPermissions(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                77,
+            )
+        }
+    }
+
+    var reminderNow by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            reminderNow = System.currentTimeMillis()
+            kotlinx.coroutines.delay(60_000)
+        }
+    }
+    val dueSoon = remember(state.plan, reminderNow) { duePlan(state.plan) }
+    var reminderHidden by remember { mutableStateOf(false) }
+    val notificationsSent = remember { mutableSetOf<String>() }
+    LaunchedEffect(dueSoon) {
+        for (item in dueSoon) {
+            if (!notificationsSent.add(item.id)) continue
+            Reminders.notify(
+                context,
+                tr("Geplanter Post", "Planned post"),
+                "${item.time} ${item.note.ifBlank { tr("Jetzt posten", "Post now") }}",
+                item.id.hashCode(),
+            )
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -198,6 +231,16 @@ fun Root(context: Context) {
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            if (dueSoon.isNotEmpty() && !reminderHidden) {
+                UpdateBanner(
+                    text = dueSoon.joinToString(" · ") {
+                        "${it.time} ${it.note.ifBlank { tr("Geplanter Post", "Planned post") }}"
+                    },
+                    action = tr("Ausblenden", "Hide"),
+                    onAction = { reminderHidden = true },
+                    onDismiss = { reminderHidden = true },
+                )
+            }
             val info = state.update
             if (info?.available == true && info.latest != null && !updateHidden) {
                 UpdateBanner(
@@ -218,6 +261,19 @@ fun Root(context: Context) {
                 else -> TutorialScreen()
             }
         }
+    }
+}
+
+/** Geplante Posts, die in den nächsten zwei Stunden fällig sind. */
+private fun duePlan(items: List<PlanItem>): List<PlanItem> {
+    if (items.isEmpty()) return emptyList()
+    val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US)
+    val now = System.currentTimeMillis()
+    return items.filter { item ->
+        if (item.status != "planned") return@filter false
+        val due = runCatching { format.parse("${item.date} ${item.time}")?.time }.getOrNull() ?: return@filter false
+        val diff = due - now
+        diff >= -15 * 60_000 && diff <= 120 * 60_000
     }
 }
 

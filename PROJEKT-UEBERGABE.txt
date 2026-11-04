@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 1.9.0, Branch main
+Stand: 04.11.2026, Version 2.0.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -206,6 +206,22 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        Video-URL; steht die URL im letzten Scan, zeigt der Plan Views
        und den Anteil am Median. Web in der Wachstumsansicht
        (components/PlanCard.tsx), Android in ui/GrowthScreen.kt.
+2.0.0  Fuenf Ergaenzungen, je Web und Android:
+       - Video-Check: POST /api/video (getVideoFromInput) plus Karte in
+         der Scan-Ansicht, vergleicht Views, Engagement, Laenge,
+         Hashtags und Zeitpunkt mit Median und besten Slots.
+       - Vergleich: zwei bis drei Watchlist-Accounts nebeneinander
+         (components/CompareCard.tsx, GrowthScreen).
+       - Ziel-Rechner: Ziel-Follower und Datum, daraus Follower pro Tag
+         und Woche, Views pro Woche und noetige Posts. Ziel liegt in
+         den Einstellungen (goalFollowers, goalDate).
+       - Wochenbericht: Overlay in der Scan-Ansicht mit Druckansicht
+         (Browser-PDF) und Kopierfunktion; Android teilt denselben
+         Bericht als Text.
+       - Erinnerung: Leiste fuer faellige Termine plus Systemmeldung.
+         Web ueber die Notification-API (Knopf in den Einstellungen),
+         Android ueber data/Reminders.kt mit Kanal und
+         POST_NOTIFICATIONS; laeuft, solange die App offen ist.
 
 
 8. BEKANNTE GRENZEN
