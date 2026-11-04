@@ -20,6 +20,11 @@ Profil und die neuesten 15 Videos werden beim Scan von tiktok.com gelesen: Views
 Länge, Sound, Hashtags und Uhrzeit. Daraus entstehen Engagement-Rate, Views pro Follower, Median, Posting-Rhythmus,
 ein Growth-Score von 0 bis 100, die besten Zeitfenster und automatisch formulierte Empfehlungen.
 
+Ein Feld reicht: Link oder Name des Profils eintragen, "Schwächen prüfen" starten. Direkt unter dem Profil steht die
+Karte "Wo es hakt": Interaktion, Reichweite, Rhythmus, Originalton und eine zu dünne Datenbasis, dringende Punkte
+zuerst. Jeder Punkt nennt die Zahl dahinter und unter "Besser machen" den konkreten nächsten Schritt. Das rechnet
+der Server aus den gescrapten Zahlen, ohne KI.
+
 ![Scan-Ansicht mit Profilkarte, Video-Check und Kennzahlen](docs/screenshots/scan.png)
 
 ### Video-Check
@@ -121,6 +126,11 @@ from it. Everything runs on your own machine, no account, no cloud.
 A scan reads the profile and the newest 15 videos from tiktok.com: views, likes, comments, shares, saves, length,
 sound, hashtags and time. From that come the engagement rate, views per follower, median, posting cadence, a growth
 score from 0 to 100, the best time windows and automatically written recommendations.
+
+One field is enough: enter the profile link or name and press "Check weaknesses". Right under the profile the card
+"Where it breaks down" names what currently holds the account back: interaction, reach, cadence, original sound and
+a thin data base, most urgent first. Each point names the number behind it and, under "Do this instead", the next
+concrete step. The server derives all of it from the scraped numbers, no AI involved.
 
 ![Scan view with profile card, video check and metrics](docs/screenshots/scan-en.png)
 
