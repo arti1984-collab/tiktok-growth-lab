@@ -154,10 +154,11 @@ export function ScanView({
                 </div>
               </div>
               <div className="score-box">
-                <div className="score-ring" style={{ ["--value" as string]: `${metrics.score ?? 0}` }}>
-                  <span>{metrics.score ?? "–"}</span>
+                <span className="score-value">{metrics.score ?? "–"}</span>
+                <span className="score-label">Growth-Score von 100</span>
+                <div className="score-meter" aria-hidden>
+                  <span style={{ width: `${Math.max(0, Math.min(100, metrics.score ?? 0))}%` }} />
                 </div>
-                <small className="muted">Growth-Score</small>
               </div>
             </div>
           </Section>

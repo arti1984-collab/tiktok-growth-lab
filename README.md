@@ -93,6 +93,17 @@ Zertifikat lässt sich eine neue APK über eine installierte kopieren – ohne s
 
 ---
 
+## Design
+
+Die Oberfläche heißt intern **Nachtstudio**: warmes Anthrazit (`#141210`), cremefarbene Schrift (`#f3ebdd`) und Gold
+(`#d9a94c`) nur dort, wo sich etwas bewegt oder eine Handlung sitzt.
+
+Warum so: das Programm wird abends am Rechner benutzt, oft in längeren Sitzungen. Ein kaltes Weiß oder ein grelles
+Schwarz ermüdet, ein warmes Anthrazit nicht. Zahlen tragen die Seite, deshalb stehen Messwerte in einer Serifenschrift
+wie in einem Kontobuch und alles andere in der Systemschrift. Flächen sind Haarlinien statt schattiger Karten, der
+Radius ist 2 px, es gibt keine Unschärfe und kein Leuchten, damit die Daten der einzige Blickfang bleiben. Desktop und
+Android teilen Palette, Kanten und Typo-Hierarchie.
+
 ## Was das Tool kann
 
 **1. Scan & Analyse**

@@ -1,16 +1,17 @@
 package de.artur.growthlab.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,47 +30,57 @@ fun dec(value: Double, digits: Int = 1): String = String.format(Locale.GERMANY, 
 fun dateShort(millis: Long): String = SimpleDateFormat("dd.MM.yy, HH:mm", Locale.GERMANY).format(Date(millis))
 fun dateOnly(millis: Long): String = SimpleDateFormat("dd.MM.yy", Locale.GERMANY).format(Date(millis))
 
+private val PanelShape = RoundedCornerShape(2.dp)
+
+/** A panel is a hairline around content, not a floating card. */
 @Composable
 fun CardBox(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(18.dp),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
-    }
+    Column(
+        modifier
+            .fillMaxWidth()
+            .border(1.dp, LineColor, PanelShape)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        content = content,
+    )
 }
 
 @Composable
 fun ScreenTitle(title: String, subtitle: String? = null) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(title, fontFamily = DisplayFont, fontSize = 22.sp, color = InkColor)
         if (subtitle != null) {
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(subtitle, fontSize = 11.sp, color = MutedColor, lineHeight = 16.sp)
         }
     }
 }
 
+/** Numbers carry the app, so they get the display serif and a hairline frame. */
 @Composable
 fun KpiTile(label: String, value: String, note: String? = null, modifier: Modifier = Modifier) {
-    Surface(
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = RoundedCornerShape(14.dp),
-        modifier = modifier,
+    Column(
+        modifier
+            .border(1.dp, LineColor, PanelShape)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Text(label.uppercase(), fontSize = 10.sp, color = MutedColor, fontWeight = FontWeight.SemiBold)
-            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            if (note != null) Text(note, fontSize = 10.sp, color = MutedColor)
-        }
+        Text(label, fontSize = 10.sp, color = MutedColor, maxLines = 1)
+        Text(value, fontFamily = DisplayFont, fontSize = 21.sp, color = InkColor, maxLines = 1)
+        if (note != null) Text(note, fontSize = 10.sp, color = MutedColor, maxLines = 1)
     }
 }
 
 @Composable
 fun Pill(text: String, tone: Color) {
-    Surface(color = tone.copy(alpha = 0.16f), shape = RoundedCornerShape(50)) {
-        Text(text, color = tone, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
-    }
+    Text(
+        text,
+        color = tone,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier
+            .border(1.dp, tone.copy(alpha = 0.5f), PanelShape)
+            .padding(horizontal = 7.dp, vertical = 2.dp),
+    )
 }
 
 @Composable
@@ -77,23 +88,20 @@ fun InsightRow(kind: String, title: String, text: String) {
     val tone = when (kind) {
         "good" -> GoodColor
         "warn" -> WarnColor
-        else -> Accent
+        else -> InkSoft
     }
     Row(verticalAlignment = Alignment.Top) {
-        Surface(color = tone, shape = RoundedCornerShape(50)) {
-            Spacer(Modifier.width(6.dp).padding(3.dp))
-        }
-        Spacer(Modifier.width(10.dp))
-        Column {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-            Text(text, fontSize = 12.sp, color = MutedColor)
+        Box(Modifier.padding(top = 6.dp).size(6.dp).background(tone))
+        Box(Modifier.padding(start = 12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(title, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = InkColor)
+                Text(text, fontSize = 12.sp, color = InkSoft, lineHeight = 17.sp)
+            }
         }
     }
 }
 
 @Composable
 fun DividerLine() {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-        Spacer(Modifier.padding(0.5.dp))
-    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(LineColor))
 }
