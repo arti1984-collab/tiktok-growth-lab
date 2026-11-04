@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 1.6.0, Branch main
+Stand: 04.11.2026, Version 1.6.1, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -175,6 +175,8 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        und hashtags.css geloescht, Android HashtagSection entfernt.
 1.6.0  Anleitung als eigener Reiter (Web: Anleitung, Android: Hilfe) mit
        Erklaerung jedes Punktes, und diese Uebergabedatei.
+1.6.1  Versionsnummer unten rechts: Web in der Fusszeile aus /api/status,
+       Android als kleine Zeile ueber der Navigationsleiste aus BuildConfig.
 
 
 8. BEKANNTE GRENZEN

@@ -102,8 +102,11 @@ export default function App() {
       </main>
 
       <footer className="footer muted small">
-        Daten kommen direkt von tiktok.com. Lokal gespeichert unter <code>data/store.json</code> – dieser Rechner verlässt nie
-        etwas außer den Anfragen an TikTok und deinen KI-Anbieter.
+        <p>
+          Daten kommen direkt von tiktok.com. Lokal gespeichert unter <code>data/store.json</code> – dieser Rechner verlässt nie
+          etwas außer den Anfragen an TikTok und deinen KI-Anbieter.
+        </p>
+        <span className="footer-version">Version {status?.version ?? "–"}</span>
       </footer>
     </div>
   );

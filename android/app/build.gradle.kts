@@ -20,8 +20,8 @@ android {
         applicationId = "de.artur.growthlab"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.6.0"
+        versionCode = 12
+        versionName = "1.6.1"
     }
 
     signingConfigs {
@@ -51,6 +51,8 @@ android {
 
     buildFeatures {
         compose = true
+        // Ab AGP 8 nicht mehr automatisch erzeugt; die App zeigt BuildConfig.VERSION_NAME an.
+        buildConfig = true
     }
 
     packaging {
