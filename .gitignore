@@ -2,7 +2,8 @@ node_modules/
 dist/
 build/
 release/
-data/
+# Nur der lokale Laufzeit-Store im Projektwurzelverzeichnis.
+/data/
 .env
 *.local
 probe*.mjs

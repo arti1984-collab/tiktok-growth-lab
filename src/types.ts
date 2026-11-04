@@ -173,4 +173,4 @@ export type AiResponse = {
   result: unknown;
 };
 
-export type AiMode = "strategy" | "audit" | "ideas" | "caption" | "hooks" | "calendar";
+export type AiMode = "strategy" | "audit" | "ideas" | "caption" | "hooks" | "calendar" | "hashtags";

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "../api";
 import type { AiMode, AiResponse, ScanResult, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { JsonView } from "../components/JsonView";
-import { HashtagPanel } from "../components/HashtagPanel";
+import { HashtagPanel, extractHashtagGroups } from "../components/HashtagPanel";
 
 const MODES: { id: AiMode; label: string; description: string }[] = [
   { id: "strategy", label: "30-Tage-Strategie", description: "Positionierung, Content-Säulen, Posting-Plan, KPI-Ziele" },
@@ -12,6 +12,7 @@ const MODES: { id: AiMode; label: string; description: string }[] = [
   { id: "caption", label: "Captions", description: "Fertige Captions mit Hashtags und On-Screen-Text" },
   { id: "hooks", label: "Hooks", description: "Sätze für die ersten 2 Sekunden" },
   { id: "calendar", label: "7-Tage-Plan", description: "Konkrete Uploads mit Uhrzeit und Format" },
+  { id: "hashtags", label: "Hashtags", description: "Tag-Sets für Nische, Reichweite und Marke" },
 ];
 
 const TONES = ["direkt", "humorvoll", "warm & persönlich", "sachlich & expertig", "frech", "emotional"];
@@ -61,6 +62,7 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
   }
 
   const activeMode = MODES.find((entry) => entry.id === mode);
+  const hashtagGroups = useMemo(() => (response ? extractHashtagGroups(response.result) : []), [response]);
 
   return (
     <div className="stack">
@@ -108,7 +110,7 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
               />
             </label>
             <label className="field">
-              <span>Nische (falls kein Scan)</span>
+              <span>{mode === "hashtags" ? "Nische oder Thema für die Hashtags" : "Nische (falls kein Scan)"}</span>
               <input value={niche} onChange={(event) => setNiche(event.target.value)} placeholder="z. B. Fitness für Berufstätige" />
             </label>
             <label className="field">
@@ -157,6 +159,37 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
         </form>
       </Section>
 
+      <Section
+        title="Hashtag-Bereich"
+        subtitle={
+          mode === "hashtags"
+            ? "Sets für Nische, Reichweite und Marke, passend zu deinem Thema"
+            : "Tags aus der letzten Antwort, nach Aufgabe sortiert"
+        }
+        actions={
+          mode === "hashtags" ? undefined : (
+            <button className="btn btn-sm" type="button" onClick={() => setMode("hashtags")}>
+              Hashtags erzeugen
+            </button>
+          )
+        }
+      >
+        {response && hashtagGroups.length > 0 ? (
+          <HashtagPanel result={response.result} embedded />
+        ) : (
+          <div className="hashtag-empty">
+            <p className="muted">
+              Hier sammeln sich die Tag-Sets. Wähle den Modus „Hashtags“, trage deine Nische oder dein Thema ein und
+              starte: 8 bis 12 Nischen-Tags, 8 bis 12 Reichweiten-Tags und 3 bis 5 Marken-Tags für den DACH-Raum. Jeder
+              Tag lässt sich einzeln oder als ganzes Set kopieren.
+            </p>
+            <button className="btn" type="button" onClick={() => setMode("hashtags")}>
+              Modus „Hashtags“ wählen
+            </button>
+          </div>
+        )}
+      </Section>
+
       {loading && (
         <Section>
           <Spinner label="Die KI schreibt – das dauert 10 bis 40 Sekunden…" />
@@ -173,7 +206,6 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </button>
           }
         >
-          <HashtagPanel result={response.result} />
           <JsonView data={response.result} />
         </Section>
       )}

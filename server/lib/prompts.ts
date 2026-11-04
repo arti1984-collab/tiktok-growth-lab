@@ -2,7 +2,7 @@ import { chat, extractJson } from "./ai.ts";
 import { WEEKDAYS, type Metrics } from "./metrics.ts";
 import type { Profile, Video } from "./tiktok.ts";
 
-export const AI_MODES = ["strategy", "audit", "ideas", "caption", "hooks", "calendar"] as const;
+export const AI_MODES = ["strategy", "audit", "ideas", "caption", "hooks", "calendar", "hashtags"] as const;
 export type AiMode = (typeof AI_MODES)[number];
 
 export type AiPayload = {
@@ -147,6 +147,12 @@ const SCHEMAS: Record<AiMode, string> = {
   "tage": [ { "tag": "Montag", "uhrzeit": "18:30", "thema": "", "hook": "", "format": "", "sound": "", "hashtags": [ "" ], "cta": "", "aufwand": "niedrig|mittel|hoch" } ],
   "hinweis": ""
 }`,
+  hashtags: `{
+  "hashtagStrategie": { "nische": [""], "reichweite": [""], "marke": [""] },
+  "begruendung": "2-4 Sätze: warum diese Sets zur Nische passen",
+  "suchbegriffe": [ "Begriffe, nach denen die Zielgruppe in TikTok sucht" ],
+  "hinweis": "was beim Einsatz der Tags zu beachten ist"
+}`,
 };
 
 function payloadBlock(payload: AiPayload): string {
@@ -175,6 +181,8 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
       return `Schreibe ${Math.max(8, count)} Hooks für die ersten 2 Sekunden. Unterschiedliche Typen, kurz, sprechbar, ohne Clickbait-Lügen.`;
     case "calendar":
       return `Erstelle einen 7-Tage-Content-Plan mit konkreten Uhrzeiten (nutze die besten Zeitfenster aus den Metriken, sonst 11:30 / 17:30 / 20:00).`;
+    case "hashtags":
+      return `Stelle ein Hashtag-Set für die angegebene Nische oder das Thema zusammen: 8 bis 12 Nischen-Tags, 8 bis 12 Reichweiten-Tags und 3 bis 5 Marken-Tags, jeweils mit #, klein geschrieben, ohne Duplikate zwischen den Gruppen. Nimm nur Tags, die es auf TikTok wirklich gibt, gemischt aus deutschsprachigen und internationalen Tags. Liegt ein gescannter Account vor, baue dessen stärkste vorhandene Tags ein und begründe die Auswahl mit den Zahlen.`;
   }
 }
 

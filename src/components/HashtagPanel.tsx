@@ -60,7 +60,7 @@ export function extractHashtagGroups(result: unknown): Group[] {
   return groups;
 }
 
-export function HashtagPanel({ result }: { result: unknown }) {
+export function HashtagPanel({ result, embedded = false }: { result: unknown; embedded?: boolean }) {
   const groups = useMemo(() => extractHashtagGroups(result), [result]);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -79,10 +79,10 @@ export function HashtagPanel({ result }: { result: unknown }) {
   };
 
   return (
-    <section className="hashtag-panel" aria-label="Hashtag-Bereich">
+    <section className={`hashtag-panel${embedded ? " hashtag-panel-embedded" : ""}`} aria-label="Hashtag-Bereich">
       <div className="hashtag-head">
         <div>
-          <h3>Hashtag-Bereich</h3>
+          {!embedded && <h3>Hashtag-Bereich</h3>}
           <p className="muted small">
             {allTags.length} Tags, sortiert nach Aufgabe. Tag antippen kopiert ihn.
             {copied === "fehler" ? " Kopieren wurde vom Browser blockiert." : ""}
