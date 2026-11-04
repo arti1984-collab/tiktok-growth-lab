@@ -15,7 +15,7 @@
     "sign": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-exe.ps1",
     "start": "tsx server/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test test/schema.test.ts test/extract.test.ts test/scanInput.test.ts"
+    "test": "node --import tsx --test test/schema.test.ts test/extract.test.ts test/scanInput.test.ts test/metrics.test.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.0",

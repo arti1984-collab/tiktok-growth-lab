@@ -38,7 +38,7 @@ Befehle (Projektwurzel):
   npm run build:server   Server fuer Electron nach build/server/index.mjs
   npm run dist           Web + Server + portable exe nach release/ + Signatur
   npm run typecheck      tsc --noEmit
-  npm test               Tests fuer Schema, JSON-Rettung, Scan-Eingabe
+  npm test               Tests fuer Score, Schema, JSON-Rettung, Scan-Eingabe
 
 
 3. AUFBAU
