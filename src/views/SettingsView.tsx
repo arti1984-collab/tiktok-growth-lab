@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import { useT } from "../lang";
-import type { FreeScan, Provider, PublicSettings, Status, UpdateInfo } from "../types";
+import type { FreeScan, Provider, PublicSettings, Status, TokenProbe, UpdateInfo } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { formatDecimal } from "../format";
 
@@ -30,6 +30,7 @@ export function SettingsView({
   const [busy, setBusy] = useState<string | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [tokenProbe, setTokenProbe] = useState<TokenProbe | null>(null);
   const [restarting, setRestarting] = useState(false);
   const [scan, setScan] = useState<FreeScan | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -159,6 +160,19 @@ export function SettingsView({
       setMessage({ kind: "error", text: (caught as ApiError).message });
     } finally {
       setCheckingUpdate(false);
+    }
+  }
+
+  async function checkToken() {
+    setBusy("token");
+    setTokenProbe(null);
+    try {
+      // Das getippte Token zaehlt schon vor dem Speichern, sonst das gespeicherte.
+      setTokenProbe(await api.probeGithubToken(githubToken.trim()));
+    } catch (caught) {
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -304,7 +318,11 @@ export function SettingsView({
           <input
             type="password"
             value={githubToken}
-            onChange={(event) => setGithubToken(event.target.value)}
+            onChange={(event) => {
+              setGithubToken(event.target.value);
+              // Ein Ergebnis gilt immer nur fuer das Token, das gerade im Feld steht.
+              setTokenProbe(null);
+            }}
             placeholder={settings?.hasGithubToken ? t("leer lassen zum Behalten", "leave empty to keep") : "github_pat_…"}
             autoComplete="off"
             spellCheck={false}
@@ -316,6 +334,26 @@ export function SettingsView({
             )}
           </small>
         </label>
+
+        <div className="row gap-sm wrap" style={{ marginBottom: 4 }}>
+          <button className="btn btn-sm" onClick={() => void checkToken()} disabled={busy === "token"}>
+            {busy === "token" ? <Spinner label={t("Prüfe…", "Checking…")} /> : t("Token prüfen", "Check token")}
+          </button>
+          {tokenProbe && (
+            <Badge tone={tokenProbe.ok ? "good" : "warn"}>
+              {tokenProbe.ok ? t("Token gültig", "Token valid") : t("Token abgelehnt", "Token rejected")}
+            </Badge>
+          )}
+        </div>
+
+        {tokenProbe && (
+          <p className="muted small">
+            {tokenProbe.repo}
+            {tokenProbe.private ? ` · ${t("privat", "private")}` : ""}
+            {tokenProbe.latest ? ` · ${t("neueste Version", "newest version")} ${tokenProbe.latest}` : ""} ·{" "}
+            {tokenProbe.message}
+          </p>
+        )}
 
         {update?.error && <Alert kind="info">{update.error}</Alert>}
 

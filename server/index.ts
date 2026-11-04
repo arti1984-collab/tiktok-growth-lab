@@ -38,7 +38,7 @@ import {
 import { browserFallbackAvailable, browserProbe, cacheSize, clearCache } from "./lib/http.ts";
 import { PROVIDERS } from "./lib/providers.ts";
 import { setLang, tr } from "./lib/lang.ts";
-import { checkForUpdate, currentVersion } from "./lib/update.ts";
+import { checkForUpdate, currentVersion, probeRepoAccess } from "./lib/update.ts";
 import { downloadInfo, startDownload } from "./lib/updater.ts";
 
 const app = express();
@@ -180,6 +180,20 @@ app.post("/api/update/restart", (_req, res) => {
   bridge.restart(info.file, info.version ?? "");
   res.json({ ok: true });
 });
+
+/**
+ * Knopf "Token pruefen": sagt sofort, ob das Token das Release-Repo lesen
+ * darf. Ein frisch getipptes Token hat Vorrang vor dem gespeicherten, damit
+ * die Pruefung schon vor dem Speichern stimmt.
+ */
+app.post(
+  "/api/update/token",
+  asyncHandler(async (req, res) => {
+    const typed = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+    const probe = await probeRepoAccess(typed || effectiveSettings().githubToken);
+    res.json(probe);
+  }),
+);
 
 app.get("/api/version", (_req, res) => {
   res.json({ version: currentVersion() });
