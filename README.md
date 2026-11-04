@@ -84,7 +84,7 @@ dem eigenen Zertifikat `android/keystore.jks` signiert.
 |---|---|
 | Paket | `de.artur.growthlab` |
 | Mindestversion | Android 8.0 (API 26) |
-| Bereiche | Scan, Wachstum, KI-Studio, Setup |
+| Bereiche | Scan, Wachstum, KI-Studio, Einstellungen, Anleitung |
 | Speicherung | nur lokal (SharedPreferences), keine Cloud |
 | KI | Gemini, Groq oder OpenRouter mit eigenem Key |
 

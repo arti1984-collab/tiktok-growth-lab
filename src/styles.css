@@ -1046,6 +1046,47 @@ input[type="range"]:focus-visible {
   line-height: 1.1;
 }
 
+/* ------------------------------------------------------------- anleitung */
+
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.guide-row {
+  display: grid;
+  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  gap: 2px 24px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.guide-row:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.guide-row dt {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.guide-row dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .guide-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+  }
+}
+
 /* --------------------------------------------------------------- tables */
 
 .table-scroll {

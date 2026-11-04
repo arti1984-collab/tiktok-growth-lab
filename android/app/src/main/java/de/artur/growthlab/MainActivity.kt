@@ -52,6 +52,7 @@ import de.artur.growthlab.ui.MutedColor
 import de.artur.growthlab.ui.ScanScreen
 import de.artur.growthlab.ui.SettingsScreen
 import de.artur.growthlab.ui.StudioScreen
+import de.artur.growthlab.ui.TutorialScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,7 +96,7 @@ class LabState(private val context: Context) {
 fun Root(context: Context) {
     val state = remember { LabState(context) }
     var tab by remember { mutableStateOf(0) }
-    val tabs = listOf("Scan", "Wachstum", "KI-Studio", "Setup")
+    val tabs = listOf("Scan", "Wachstum", "KI-Studio", "Setup", "Hilfe")
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -162,7 +163,8 @@ fun Root(context: Context) {
                 0 -> ScanScreen(state)
                 1 -> GrowthScreen(state)
                 2 -> StudioScreen(state)
-                else -> SettingsScreen(state)
+                3 -> SettingsScreen(state)
+                else -> TutorialScreen()
             }
         }
     }
@@ -197,11 +199,19 @@ private fun NavGlyph(index: Int, tint: Color) {
                 drawLine(tint, Offset(s * 0.2f, s * 0.72f), Offset(s * 0.56f, s * 0.72f), stroke, StrokeCap.Round)
             }
 
-            else -> {
+            3 -> {
                 drawLine(tint, Offset(s * 0.14f, s * 0.36f), Offset(s * 0.86f, s * 0.36f), stroke, StrokeCap.Round)
                 drawCircle(tint, radius = s * 0.11f, center = Offset(s * 0.64f, s * 0.36f))
                 drawLine(tint, Offset(s * 0.14f, s * 0.68f), Offset(s * 0.86f, s * 0.68f), stroke, StrokeCap.Round)
                 drawCircle(tint, radius = s * 0.11f, center = Offset(s * 0.34f, s * 0.68f))
+            }
+
+            else -> {
+                drawLine(tint, Offset(s * 0.2f, s * 0.2f), Offset(s * 0.8f, s * 0.2f), stroke, StrokeCap.Round)
+                drawLine(tint, Offset(s * 0.2f, s * 0.8f), Offset(s * 0.8f, s * 0.8f), stroke, StrokeCap.Round)
+                drawLine(tint, Offset(s * 0.2f, s * 0.2f), Offset(s * 0.2f, s * 0.8f), stroke, StrokeCap.Round)
+                drawLine(tint, Offset(s * 0.8f, s * 0.2f), Offset(s * 0.8f, s * 0.8f), stroke, StrokeCap.Round)
+                drawLine(tint, Offset(s * 0.5f, s * 0.2f), Offset(s * 0.5f, s * 0.8f), stroke, StrokeCap.Round)
             }
         }
     }

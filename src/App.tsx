@@ -5,14 +5,16 @@ import { ScanView } from "./views/ScanView";
 import { WatchView } from "./views/WatchView";
 import { StudioView } from "./views/StudioView";
 import { SettingsView } from "./views/SettingsView";
+import { TutorialView } from "./views/TutorialView";
 
-type Tab = "scan" | "watch" | "studio" | "settings";
+type Tab = "scan" | "watch" | "studio" | "settings" | "guide";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "scan", label: "Scan & Analyse" },
   { id: "watch", label: "Wachstum" },
   { id: "studio", label: "KI-Studio" },
   { id: "settings", label: "Einstellungen" },
+  { id: "guide", label: "Anleitung" },
 ];
 
 export default function App() {
@@ -96,6 +98,7 @@ export default function App() {
         {tab === "watch" && <WatchView />}
         {tab === "studio" && <StudioView scan={scan} status={status} initialMode={studioMode} />}
         {tab === "settings" && <SettingsView status={status} onStatusChange={refreshStatus} />}
+        {tab === "guide" && <TutorialView />}
       </main>
 
       <footer className="footer muted small">
