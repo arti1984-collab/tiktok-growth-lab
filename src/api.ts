@@ -1,5 +1,5 @@
 import { tr } from "./lang";
-import type { Account, AiMode, AiResponse, Provider, PublicSettings, ScanResult, Status } from "./types";
+import type { Account, AiMode, AiResponse, Provider, PublicSettings, ScanResult, Status, UpdateInfo } from "./types";
 
 export class ApiError extends Error {
   hint: string;
@@ -45,6 +45,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   status: () => request<Status>("/api/status"),
+
+  /** Latest GitHub release compared to the running version. */
+  update: (force = false) => request<UpdateInfo>(`/api/update${force ? "?force=1" : ""}`),
 
   scan: (payload: { handle: string; videoUrls: string[]; track: boolean }) =>
     request<ScanResult>("/api/scan", { method: "POST", body: JSON.stringify(payload) }),

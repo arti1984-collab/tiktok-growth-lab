@@ -29,6 +29,7 @@ import {
 import { cacheSize, clearCache } from "./lib/http.ts";
 import { PROVIDERS } from "./lib/providers.ts";
 import { setLang, tr } from "./lib/lang.ts";
+import { checkForUpdate, currentVersion } from "./lib/update.ts";
 
 const app = express();
 app.disable("x-powered-by");
@@ -136,6 +137,19 @@ app.get("/api/status", (_req, res) => {
       cacheEntries: cacheSize(),
     },
   });
+});
+
+/* ------------------------------------------------------------------ update */
+
+app.get(
+  "/api/update",
+  asyncHandler(async (req, res) => {
+    res.json(await checkForUpdate(req.query.force === "1"));
+  }),
+);
+
+app.get("/api/version", (_req, res) => {
+  res.json({ version: currentVersion() });
 });
 
 /* -------------------------------------------------------------------- scan */

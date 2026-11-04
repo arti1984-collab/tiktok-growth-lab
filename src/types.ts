@@ -113,6 +113,19 @@ export type Status = {
   scraping: { minDelayMs: number; cookieSet: boolean; cacheEntries: number };
 };
 
+export type UpdateInfo = {
+  current: string;
+  latest: string | null;
+  updateAvailable: boolean;
+  url: string | null;
+  exe: string | null;
+  apk: string | null;
+  notes: string;
+  publishedAt: string | null;
+  checkedAt: number;
+  error: string | null;
+};
+
 export type Snapshot = {
   at: number;
   followers: number;
@@ -142,6 +155,8 @@ export type PublicSettings = {
   aiModel: string;
   hasApiKey: boolean;
   apiKeySource: "ui" | "env" | "none";
+  hasGithubToken: boolean;
+  githubTokenSource: "ui" | "env" | "none";
   cookieSet: boolean;
   cookieSource: "ui" | "env" | "none";
   minDelayMs: number;

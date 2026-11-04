@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 1.7.0, Branch main
+Stand: 04.11.2026, Version 1.8.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -183,6 +183,21 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        Sprache der KI-Antworten. Web: src/lang.tsx mit t(de, en),
        server/lib/lang.ts fuer Fehler- und Auswertungstexte. Android:
        data/Lang.kt mit Language.current, gespeichert in den Einstellungen.
+1.8.0  Update-Pruefung: server/lib/update.ts fragt die neueste
+       GitHub-Veröffentlichung ab (15 Minuten Zwischenspeicher) und
+       /api/update liefert current, latest, updateAvailable, Downloads
+       und Notizen. Web und Desktop zeigen oben eine Leiste mit dem
+       Hinweis und einem Download-Knopf, die Einstellungen haben eine
+       Karte "Updates" mit Knopf "Nach Updates suchen". Android macht
+       dasselbe lokal in data/Update.kt gegen BuildConfig.VERSION_NAME
+       und zeigt die Leiste ueber dem Inhalt sowie die Karte im Setup.
+       Ein automatisches Selbst-Update ist bewusst nicht eingebaut: die
+       Meldung fuehrt zur Release-Seite bzw. direkt zur Datei.
+       Das Repo ist privat, deshalb braucht die Abfrage einen GitHub-Token
+       mit Lesezugriff: Web unter Einstellungen, Abschnitt Updates, Android
+       im Setup. Der Token liegt in data/store.json bzw. in den
+       SharedPreferences und wird nur fuer diese eine Anfrage benutzt.
+       Alternativ GITHUB_TOKEN in die .env schreiben.
 
 
 8. BEKANNTE GRENZEN
