@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import express from "express";
-import { DIST_DIR, HOST, IS_DEV, PORT, ROOT, isLoopbackHost } from "./config.ts";
+import { APP_VERSION, DIST_DIR, HOST, IS_DEV, PORT, ROOT, isLoopbackHost } from "./config.ts";
 import { computeMetrics, type Metrics } from "./lib/metrics.ts";
 import {
   getProfile,
@@ -118,7 +118,7 @@ app.get("/api/status", (_req, res) => {
   const settings = effectiveSettings();
   res.json({
     ok: true,
-    version: "1.0.0",
+    version: APP_VERSION,
     timezone: settings.timezone,
     ai: { configured: aiConfigured(), baseUrl: config.baseUrl, model: config.model },
     server: { host: HOST, localOnly: isLoopbackHost(HOST) },

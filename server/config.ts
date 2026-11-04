@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -35,6 +36,24 @@ export function isLoopbackHost(host: string): boolean {
 }
 
 export const IS_DEV = process.env.APP_ENV === "development";
+
+/**
+ * Version from package.json – the one place where it is bumped. The desktop
+ * build ships that file next to build/server/, so the running app reports the
+ * same number as the release. Falls back instead of throwing, so a missing
+ * file cannot stop the server from starting.
+ */
+function readVersion(): string {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+    const version = typeof parsed?.version === "string" ? parsed.version.trim() : "";
+    return version || "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+export const APP_VERSION = readVersion();
 
 /**
  * Values from .env. They act as defaults for every setting that can also be
