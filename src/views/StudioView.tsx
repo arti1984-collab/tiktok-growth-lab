@@ -4,6 +4,7 @@ import type { AiMode, AiResponse, ScanResult, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { JsonView } from "../components/JsonView";
 import { HashtagPanel, extractHashtagGroups } from "../components/HashtagPanel";
+import { buildTextExport, downloadTextFile, textFilename } from "../textExport";
 
 const MODES: { id: AiMode; label: string; description: string }[] = [
   { id: "strategy", label: "30-Tage-Strategie", description: "Positionierung, Content-Säulen, Posting-Plan, KPI-Ziele" },
@@ -59,6 +60,15 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
     await navigator.clipboard.writeText(JSON.stringify(response.result, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function saveText() {
+    if (!response) return;
+    const title = activeMode?.label ?? "KI-Antwort";
+    downloadTextFile(
+      textFilename(title),
+      buildTextExport({ title, model: response.model, handle: scan?.profile.handle, result: response.result }),
+    );
   }
 
   const activeMode = MODES.find((entry) => entry.id === mode);
@@ -201,9 +211,14 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
           title={activeMode?.label}
           subtitle={`Modell: ${response.model}${response.parsed ? "" : " · Antwort war kein valides JSON, wird als Text angezeigt"}`}
           actions={
-            <button className="btn btn-ghost" onClick={copy}>
-              {copied ? "Kopiert" : "Als JSON kopieren"}
-            </button>
+            <>
+              <button className="btn btn-ghost" onClick={saveText}>
+                Als Textdatei speichern
+              </button>
+              <button className="btn btn-ghost" onClick={copy}>
+                {copied ? "Kopiert" : "Als JSON kopieren"}
+              </button>
+            </>
           }
         >
           <JsonView data={response.result} />
