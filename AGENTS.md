@@ -14,7 +14,7 @@ To update antislop later: `npx antislop-ai --update`, or run `npx antislop-ai` a
 <!-- antislop:end -->
 
 ## Auslieferung
-Jede Änderung an der Desktop-App bekommt dieselbe Änderung in der Android-App, sofern die Oberfläche betroffen ist. Danach werden beide gebaut, die neuen Dateien ersetzt, alles committet und auf GitHub gepusht. Die Dateien im Release werden dabei ausgetauscht, nicht nur der Code.
+Jede Änderung an der Desktop-App wird gebaut, die neue Datei im Release ersetzt, alles committet und auf GitHub gepusht. Die Dateien im Release werden dabei ausgetauscht, nicht nur der Code.
 
 ## Versionen
-Jede neue Auslieferung bekommt eine höhere Nummer. Sie steigt gleichzeitig in `package.json` (`version`) und in `android/app/build.gradle.kts` (`versionName` und `versionCode`), danach wird daraus ein neuer Tag und ein neues Release. Ein Upload mit unveränderter Nummer ist keine Auslieferung.
+Jede neue Auslieferung bekommt eine höhere Nummer in `package.json` (`version`), danach wird daraus ein neuer Tag und ein neues Release. Ein Upload mit unveränderter Nummer ist keine Auslieferung.
