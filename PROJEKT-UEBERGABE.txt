@@ -1,0 +1,197 @@
+TIKTOK GROWTH LAB
+Uebergabedatei fuer eine andere KI
+Stand: 04.11.2026, Version 1.6.0, Branch main
+
+
+1. WAS DAS PROJEKT IST
+----------------------
+Ein lokales Werkzeug fuer TikTok-Wachstum. Es liest Profil und Videos direkt
+von tiktok.com, rechnet Kennzahlen aus, verfolgt Follower ueber die Zeit und
+laesst eine KI daraus Strategie, Ideen, Captions, Hooks, Plaene und Hashtags
+schreiben.
+
+Drei Oberflaechen, ein gemeinsamer Kern:
+- Web-Dashboard (React, laeuft im Browser auf 127.0.0.1:8787)
+- Windows-Programm (Electron, portable .exe, startet den Server selbst)
+- Android-App (Kotlin, Compose, rechnet und speichert eigenstaendig)
+
+Alles ist lokal. Es gibt kein Benutzerkonto, keine Datenbank in der Cloud und
+keine Telemetrie. Nach aussen gehen nur zwei Dinge: Anfragen an tiktok.com und
+Anfragen an den KI-Anbieter, dessen Key der Nutzer selbst eintraegt.
+
+Das Projekt ist privat auf GitHub: arti1984-collab/tiktok-growth-lab
+
+
+2. TECHNIK
+----------
+Web/Server: Node 24, Express 4, TypeScript (tsx), React 19, Vite 7,
+handgeschriebenes CSS, keine UI-Bibliothek.
+Desktop: Electron 45, electron-builder (target portable), self-signed exe.
+Android: Kotlin, Jetpack Compose, Material 3 als Basis, org.json, minSdk 26.
+Speicher: JSON-Datei data/store.json (Web/Desktop), SharedPreferences (Android).
+
+Befehle (Projektwurzel):
+  npm start              Server auf 127.0.0.1:8787 starten (tsx, ohne Build)
+  npm run dev            Server mit Watch-Modus
+  npm run build          Vite-Build nach dist/
+  npm run build:server   Server fuer Electron nach build/server/index.mjs
+  npm run dist           Web + Server + portable exe nach release/ + Signatur
+  npm run typecheck      tsc --noEmit
+  Android: .tools/gradle-8.13/bin/gradle assembleRelease --no-daemon
+           APK danach aus android/app/build/outputs/apk/release/ kopieren
+
+
+3. AUFBAU
+---------
+server/
+  index.ts          Alle HTTP-Routen, Scan-Ablauf, KI-Aufruf, Watchlist
+  config.ts         ROOT, PORT, HOST, .env-Werte, APP_VERSION aus package.json
+  lib/tiktok.ts     Scraping: Profil, Video-Detail, item_list, Fehlerklassen
+  lib/metrics.ts    Kennzahlen, Score, Zeitfenster, Laengen, Hashtags, Ausreisser
+  lib/prompts.ts    AI_MODES, System- und Nutzerprompt je Modus, JSON-Schema
+  lib/ai.ts         OpenAI-kompatible Clients, Modellliste, Fehler mit Hinweis
+  lib/store.ts      Accounts, Snapshots, Einstellungen, atomares Schreiben
+  lib/http.ts       Anfragen mit Cache, Pausen, Browser-Kopfzeilen
+  lib/providers.ts  Vorschlaege fuer kostenlose Anbieter
+  lib/fsAtomic.ts   Schreiben ohne halbe Dateien
+
+src/
+  App.tsx           Rahmen: Kopfzeile, Reiter, Fusszeile, Statusabruf
+  views/            ScanView, WatchView, StudioView, SettingsView, TutorialView
+  components/       ui.tsx (Section, Stat, Badge, Spinner, Alert, Sparkline),
+                    JsonView.tsx (Antwort als lesbare Liste), 
+  textExport.ts     Antwort als formatierte .txt (Umbruch 88 Zeichen)
+  styles.css        Gesamtes Design, Tokens in :root
+  types.ts          Typen fuer Status, Scan, Metriken, KI-Antworten
+
+electron/main.mjs   Startet den gebauten Server, freier Port, eigenes Fenster,
+                    Datenordner %APPDATA%\TikTok Growth Lab\data
+
+android/app/src/main/java/de/artur/growthlab/
+  MainActivity.kt   Reiter, LabState (Einstellungen, Konten, Scan), NavGlyph
+  ui/Theme.kt       Farben und Schriften (Nachtstudio)
+  ui/Common.kt      CardBox, KpiTile, Pill, InsightRow, ScreenTitle, Formatierung
+  ui/ScanScreen.kt  Scan, Kennzahlen, Zeitfenster, Top-Videos
+  ui/GrowthScreen.kt Watchlist mit Verlauf
+  ui/StudioScreen.kt Modi, Anfrage, Antwort, Kopieren, Textdatei
+  ui/SettingsScreen.kt Anbieter, Basis-URL, Modell, Key, Datenherkunft
+  ui/TutorialScreen.kt Anleitung als Textseite
+  data/TikTok.kt    Scraping mit OkHttp
+  data/Metrics.kt   Kennzahlen wie im Server
+  data/Prompts.kt   Modi und Prompts
+  data/Ai.kt        KI-Aufruf, JSON-Extraktion
+  data/TextExport.kt Antwort als .txt
+  data/Store.kt     SharedPreferences, Snapshots
+
+PROJEKT-UEBERGABE.txt  Diese Datei.
+
+
+4. DATENFLUSS
+-------------
+Scan (Web/Desktop):
+  1. GET Profilseite, daraus secUid, Follower, Nickname, Avatar.
+  2. GET https://www.tiktok.com/api/creator/item_list/?aid=1988&secUid=...&type=1&count=15&cursor=0
+     Das ist der einzige Weg, der ohne Signatur funktioniert. post/item_list
+     liefert leer, deshalb nicht verwenden.
+  3. Optional einzelne Video-URLs ueber webapp.video-detail -> itemInfo.itemStruct.
+  4. computeMetrics rechnet lokal, Antwort geht an den Browser.
+  5. Bei aktivem Tracking landet ein Snapshot in data/store.json.
+
+Scan (Android): gleicher Ablauf in TikTok.kt mit OkHttp, ohne Server.
+
+KI-Aufruf:
+  POST /api/ai mit { mode, handle, payload }. Der Server baut System- und
+  Nutzerprompt, schickt sie an die konfigurierte Basis-URL und versucht, JSON
+  aus der Antwort zu loesen. Rueckgabe: { model, parsed, result }.
+  parsed=false heisst: kein reines JSON, die Antwort wird als Text angezeigt.
+
+Wichtige Routen (Details in server/index.ts):
+  GET  /api/status         Version, Zeitzone, KI-Zustand, Scraper-Zustand
+  POST /api/scan           Account scannen
+  GET  /api/last-scan      letzter Scan im Speicher (nach Neustart leer)
+  POST /api/ai             KI-Antwort erzeugen
+  GET  /api/ai/models      verfuegbare Modelle des Anbieters
+  GET/POST /api/watchlist  Account verfolgen, messen, entfernen
+  GET/POST /api/settings   Einstellungen lesen und schreiben
+
+
+5. OBERFLAECHEN UND IHRE PUNKTE
+-------------------------------
+Reiter im Web: Scan & Analyse, Wachstum, KI-Studio, Einstellungen, Anleitung.
+Reiter in Android: Scan, Wachstum, KI-Studio, Setup, Hilfe.
+Die Anleitung im Programm beschreibt jeden Punkt in beiden Oberflaechen; wer
+etwas umbaut, sollte sie mitziehen.
+
+Scan: Handle-Feld, optionale Video-Links, Scan starten, Score mit Messlatte,
+Kennzahlenkacheln, Hinweise aus den Daten, beste Zeitfenster, Videolaenge,
+Hashtag-Nutzung, Videoliste mit Link ins Original.
+
+Wachstum: Account hinzufuegen, alle messen, Delta 7 Tage, Delta seit erster
+Messung, Detailreihe mit allen Messpunkten, entfernen.
+
+KI-Studio: sieben Modi (strategy, audit, ideas, caption, hooks, calendar,
+hashtags). Eingaben: Thema, Nische, Tonalitaet, Ziel, Anzahl. Ergebnis als
+JSON, "Kopieren" und "Als Textdatei speichern". Der Hashtag-Bereich als eigene
+Karte wurde in 1.5.2 entfernt, Hashtags laufen ueber den Modus-Chip.
+
+Einstellungen: Anbieter-Karten (Google AI Studio, Groq, OpenRouter), Basis-URL,
+Modell, Key (wird nie zurueckgegeben), Pause zwischen Anfragen, Zeitzone,
+optional Cookie, Systemstatus mit Version aus package.json.
+
+
+6. DESIGN
+---------
+Nachtstudio: Grund #141210, Panel #1a1714, Creme #f3ebdd, Gold #d9a94c,
+2 px Radius, Haarlinien statt Schatten, Serifenzahlen, dichte Zahlenkolonnen.
+Keine Verlaeufe, keine Unschaerfe, keine Karten mit Schlagschatten.
+Deutsche Texte, kein Gedankenstrich als Stilmittel.
+Kontraste liegen ueber 6:1, Tap-Ziele auf dem Handy mindestens 44 px.
+
+
+7. VERSIONEN UND AENDERUNGEN
+----------------------------
+Jede Auslieferung erhoeht package.json (version) und
+android/app/build.gradle.kts (versionName und versionCode), bekommt einen Tag
+und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
+
+1.0.0  Grundfassung: Scannen, Kennzahlen, KI-Studio, Einstellungen, lokaler
+       JSON-Speicher.
+1.1.0  Desktop-Verpackung als portable exe, eigener Datenordner, Signatur.
+1.1.1  Fehlerbehebungen an Scan und Build. Details in der Release-Notiz.
+1.1.2  Fehlerbehebungen an Scan und Build. Details in der Release-Notiz.
+1.2.0  Videoliste kommt automatisch beim Scan (creator/item_list), Video-URL
+       als Spalte, Android gleichgezogen.
+1.3.0  Komplettes Redesign auf Nachtstudio, Score als Zahl mit Messlatte,
+       Web und Android.
+1.4.0  Modus hashtags plus eigener Hashtag-Bereich, Android-Datenschicht
+       erstmals versioniert, .gitignore von data/ auf /data/ verengt.
+1.5.0  Antworten als formatierte Textdatei speichern (Web und Android):
+       Ueberschriften je Block, zwei Leerzeichen Einzug, Umbruch bei 88
+       Zeichen, Dateiname mit Modus und Datum.
+1.5.1  /api/status liest die Version aus package.json statt fester 1.0.0,
+       deshalb zeigten die Einstellungen vorher immer 1.0.0.
+1.5.2  Doppelter Hashtag-Bereich entfernt: die eigene Karte unter dem
+       Formular fiel weg, Hashtags laufen ueber den Modus-Chip. HashtagPanel
+       und hashtags.css geloescht, Android HashtagSection entfernt.
+1.6.0  Anleitung als eigener Reiter (Web: Anleitung, Android: Hilfe) mit
+       Erklaerung jedes Punktes, und diese Uebergabedatei.
+
+
+8. BEKANNTE GRENZEN
+-------------------
+- Ohne Login hoechstens 15 Videos pro Account. Mehr nur mit Session-Cookie.
+- /api/last-scan ist leer, solange der Server nicht neu gestartet wurde.
+- Die Android-App hat keinen Export der Rohdaten und keine Verbindung zum
+  Desktop-Speicher; beide halten ihre Daten getrennt.
+- Downloads im eingebetteten Browserfenster von Werkzeugen wie diesem werden
+  teils verworfen. Das ist keine Eigenschaft der App: in der exe und im
+  normalen Browser speichert der Export regulaer.
+- Ohne API-Key antwortet das KI-Studio nicht, Scannen und Rechnen gehen ohne.
+
+
+9. REGELN IM PROJEKT (AGENTS.md)
+--------------------------------
+- Jede Aenderung an der Oberflaeche gilt fuer Desktop und Android. Danach
+  beide bauen, die Dateien im Release ersetzen, committen, pushen.
+- Jede Auslieferung bekommt eine hoehere Nummer, danach Tag und Release.
+- Sprache Deutsch, kein Gedankenstrich in eigener Textausgabe.
