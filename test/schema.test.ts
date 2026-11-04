@@ -2,17 +2,37 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { checkSchema } from "../server/lib/schema.ts";
 
-test("vollstaendige Strategie passt", () => {
-  const issues = checkSchema("strategy", {
-    diagnose: "x",
-    positionierung: {},
-    contentSaeulen: [{ name: "a", warum: "b" }],
-    hooks: ["h"],
-    postingPlan: [{ tag: "Montag", uhrzeit: "18:30", thema: "t", hook: "h" }],
-    hashtagStrategie: {},
-    kpiZiele: {},
-  });
-  assert.deepEqual(issues, []);
+const plan = Array.from({ length: 28 }, (_, index) => ({
+  woche: Math.floor(index / 7) + 1,
+  tag: "Montag",
+  uhrzeit: "18:30",
+  thema: "t",
+  hook: "h",
+}));
+
+const strategy = (postingPlan: unknown[]) => ({
+  diagnose: "x",
+  positionierung: {},
+  contentSaeulen: [{ name: "a", warum: "b" }],
+  hooks: ["h"],
+  postingPlan,
+  hashtagStrategie: {},
+  kpiZiele: {},
+});
+
+test("vollstaendige Strategie mit 28 Tagen passt", () => {
+  assert.deepEqual(checkSchema("strategy", strategy(plan)), []);
+});
+
+test("kurzer Plan wird als Hinweis gemeldet", () => {
+  const issues = checkSchema("strategy", strategy(plan.slice(0, 7)));
+  assert.ok(issues.some((issue) => issue.includes("28 Eintraegen")), issues.join(", "));
+});
+
+test("Plan-Eintrag ohne Woche wird benannt", () => {
+  const withoutWeek = plan.map((entry) => ({ ...entry, woche: undefined }));
+  const issues = checkSchema("strategy", strategy(withoutWeek));
+  assert.ok(issues.includes("postingPlan[0].woche fehlt"));
 });
 
 test("fehlende und falsche Felder werden benannt", () => {

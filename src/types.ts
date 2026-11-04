@@ -220,6 +220,8 @@ export type AiResponse = {
   issues?: string[];
   /** Datenlage, auf der die Antwort beruht. */
   guard?: { level: "thin" | "poor"; warning: string };
+  /** stop, length oder leer; length heisst abgeschnitten. */
+  finish?: string;
 };
 
 export type FreeModel = {

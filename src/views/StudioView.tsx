@@ -254,7 +254,13 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
           {response.mode === "calendar" && Array.isArray((response.result as { tage?: unknown })?.tage) ? (
             <WeekPlan days={(response.result as { tage: unknown[] }).tage} />
           ) : (
-            <JsonView data={response.result} />
+            <>
+              {response.mode === "strategy" &&
+                Array.isArray((response.result as { postingPlan?: unknown })?.postingPlan) && (
+                  <WeekPlan days={(response.result as { postingPlan: unknown[] }).postingPlan} />
+                )}
+              <JsonView data={response.result} />
+            </>
           )}
         </Section>
       )}
