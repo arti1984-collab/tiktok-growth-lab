@@ -9,6 +9,7 @@ object Store {
     private const val PREFS = "growthlab"
     private const val KEY_SETTINGS = "settings"
     private const val KEY_ACCOUNTS = "accounts"
+    private const val KEY_PLAN = "plan"
     private const val MAX_SNAPSHOTS = 200
 
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -117,6 +118,45 @@ object Store {
         }
         saveAccounts(context, accounts)
         return accounts
+    }
+
+    fun loadPlan(context: Context): List<PlanItem> {
+        val raw = prefs(context).getString(KEY_PLAN, null) ?: return emptyList()
+        return try {
+            val array = JSONArray(raw)
+            (0 until array.length()).mapNotNull { index ->
+                val node = array.optJSONObject(index) ?: return@mapNotNull null
+                PlanItem(
+                    id = node.optString("id", ""),
+                    date = node.optString("date", ""),
+                    time = node.optString("time", ""),
+                    note = node.optString("note", ""),
+                    status = node.optString("status", "planned"),
+                    videoUrl = node.optString("videoUrl", ""),
+                    createdAt = node.optLong("createdAt", 0),
+                )
+            }.filter { it.id.isNotBlank() && it.date.isNotBlank() }
+                .sortedBy { "${it.date} ${it.time}" }
+        } catch (error: Exception) {
+            emptyList()
+        }
+    }
+
+    fun savePlan(context: Context, items: List<PlanItem>) {
+        val array = JSONArray()
+        for (item in items) {
+            array.put(
+                JSONObject()
+                    .put("id", item.id)
+                    .put("date", item.date)
+                    .put("time", item.time)
+                    .put("note", item.note)
+                    .put("status", item.status)
+                    .put("videoUrl", item.videoUrl)
+                    .put("createdAt", item.createdAt),
+            )
+        }
+        prefs(context).edit().putString(KEY_PLAN, array.toString()).apply()
     }
 
     fun removeAccount(context: Context, handle: String): List<TrackedAccount> {

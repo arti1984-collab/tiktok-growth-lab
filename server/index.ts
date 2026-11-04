@@ -15,8 +15,12 @@ import {
 import { AI_MODES, generate, type AiMode, type AiPayload } from "./lib/prompts.ts";
 import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
 import {
+  addPlan,
   addSnapshot,
+  deletePlanEntry,
   effectiveSettings,
+  listPlan,
+  updatePlanEntry,
   listAccounts,
   publicSettings,
   trackAccount,
@@ -345,6 +349,27 @@ app.delete("/api/watchlist/:handle", (req, res) => {
   if (!removed)
     return res.status(404).json({ error: tr("Account ist nicht in der Watchlist.", "This account is not on the watchlist.") });
   res.json({ accounts: listAccounts().map(accountView) });
+});
+
+/* -------------------------------------------------------------------- plan */
+
+app.get("/api/plan", (_req, res) => {
+  res.json({ items: listPlan() });
+});
+
+app.post("/api/plan", (req, res) => {
+  const body = req.body ?? {};
+  const entries = Array.isArray(body.items) ? body.items : [body];
+  const cleaned = entries.filter((entry: unknown) => entry && typeof entry === "object") as Record<string, unknown>[];
+  res.json({ items: addPlan(cleaned) });
+});
+
+app.put("/api/plan/:id", (req, res) => {
+  res.json({ items: updatePlanEntry(req.params.id, (req.body ?? {}) as Record<string, never>) });
+});
+
+app.delete("/api/plan/:id", (req, res) => {
+  res.json({ items: deletePlanEntry(req.params.id) });
 });
 
 /* ---------------------------------------------------------------- settings */

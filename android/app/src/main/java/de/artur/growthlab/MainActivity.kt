@@ -40,6 +40,7 @@ import de.artur.growthlab.data.AiSettings
 import de.artur.growthlab.data.Lang
 import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.Metrics
+import de.artur.growthlab.data.PlanItem
 import de.artur.growthlab.data.Profile
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
@@ -77,6 +78,7 @@ class LabState(private val context: Context) {
     var settings by mutableStateOf(Store.loadSettings(context))
     var accounts by mutableStateOf(Store.loadAccounts(context))
     var scan by mutableStateOf<ScanResult?>(null)
+    var plan by mutableStateOf(Store.loadPlan(context))
     var busy by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
     var progress by mutableStateOf("")
@@ -93,6 +95,23 @@ class LabState(private val context: Context) {
 
     fun remove(handle: String) {
         accounts = Store.removeAccount(context, handle)
+    }
+
+    fun savePlan(next: List<PlanItem>) {
+        plan = next.sortedBy { "${it.date} ${it.time}" }
+        Store.savePlan(context, plan)
+    }
+
+    fun addPlan(items: List<PlanItem>) {
+        savePlan(plan + items)
+    }
+
+    fun updatePlan(item: PlanItem) {
+        savePlan(plan.map { if (it.id == item.id) item else it })
+    }
+
+    fun removePlan(id: String) {
+        savePlan(plan.filterNot { it.id == id })
     }
 
     fun reload() {

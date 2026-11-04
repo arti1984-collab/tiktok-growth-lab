@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 1.8.0, Branch main
+Stand: 04.11.2026, Version 1.9.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -198,6 +198,14 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        im Setup. Der Token liegt in data/store.json bzw. in den
        SharedPreferences und wird nur fuer diese eine Anfrage benutzt.
        Alternativ GITHUB_TOKEN in die .env schreiben.
+1.9.0  Wochenplan: Termine aus den besten Slots des letzten Scans
+       (drei starke Wochentage, je zu ihrer Stunde), ohne Scan zwei
+       Abende. Speicherung in data/store.json unter plan bzw. in den
+       SharedPreferences, Endpunkte GET/POST /api/plan und
+       PUT/DELETE /api/plan/:id. Jeder Termin hat Idee, Status und
+       Video-URL; steht die URL im letzten Scan, zeigt der Plan Views
+       und den Anteil am Median. Web in der Wachstumsansicht
+       (components/PlanCard.tsx), Android in ui/GrowthScreen.kt.
 
 
 8. BEKANNTE GRENZEN

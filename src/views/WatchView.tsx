@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import { formatCompact, formatDateTime, formatSigned, formatNumber } from "../format";
 import { useT } from "../lang";
-import type { Account } from "../types";
+import type { Account, ScanResult } from "../types";
+import { PlanCard } from "../components/PlanCard";
 import { Alert, EmptyState, Section, Sparkline, Spinner } from "../components/ui";
 import { AccountDetails, type MetricKey } from "../components/AccountDetails";
 
-export function WatchView() {
+export function WatchView({ scan }: { scan: ScanResult | null }) {
   const t = useT();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [handle, setHandle] = useState("");
@@ -73,6 +74,8 @@ export function WatchView() {
 
   return (
     <div className="stack">
+      <PlanCard scan={scan} />
+
       <Section
         title={t("Wachstums-Tracking", "Growth tracking")}
         subtitle={t(

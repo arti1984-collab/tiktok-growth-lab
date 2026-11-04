@@ -113,6 +113,18 @@ export type Status = {
   scraping: { minDelayMs: number; cookieSet: boolean; cacheEntries: number };
 };
 
+export type PlanStatus = "planned" | "done" | "skipped";
+
+export type PlanItem = {
+  id: string;
+  date: string;
+  time: string;
+  note: string;
+  status: PlanStatus;
+  videoUrl: string;
+  createdAt: number;
+};
+
 export type UpdateInfo = {
   current: string;
   latest: string | null;
