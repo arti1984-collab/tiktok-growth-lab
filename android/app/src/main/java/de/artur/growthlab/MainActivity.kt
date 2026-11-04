@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.artur.growthlab.data.AiSettings
@@ -129,6 +130,13 @@ fun Root(context: Context) {
         bottomBar = {
             Column {
                 DividerLine()
+                Text(
+                    "Version ${BuildConfig.VERSION_NAME}",
+                    fontSize = 9.sp,
+                    color = MutedColor,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 3.dp),
+                )
                 NavigationBar(
                     containerColor = BgColor,
                     tonalElevation = 0.dp,
