@@ -125,17 +125,29 @@ export type PlanItem = {
   createdAt: number;
 };
 
+/** Der Hintergrund-Download der neuen Windows-Datei. */
+export type UpdateDownload = {
+  state: "idle" | "downloading" | "ready" | "failed";
+  version: string | null;
+  received: number;
+  total: number;
+  percent: number;
+  file: string | null;
+  error: string | null;
+};
+
 export type UpdateInfo = {
   current: string;
   latest: string | null;
   updateAvailable: boolean;
   url: string | null;
   exe: string | null;
-  apk: string | null;
+  exeSize: number | null;
   notes: string;
   publishedAt: string | null;
   checkedAt: number;
   error: string | null;
+  download: UpdateDownload | null;
 };
 
 export type Snapshot = {

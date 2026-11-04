@@ -35,6 +35,7 @@ import { browserFallbackAvailable, browserProbe, cacheSize, clearCache } from ".
 import { PROVIDERS } from "./lib/providers.ts";
 import { setLang, tr } from "./lib/lang.ts";
 import { checkForUpdate, currentVersion } from "./lib/update.ts";
+import { downloadInfo, startDownload } from "./lib/updater.ts";
 
 const app = express();
 app.disable("x-powered-by");
@@ -150,9 +151,37 @@ app.get("/api/status", (_req, res) => {
 app.get(
   "/api/update",
   asyncHandler(async (req, res) => {
-    res.json(await checkForUpdate(req.query.force === "1"));
+    const info = await checkForUpdate(req.query.force === "1");
+    // Liegt eine hoehere Version bereit, laedt die App sie nebenbei selbst.
+    if (info.updateAvailable && info.latest && info.exe) {
+      startDownload(info.latest, info.exe, info.exeSize ?? 0);
+    }
+    res.json({ ...info, download: downloadInfo() });
   }),
 );
+
+/**
+ * Nur die Windows-App kann sich selbst ersetzen: sie tauscht die Datei beim
+ * Beenden und startet auf Wunsch gleich wieder. Im Browser gibt es dafuer
+ * keinen Empfaenger, dort bleibt der Download-Knopf.
+ */
+app.post("/api/update/restart", (_req, res) => {
+  const info = downloadInfo();
+  const bridge = (globalThis as { __tiktokUpdater?: { restart: (file: string, version: string) => void } })
+    .__tiktokUpdater;
+  if (!bridge || info.state !== "ready" || !info.file) {
+    res.status(409).json({
+      error: tr("Der automatische Neustart geht nur in der Windows-App.", "The automatic restart only works in the Windows app."),
+      hint: tr(
+        "Im Browser die neue Datei herunterladen und die App danach neu starten.",
+        "In the browser, download the new file and start the app again afterwards.",
+      ),
+    });
+    return;
+  }
+  bridge.restart(info.file, info.version ?? "");
+  res.json({ ok: true });
+});
 
 app.get("/api/version", (_req, res) => {
   res.json({ version: currentVersion() });

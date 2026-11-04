@@ -1,6 +1,8 @@
 import { app, BrowserWindow, Menu, dialog, shell } from "electron";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import net from "node:net";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -17,6 +19,40 @@ const ICON = path.join(ROOT, "build", "icon.ico");
 
 let mainWindow = null;
 let fallbackWindow = null;
+
+/** The portable .exe the user actually started, not the copy unpacked to %TEMP%. */
+const PORTABLE_EXE = (process.env.PORTABLE_EXECUTABLE_FILE || "").trim();
+
+let pendingUpdate = null;
+let restartRequested = false;
+let swapStarted = false;
+
+/**
+ * Waits until the running exe is no longer locked, copies the new file over it
+ * and starts it again when asked. Runs in its own cmd process, because a
+ * program cannot replace itself while it is still running.
+ */
+function startSwap(relaunch) {
+  if (swapStarted || !pendingUpdate) return;
+  swapStarted = true;
+  if (!app.isPackaged || !PORTABLE_EXE) {
+    log("update swap skipped: no portable exe");
+    return;
+  }
+  try {
+    const script = path.join(os.tmpdir(), `tiktok-growth-lab-update-${process.pid}.cmd`);
+    fs.copyFileSync(path.join(ROOT, "electron", "swap-update.cmd"), script);
+    const child = spawn("cmd.exe", ["/c", script, PORTABLE_EXE, pendingUpdate.file, relaunch ? "1" : "0"], {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+    });
+    child.unref();
+    log(`update swap queued version=${pendingUpdate.version} relaunch=${relaunch}`);
+  } catch (error) {
+    log(`update swap error: ${error?.message || error}`);
+  }
+}
 
 /**
  * The server falls back to this when TikTok answers with 403 or a captcha.
@@ -180,11 +216,26 @@ async function boot() {
   globalThis.__tiktokBrowser = { fetchPage: browserFetchPage };
 
   process.env.APP_ENV = "production";
+  process.env.APP_DESKTOP = app.isPackaged ? "1" : "0";
   process.env.APP_ROOT = ROOT;
   process.env.APP_DATA_DIR = DATA_DIR;
   process.env.HOST = "127.0.0.1";
   process.env.PORT = String(port);
   log(`start port=${port} packaged=${app.isPackaged} root=${ROOT}`);
+
+  // The server hands the downloaded file over here and asks for the restart.
+  globalThis.__tiktokUpdateReady = (file, version) => {
+    pendingUpdate = { file, version };
+    log(`update ready version=${version} file=${file}`);
+  };
+  globalThis.__tiktokUpdater = {
+    restart: (file, version) => {
+      pendingUpdate = { file, version };
+      restartRequested = true;
+      log(`update restart version=${version}`);
+      app.quit();
+    },
+  };
 
   try {
     await import(pathToFileURL(SERVER_ENTRY).href);
@@ -227,4 +278,6 @@ if (!app.requestSingleInstanceLock()) {
   app.on("before-quit", () => {
     if (fallbackWindow && !fallbackWindow.isDestroyed()) fallbackWindow.destroy();
   });
+  // Last chance: the new file is copied over the old one while the process ends.
+  app.on("will-quit", () => startSwap(restartRequested));
 }

@@ -29,6 +29,7 @@ export function SettingsView({
   const [busy, setBusy] = useState<string | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info" | "warn"; text: string } | null>(null);
 
   useEffect(() => {
@@ -51,6 +52,17 @@ export function SettingsView({
       .then(setUpdate)
       .catch(() => setUpdate(null));
   }, []);
+
+  // Solange die neue Datei laedt, zeigt die Karte den Fortschritt mit.
+  const downloadState = update?.download?.state ?? null;
+  const updateAvailable = update?.updateAvailable ?? false;
+  useEffect(() => {
+    if (!updateAvailable || downloadState === "ready") return;
+    const timer = window.setInterval(() => {
+      api.update().then(setUpdate).catch(() => undefined);
+    }, 2_000);
+    return () => window.clearInterval(timer);
+  }, [updateAvailable, downloadState]);
 
   useEffect(() => {
     if (settings?.hasApiKey) void loadModels(true);
@@ -142,6 +154,16 @@ export function SettingsView({
       setMessage({ kind: "error", text: (caught as ApiError).message });
     } finally {
       setCheckingUpdate(false);
+    }
+  }
+
+  async function restart() {
+    setRestarting(true);
+    try {
+      await api.restartUpdate();
+    } catch (caught) {
+      setRestarting(false);
+      setMessage({ kind: "error", text: (caught as ApiError).message });
     }
   }
 
@@ -256,16 +278,36 @@ export function SettingsView({
         {update && !update.error &&
           (update.updateAvailable ? (
             <Alert kind="info">
-              <strong>{t(`Version ${update.latest} ist verfügbar.`, `Version ${update.latest} is available.`)}</strong>
+              <strong>
+                {update.download?.state === "downloading"
+                  ? t(
+                      `Version ${update.latest} wird geladen, ${update.download.percent} %.`,
+                      `Version ${update.latest} is downloading, ${update.download.percent} %.`,
+                    )
+                  : update.download?.state === "ready"
+                    ? t(`Version ${update.latest} liegt bereit.`, `Version ${update.latest} is ready.`)
+                    : t(`Version ${update.latest} ist verfügbar.`, `Version ${update.latest} is available.`)}
+              </strong>
+              <p className="muted small" style={{ marginTop: 6 }}>
+                {update.download?.state === "ready"
+                  ? t(
+                      "Die neue Datei ersetzt die alte beim Beenden. Ein Neustart genügt.",
+                      "The new file replaces the old one when the app quits. A restart is enough.",
+                    )
+                  : t(
+                      "Die Datei lädt im Hintergrund. Danach genügt ein Neustart.",
+                      "The file downloads in the background. A restart is enough afterwards.",
+                    )}
+              </p>
               <div className="row gap-sm wrap" style={{ marginTop: 8 }}>
-                {update.exe && (
-                  <a className="btn btn-sm btn-primary" href={update.exe} target="_blank" rel="noreferrer">
-                    {t("Windows-Datei", "Windows file")}
-                  </a>
+                {update.download?.state === "ready" && (
+                  <button className="btn btn-sm btn-primary" onClick={() => void restart()} disabled={restarting}>
+                    {restarting ? t("Startet neu…", "Restarting…") : t("Jetzt neu starten", "Restart now")}
+                  </button>
                 )}
-                {update.apk && (
-                  <a className="btn btn-sm" href={update.apk} target="_blank" rel="noreferrer">
-                    {t("Android-Datei", "Android file")}
+                {update.exe && update.download?.state !== "ready" && (
+                  <a className="btn btn-sm" href={update.exe} target="_blank" rel="noreferrer">
+                    {t("Windows-Datei", "Windows file")}
                   </a>
                 )}
                 {update.url && (

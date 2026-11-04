@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.4.0, Branch main
+Stand: 04.11.2026, Version 2.5.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -197,6 +197,13 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.5.0  Update laedt sich selbst: /api/update startet im Hintergrund einen
+       Download der neuen exe nach data/updates/ (server/lib/updater.ts),
+       der Fortschritt steht als download-Feld in der Antwort. Die fertige
+       Datei wird an die Huelle gemeldet, die beim Beenden die alte exe
+       ersetzt und auf Wunsch neu startet (electron/main.mjs,
+       POST /api/update/restart). Leiste und Einstellungen zeigen Prozent,
+       danach "Jetzt neu starten". Version 2.5.0.
 2.4.0  KI-Antworten lesbar: extractJson repariert Komma vor der
        schliessenden Klammer und echte Zeilenumbrueche in Strings und
        rettet einzelne Listeneintraege, statt die ganze Antwort zu

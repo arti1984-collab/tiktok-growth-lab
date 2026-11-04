@@ -61,6 +61,9 @@ export const api = {
   /** Latest GitHub release compared to the running version. */
   update: (force = false) => request<UpdateInfo>(`/api/update${force ? "?force=1" : ""}`),
 
+  /** Quit and start again, so the downloaded file takes over. */
+  restartUpdate: () => request<{ ok: boolean }>("/api/update/restart", { method: "POST", body: JSON.stringify({}) }),
+
   scan: (payload: { handle: string; videoUrls: string[]; track: boolean }) =>
     request<ScanResult>("/api/scan", { method: "POST", body: JSON.stringify(payload) }),
 
