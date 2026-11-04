@@ -109,7 +109,7 @@ A scan reads the profile and the newest 15 videos from tiktok.com: views, likes,
 sound, hashtags and time. From that come the engagement rate, views per follower, median, posting cadence, a growth
 score from 0 to 100, the best time windows and automatically written recommendations.
 
-![Scan view with profile card, video check and metrics](docs/screenshots/scan.png)
+![Scan view with profile card, video check and metrics](docs/screenshots/scan-en.png)
 
 ### Video check
 Paste a single video URL and compare it with your median, your engagement, your length windows and your best times.
@@ -120,14 +120,14 @@ The scan finds your strong times, the plan turns them into real slots with an id
 posted, the number appears next to the slot. The goal calculator says how many followers, views and posts per week a
 target needs. The comparison puts two or three watchlist accounts side by side.
 
-![Growth view with weekly plan and goal calculator](docs/screenshots/wachstum.png)
+![Growth view with weekly plan and goal calculator](docs/screenshots/wachstum-en.png)
 
 ### AI studio
 Seven workbooks: 30-day strategy, profile audit, video ideas, captions, hooks, 7-day plan and hashtags. The AI works
 from the scraped numbers, not from generic advice. Any OpenAI-compatible provider works, Gemini, Groq and OpenRouter
 start free with your own key.
 
-![AI studio with its seven workbooks](docs/screenshots/studio.png)
+![AI studio with its seven workbooks](docs/screenshots/studio-en.png)
 
 ### Growth tracking
 Put accounts on a watchlist, every scan and every refresh adds a point to the history. Worth it because TikTok hands
@@ -142,7 +142,7 @@ German and English for the interface, the guide, number formats and the AI texts
 versions (checked against the GitHub releases, which needs a read-only token once). Planned posts show up as a bar
 and as a system message once they are due within the next two hours.
 
-![Settings with language, updates and the token field](docs/screenshots/einstellungen.png)
+![Settings with language, updates and the token field](docs/screenshots/einstellungen-en.png)
 
 ## Install
 
