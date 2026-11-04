@@ -240,7 +240,7 @@ function ValueChart({ series, format }: { series: { at: number; value: number }[
   return (
     <div className="chart-wrap">
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Verlauf">
-        <polygon points={area} fill={rising ? "rgba(55, 211, 153, 0.14)" : "rgba(242, 113, 113, 0.14)"} />
+        <polygon points={area} fill={rising ? "rgba(143, 191, 149, 0.14)" : "rgba(207, 133, 124, 0.14)"} />
         <polyline
           points={line}
           fill="none"

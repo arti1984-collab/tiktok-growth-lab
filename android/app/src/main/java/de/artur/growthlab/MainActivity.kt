@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,8 +41,14 @@ import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
 import de.artur.growthlab.data.TrackedAccount
 import de.artur.growthlab.ui.Accent
+import de.artur.growthlab.ui.BgColor
+import de.artur.growthlab.ui.DividerLine
+import de.artur.growthlab.ui.DisplayFont
 import de.artur.growthlab.ui.GrowthLabTheme
 import de.artur.growthlab.ui.GrowthScreen
+import de.artur.growthlab.ui.InkColor
+import de.artur.growthlab.ui.LineColor
+import de.artur.growthlab.ui.MutedColor
 import de.artur.growthlab.ui.ScanScreen
 import de.artur.growthlab.ui.SettingsScreen
 import de.artur.growthlab.ui.StudioScreen
@@ -92,42 +100,59 @@ fun Root(context: Context) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            Surface(color = MaterialTheme.colorScheme.background) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text("TikTok Growth Lab", fontSize = 19.sp, fontWeight = FontWeight.Bold)
+            Surface(color = BgColor) {
+                Column {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column {
+                            Text("TikTok Growth Lab", fontFamily = DisplayFont, fontSize = 20.sp, color = InkColor)
+                            Text(
+                                "Scraping + KI-Coach für mehr Reichweite",
+                                fontSize = 10.sp,
+                                color = MutedColor,
+                            )
+                        }
                         Text(
-                            "Scraping + KI-Coach für mehr Reichweite",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            if (state.settings.apiKey.isBlank()) "KI: kein Key" else "KI bereit",
+                            fontSize = 10.sp,
+                            color = if (state.settings.apiKey.isBlank()) MutedColor else Accent,
                         )
                     }
-                    Text(
-                        if (state.settings.apiKey.isBlank()) "KI: kein Key" else "KI bereit",
-                        fontSize = 11.sp,
-                        color = if (state.settings.apiKey.isBlank()) MaterialTheme.colorScheme.onSurfaceVariant else Accent,
-                    )
+                    DividerLine()
                 }
             }
         },
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                tabs.forEachIndexed { index, entry ->
-                    NavigationBarItem(
-                        selected = tab == index,
-                        onClick = { tab = index },
-                        icon = {
-                            NavGlyph(
-                                index = index,
-                                tint = if (tab == index) Accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        label = { Text(entry, fontSize = 10.sp, maxLines = 1) },
-                    )
+            Column {
+                DividerLine()
+                NavigationBar(
+                    containerColor = BgColor,
+                    tonalElevation = 0.dp,
+                    windowInsets = NavigationBarDefaults.windowInsets,
+                ) {
+                    tabs.forEachIndexed { index, entry ->
+                        NavigationBarItem(
+                            selected = tab == index,
+                            onClick = { tab = index },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Accent,
+                                selectedTextColor = InkColor,
+                                unselectedIconColor = MutedColor,
+                                unselectedTextColor = MutedColor,
+                                indicatorColor = LineColor,
+                            ),
+                            icon = {
+                                NavGlyph(
+                                    index = index,
+                                    tint = if (tab == index) Accent else MutedColor,
+                                )
+                            },
+                            label = { Text(entry, fontSize = 10.sp, maxLines = 1) },
+                        )
+                    }
                 }
             }
         },
