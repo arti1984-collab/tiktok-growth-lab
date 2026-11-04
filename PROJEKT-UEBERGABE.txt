@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.9.0, Branch main
+Stand: 04.11.2026, Version 2.10.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -60,7 +60,7 @@ server/
   lib/stats.ts      Zaehler fuer Scans, Rate-Limits, KI-Antworten
 
 test/               node:test gegen die reinen Server-Module
-  fixtures/         gespeicherte Profilseite und Videoliste fuer den Parser
+  fixtures/         Mitschnitte von Profil-, Videoseite und Videoliste
 .github/workflows/ci.yml  npm ci, typecheck, test, build bei jedem Push
 
 src/
@@ -209,6 +209,17 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.10.0 Fixtures aus einem echten Scan:
+       - Profilseite, Videoseite und Videoliste von @tiktok liegen als
+         gekuerzte Mitschnitte in test/fixtures/. Die Tests fahren damit
+         parseProfileHtml, parseVideoHtml und mapVideoItem.
+       - parseVideoHtml in server/lib/tiktok.ts trennt das Auswerten der
+         Videoseite vom Netz, getVideo nutzt es. Damit ist auch der
+         Video-Check gegen ein gespeichertes HTML abgesichert.
+       - Die von Hand gebauten Seiten bleiben als profile-messy.html und
+         item-list-messy.json, weil sie Faelle abdecken, die ein echter
+         Mitschnitt nicht enthaelt (Zahlen als String, fehlende Felder).
+       Version 2.10.0.
 2.9.0  Guardrails und gruendlichere Parser:
        - Datenlage steuert die KI: unter 70 Prozent sagt der Systemprompt,
          Empfehlungen als UNSICHER zu markieren, unter 40 Prozent antwortet

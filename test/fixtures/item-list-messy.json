@@ -1,0 +1,27 @@
+{
+  "statusCode": 0,
+  "itemList": [
+    {
+      "id": "7311111111111111111",
+      "desc": "Erster Test #tiktok",
+      "createTime": 1762300000,
+      "stats": { "playCount": 15200, "diggCount": 980, "commentCount": 41, "shareCount": 12, "collectCount": 30 },
+      "video": { "duration": 21, "cover": "https://p16-sign.example.com/cover1.jpg" },
+      "music": { "title": "original sound - testkonto", "original": true },
+      "author": { "uniqueId": "testkonto" },
+      "authorStats": { "followerCount": 1240 },
+      "challenges": [{ "title": "tiktok" }, { "title": "test" }]
+    },
+    {
+      "id": "7311111111111111112",
+      "desc": "",
+      "createTime": "1762200000",
+      "stats": { "playCount": "1200", "commentCount": "7", "shareCount": 0, "collectCount": 1 },
+      "video": { "duration": "18" },
+      "music": {},
+      "author": {},
+      "authorStats": {},
+      "challenges": []
+    }
+  ]
+}
