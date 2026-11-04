@@ -41,6 +41,11 @@ starten Gemini, Groq oder OpenRouter mit eigenem Key.
 
 ![KI-Studio mit den sieben Werkmappen](docs/screenshots/studio.png)
 
+Der 7-Tage-Plan liest sich als Ablauf statt als JSON: Tag, Uhrzeit, Thema, Hook, Format, Sound,
+Call-to-Action, Aufwand und Hashtags.
+
+![7-Tage-Plan als Wochenplan](docs/screenshots/wochenplan.png)
+
 ### Wachstums-Tracking
 Accounts in eine Watchlist legen, jeder Scan und jede Messung erzeugt einen Punkt im Verlauf. Sinnvoll, weil TikTok
 selbst keine Follower-Historie herausgibt: die Kurve entsteht aus den eigenen Messungen.
