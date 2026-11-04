@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.13.0, Branch main
+Stand: 04.11.2026, Version 2.14.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -211,6 +211,18 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.14.0 Compliance in der Anleitung:
+       - Neuer Abschnitt "Compliance" am Ende der Anleitung, Deutsch und
+         Englisch: alles laeuft lokal (kein Proxy, kein eigenes Backend),
+         gelesen werden nur oeffentliche TikTok-Seiten ohne Login, Pausen
+         zwischen den Requests gegen Drosselung, kein Bulk Export, Nutzung
+         auf eigene Verantwortung nach den TikTok-Nutzungsbedingungen.
+       - Dieselben Punkte stehen im README unter Grenzen/Limits und im
+         Datenschutz-Abschnitt.
+       - Der Punkt "Nach aussen" in der Anleitung nennt jetzt drei Ziele
+         (tiktok.com, KI-Anbieter, Update-Pruefung an api.github.com)
+         statt zwei.
+       Version 2.14.0.
 2.13.0 Knopf "Token pruefen" in der Update-Karte:
        - POST /api/update/token prueft mit dem eingetippten Token (sonst dem
          gespeicherten), ob das Release-Repo lesbar ist. Erst das Repo
