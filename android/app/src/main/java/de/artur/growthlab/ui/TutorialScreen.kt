@@ -76,6 +76,20 @@ private fun chapters(): List<Chapter> = listOf(
                 ),
             ),
             Point(
+                tr("Video-Check", "Video check"),
+                tr(
+                    "Ein einzelnes Video prüfen, auch von einem anderen Account: URL einwerfen und prüfen lassen. Daneben steht dein Median, dein Engagement, das Längenfenster und der beste Slot.",
+                    "Check a single video, including one from another account: paste the URL and let the app read it. Next to it sit your median, your engagement, the length window and the best slot.",
+                ),
+            ),
+            Point(
+                tr("Wochenbericht", "Weekly report"),
+                tr(
+                    "Follower, Score, Engagement, Views je Video, Posts pro Woche, die stärksten Videos und die Hinweise als Text. Bericht teilen schickt ihn in eine andere App, etwa Notizen oder Mail.",
+                    "Followers, score, engagement, views per video, posts per week, the strongest videos and the notes as text. Share report sends it to another app, for example notes or mail.",
+                ),
+            ),
+            Point(
                 tr("Grenze der Methode", "Limit of the method"),
                 tr(
                     "Ohne Login liefert TikTok höchstens die letzten 15 Videos. Mehr geht nur mit Session-Cookie in den Einstellungen.",
@@ -117,6 +131,27 @@ private fun chapters(): List<Chapter> = listOf(
                 tr(
                     "Die gespeicherte Reihe eines Accounts, damit Sprünge und Plateaus sichtbar werden.",
                     "The stored series of an account, so jumps and plateaus become visible.",
+                ),
+            ),
+            Point(
+                tr("Wochenplan", "Weekly plan"),
+                tr(
+                    "Zwei Abende oder drei Termine aus den besten Zeiten anlegen. Jeder Termin hat Datum, Uhrzeit und eine Idee, nach dem Posten trägst du die Video-URL ein, die dann gegen den Median gemessen wird.",
+                    "Plan two evenings or take three slots from your best times. Each slot has a date, a time and an idea, and after posting you add the video URL, which is then measured against your median.",
+                ),
+            ),
+            Point(
+                tr("Ziel-Rechner", "Goal calculator"),
+                tr(
+                    "Ziel-Follower und Datum eintragen, dann rechnet die App Follower pro Tag und Woche, Views pro Woche und Posts pro Woche aus, auf Basis deiner Views je Video.",
+                    "Enter target followers and a date, and the app works out followers per day and week, views per week and posts per week, based on your views per video.",
+                ),
+            ),
+            Point(
+                tr("Vergleich", "Comparison"),
+                tr(
+                    "Zwei bis drei Accounts nebeneinander: Follower, Gesamt-Zuwachs, Videos, Engagement, Score und Anzahl der Messpunkte.",
+                    "Two or three accounts side by side: followers, total gain, videos, engagement, score and the number of measurements.",
                 ),
             ),
             Point(
@@ -202,6 +237,20 @@ private fun chapters(): List<Chapter> = listOf(
                 tr(
                     "Liegt im privaten Speicher der App und wird nur an deinen Anbieter geschickt.",
                     "Lives in the private storage of the app and only goes to your provider.",
+                ),
+            ),
+            Point(
+                tr("Updates", "Updates"),
+                tr(
+                    "Nach Updates suchen fragt die Releases auf GitHub ab. Für das private Repo braucht es ein Token mit Lesezugriff. Der Hinweis erscheint danach oben in der App, installiert wird nichts von selbst.",
+                    "Check for updates asks the releases on GitHub. The private repo needs a read-only token for that. The notice then appears on top of the app, nothing installs itself.",
+                ),
+            ),
+            Point(
+                tr("Erinnerungen", "Reminders"),
+                tr(
+                    "Erlaubt das Handy Meldungen, erinnert die App zwei Stunden vor einem geplanten Termin. Zusätzlich steht die Leiste mit den fälligen Terminen oben in der App.",
+                    "If the phone allows notifications the app reminds you two hours before a planned slot. On top of that the bar with due slots stays at the top of the app.",
                 ),
             ),
             Point(
