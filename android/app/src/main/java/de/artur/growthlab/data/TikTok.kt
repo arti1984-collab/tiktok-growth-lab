@@ -47,18 +47,27 @@ object TikTok {
                 val body = response.body?.string().orEmpty()
                 if (response.isSuccessful) return@withContext body
                 when (response.code) {
-                    404 -> throw TikTokException("NOT_FOUND", "Diesen Account oder dieses Video gibt es nicht.")
+                    404 -> throw TikTokException(
+                        "NOT_FOUND",
+                        tr("Diesen Account oder dieses Video gibt es nicht.", "This account or video does not exist."),
+                    )
                     403 -> throw TikTokException(
                         "BLOCKED",
-                        "TikTok blockt die Anfrage (403).",
-                        "Öffne tiktok.com im Browser, löse ein Captcha und versuche es danach erneut.",
+                        tr("TikTok blockt die Anfrage (403).", "TikTok blocks the request (403)."),
+                        tr(
+                            "Öffne tiktok.com im Browser, löse ein Captcha und versuche es danach erneut.",
+                            "Open tiktok.com in a browser, solve a captcha and try again afterwards.",
+                        ),
                     )
                     429 -> throw TikTokException(
                         "RATE_LIMIT",
-                        "TikTok drosselt gerade die Anfragen.",
-                        "Warte ein bis zwei Minuten und starte den Scan erneut.",
+                        tr("TikTok drosselt gerade die Anfragen.", "TikTok is throttling the requests."),
+                        tr("Warte ein bis zwei Minuten und starte den Scan erneut.", "Wait one or two minutes and run the scan again."),
                     )
-                    else -> throw TikTokException("NETWORK", "TikTok antwortet mit HTTP ${response.code}.")
+                    else -> throw TikTokException(
+                        "NETWORK",
+                        tr("TikTok antwortet mit HTTP ${response.code}.", "TikTok answers with HTTP ${response.code}."),
+                    )
                 }
             }
         } catch (error: TikTokException) {
@@ -66,19 +75,22 @@ object TikTok {
         } catch (error: Exception) {
             throw TikTokException(
                 "NETWORK",
-                "Keine Verbindung zu TikTok.",
-                error.message?.take(140) ?: "Prüfe deine Internetverbindung.",
+                tr("Keine Verbindung zu TikTok.", "No connection to TikTok."),
+                error.message?.take(140) ?: tr("Prüfe deine Internetverbindung.", "Check your internet connection."),
             )
         }
     }
 
     fun normalizeHandle(raw: String): String {
         val input = raw.trim()
-        if (input.isEmpty()) throw TikTokException("NOT_FOUND", "Bitte einen TikTok-Namen eingeben.")
+        if (input.isEmpty()) throw TikTokException("NOT_FOUND", tr("Bitte einen TikTok-Namen eingeben.", "Please enter a TikTok name."))
         Regex("tiktok\\.com/@([A-Za-z0-9._]+)", RegexOption.IGNORE_CASE).find(input)?.let { return it.groupValues[1] }
         val cleaned = input.trimStart('@').split('?', '#', '/').first().trim()
         if (!Regex("^[A-Za-z0-9._]{2,24}$").matches(cleaned)) {
-            throw TikTokException("NOT_FOUND", "\"${input.take(40)}\" ist kein gültiger TikTok-Name.")
+            throw TikTokException(
+                "NOT_FOUND",
+                tr("\"${input.take(40)}\" ist kein gültiger TikTok-Name.", "\"${input.take(40)}\" is not a valid TikTok name."),
+            )
         }
         return cleaned
     }
@@ -94,13 +106,23 @@ object TikTok {
 
     suspend fun getProfile(rawHandle: String): Profile {
         val handle = normalizeHandle(rawHandle)
-        val html = fetch("https://www.tiktok.com/@$handle?lang=de")
+        val html = fetch("https://www.tiktok.com/@$handle?lang=${if (english()) "en" else "de"}")
         val scope = extractScope(html)
-            ?: throw TikTokException("PARSE", "TikTok hat für @$handle keine verwertbaren Daten geliefert.", "Prüfe den Namen.")
+            ?: throw TikTokException(
+                "PARSE",
+                tr("TikTok hat für @$handle keine verwertbaren Daten geliefert.", "TikTok returned no usable data for @$handle."),
+                tr("Prüfe den Namen.", "Check the name."),
+            )
         val detail = scope.optJSONObject("webapp.user-detail")
-            ?: throw TikTokException("NOT_FOUND", "@$handle existiert nicht oder ist gesperrt.")
+            ?: throw TikTokException(
+                "NOT_FOUND",
+                tr("@$handle existiert nicht oder ist gesperrt.", "@$handle does not exist or is blocked."),
+            )
         if (detail.optInt("statusCode", 0) != 0) {
-            throw TikTokException("NOT_FOUND", "@$handle existiert nicht oder ist gesperrt.")
+            throw TikTokException(
+                "NOT_FOUND",
+                tr("@$handle existiert nicht oder ist gesperrt.", "@$handle does not exist or is blocked."),
+            )
         }
         val info = detail.optJSONObject("userInfo") ?: JSONObject()
         val user = info.optJSONObject("user") ?: JSONObject()

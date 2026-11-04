@@ -1,3 +1,4 @@
+import { tr } from "./lang";
 import type { Account, AiMode, AiResponse, Provider, PublicSettings, ScanResult, Status } from "./types";
 
 export class ApiError extends Error {
@@ -19,7 +20,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
     });
   } catch {
-    throw new ApiError("Der lokale Server ist nicht erreichbar.", "Läuft `npm run dev` noch?");
+    throw new ApiError(
+      tr("Der lokale Server ist nicht erreichbar.", "The local server cannot be reached."),
+      tr("Läuft `npm run dev` noch?", "Is `npm run dev` still running?"),
+    );
   }
   const text = await response.text();
   let payload: unknown = null;
@@ -30,7 +34,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!response.ok) {
     const body = (payload ?? {}) as { error?: string; hint?: string; code?: string };
-    throw new ApiError(body.error ?? `Anfrage fehlgeschlagen (HTTP ${response.status}).`, body.hint ?? "", body.code ?? "");
+    throw new ApiError(
+      body.error ?? tr(`Anfrage fehlgeschlagen (HTTP ${response.status}).`, `Request failed (HTTP ${response.status}).`),
+      body.hint ?? "",
+      body.code ?? "",
+    );
   }
   return payload as T;
 }

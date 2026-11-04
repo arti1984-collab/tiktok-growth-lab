@@ -1,4 +1,5 @@
 import { HttpError, fetchHtml, fetchJson, limiter, sleep } from "./http.ts";
+import { tr } from "./lang.ts";
 
 const WEB = "https://www.tiktok.com";
 
@@ -83,50 +84,77 @@ function failFromResponse(html: string, subject: string): never {
   if (/ratelimit triggered/i.test(html.slice(0, 200))) {
     throw new TikTokError(
       "RATE_LIMIT",
-      "TikTok drosselt gerade (Rate-Limit).",
-      "Warte 1–2 Minuten und starte den Scan erneut, oder erhöhe den Anfrage-Abstand in den Einstellungen.",
+      tr("TikTok drosselt gerade (Rate-Limit).", "TikTok is throttling right now (rate limit)."),
+      tr(
+        "Warte 1–2 Minuten und starte den Scan erneut, oder erhöhe den Anfrage-Abstand in den Einstellungen.",
+        "Wait 1–2 minutes and start the scan again, or raise the request delay in the settings.",
+      ),
     );
   }
   if (/captcha|verify you are human|unusual traffic/i.test(html)) {
     throw new TikTokError(
       "BLOCKED",
-      "TikTok verlangt eine Bestätigung (Captcha).",
-      "Öffne tikTok.com im Browser, löse das Captcha und hinterlege die Cookies in den Einstellungen.",
+      tr("TikTok verlangt eine Bestätigung (Captcha).", "TikTok asks for a confirmation (captcha)."),
+      tr(
+        "Öffne tiktok.com im Browser, löse das Captcha und hinterlege die Cookies in den Einstellungen.",
+        "Open tiktok.com in a browser, solve the captcha and store the cookies in the settings.",
+      ),
     );
   }
   if (/couldn't find this account|account doesn't exist|nicht gefunden/i.test(html)) {
-    throw new TikTokError("NOT_FOUND", `${subject} existiert nicht.`);
+    throw new TikTokError("NOT_FOUND", tr(`${subject} existiert nicht.`, `${subject} does not exist.`));
   }
   throw new TikTokError(
     "PARSE",
-    `TikTok hat für ${subject} keine verwertbaren Daten geliefert.`,
-    "Prüfe den Namen/die URL, oder hinterlege Cookies in den Einstellungen.",
+    tr(
+      `TikTok hat für ${subject} keine verwertbaren Daten geliefert.`,
+      `TikTok returned no usable data for ${subject}.`,
+    ),
+    tr(
+      "Prüfe den Namen/die URL, oder hinterlege Cookies in den Einstellungen.",
+      "Check the name/URL, or store cookies in the settings.",
+    ),
   );
 }
 
 function wrapHttpError(error: unknown, subject: string): never {
   if (error instanceof TikTokError) throw error;
   if (error instanceof HttpError) {
-    if (error.status === 404) throw new TikTokError("NOT_FOUND", `${subject} existiert nicht.`);
+    if (error.status === 404)
+      throw new TikTokError("NOT_FOUND", tr(`${subject} existiert nicht.`, `${subject} does not exist.`));
     if (error.status === 403)
-      throw new TikTokError("BLOCKED", "TikTok blockt die Anfrage (403).", "Hinterlege Cookies in den Einstellungen.");
+      throw new TikTokError(
+        "BLOCKED",
+        tr("TikTok blockt die Anfrage (403).", "TikTok blocked the request (403)."),
+        tr("Hinterlege Cookies in den Einstellungen.", "Store cookies in the settings."),
+      );
     if (error.status === 429)
-      throw new TikTokError("RATE_LIMIT", "TikTok drosselt die Anfragen.", "Kurz warten und erneut versuchen.");
-    throw new TikTokError("NETWORK", error.message, "Prüfe die Internetverbindung.");
+      throw new TikTokError(
+        "RATE_LIMIT",
+        tr("TikTok drosselt die Anfragen.", "TikTok is throttling the requests."),
+        tr("Kurz warten und erneut versuchen.", "Wait a moment and try again."),
+      );
+    throw new TikTokError("NETWORK", error.message, tr("Prüfe die Internetverbindung.", "Check your internet connection."));
   }
-  throw new TikTokError("NETWORK", (error as Error).message || "Unbekannter Netzwerkfehler.");
+  throw new TikTokError(
+    "NETWORK",
+    (error as Error).message || tr("Unbekannter Netzwerkfehler.", "Unknown network error."),
+  );
 }
 
 export function normalizeHandle(raw: string): string {
   const input = String(raw ?? "").trim();
-  if (!input) throw new TikTokError("NOT_FOUND", "Bitte einen TikTok-Namen eingeben.");
+  if (!input) throw new TikTokError("NOT_FOUND", tr("Bitte einen TikTok-Namen eingeben.", "Please enter a TikTok name."));
 
   const fromUrl = input.match(/tiktok\.com\/@([A-Za-z0-9._]+)/i);
   if (fromUrl) return fromUrl[1];
 
   const cleaned = input.replace(/^@+/, "").split(/[?#/\s]/)[0];
   if (!/^[A-Za-z0-9._]{2,24}$/.test(cleaned)) {
-    throw new TikTokError("NOT_FOUND", `"${input.slice(0, 40)}" ist kein gültiger TikTok-Name.`);
+    throw new TikTokError(
+      "NOT_FOUND",
+      tr(`"${input.slice(0, 40)}" ist kein gültiger TikTok-Name.`, `"${input.slice(0, 40)}" is not a valid TikTok name.`),
+    );
   }
   return cleaned;
 }
@@ -147,7 +175,10 @@ export function parseVideoRef(raw: string): VideoRef {
   const idOnly = input.match(/^(\d{16,20})$/);
   if (idOnly) return { id: idOnly[1] };
 
-  throw new TikTokError("NOT_FOUND", `Kein TikTok-Video-Link: ${input.slice(0, 60)}`);
+  throw new TikTokError(
+    "NOT_FOUND",
+    tr(`Kein TikTok-Video-Link: ${input.slice(0, 60)}`, `Not a TikTok video link: ${input.slice(0, 60)}`),
+  );
 }
 
 async function resolveShortLink(code: string): Promise<{ handle: string; id: string }> {
@@ -158,14 +189,18 @@ async function resolveShortLink(code: string): Promise<{ handle: string; id: str
   const finalUrl = response.url || "";
   const match = finalUrl.match(/@([A-Za-z0-9._]+)\/(?:video|photo)\/(\d+)/i);
   if (match) return { handle: match[1], id: match[2] };
-  throw new TikTokError("NOT_FOUND", "Der Kurzlink ließ sich nicht auflösen.", "Nutze den vollständigen Video-Link.");
+  throw new TikTokError(
+    "NOT_FOUND",
+    tr("Der Kurzlink ließ sich nicht auflösen.", "The short link could not be resolved."),
+    tr("Nutze den vollständigen Video-Link.", "Use the full video link instead."),
+  );
 }
 
 export async function getProfile(rawHandle: string): Promise<Profile> {
   const handle = normalizeHandle(rawHandle);
   let html: string;
   try {
-    html = await fetchHtml(`${WEB}/@${encodeURIComponent(handle)}?lang=de`);
+    html = await fetchHtml(`${WEB}/@${encodeURIComponent(handle)}?lang=${tr("de", "en")}`);
   } catch (error) {
     wrapHttpError(error, `@${handle}`);
   }
@@ -175,7 +210,10 @@ export async function getProfile(rawHandle: string): Promise<Profile> {
 
   const statusCode = toNumber(detail!.statusCode);
   if (statusCode !== 0) {
-    throw new TikTokError("NOT_FOUND", `@${handle} existiert nicht oder ist gesperrt.`);
+    throw new TikTokError(
+      "NOT_FOUND",
+      tr(`@${handle} existiert nicht oder ist gesperrt.`, `@${handle} does not exist or is blocked.`),
+    );
   }
 
   const info = (detail!.userInfo ?? {}) as Json;
@@ -212,8 +250,11 @@ export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT
   if (!profile.secUid) {
     throw new TikTokError(
       "PARSE",
-      "Dieses Profil liefert keine secUid.",
-      "Starte den Scan erneut. Bleibt es dabei, ist das Profil gesperrt oder privat.",
+      tr("Dieses Profil liefert keine secUid.", "This profile returns no secUid."),
+      tr(
+        "Starte den Scan erneut. Bleibt es dabei, ist das Profil gesperrt oder privat.",
+        "Start the scan again. If it stays like this, the profile is blocked or private.",
+      ),
     );
   }
 
@@ -226,15 +267,21 @@ export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT
   try {
     payload = await fetchJson<{ itemList?: Json[]; statusCode?: number }>(url, profile.url);
   } catch (error) {
-    wrapHttpError(error, `die Videoliste von @${profile.handle}`);
+    wrapHttpError(error, tr(`die Videoliste von @${profile.handle}`, `the video list of @${profile.handle}`));
   }
 
   const items = Array.isArray(payload!.itemList) ? payload!.itemList! : [];
   if (items.length === 0) {
     throw new TikTokError(
       "PARSE",
-      `TikTok liefert für @${profile.handle} gerade keine Videoliste.`,
-      "Private Konten liefern keine Videos. Sonst später erneut scannen oder Links einfügen.",
+      tr(
+        `TikTok liefert für @${profile.handle} gerade keine Videoliste.`,
+        `TikTok is returning no video list for @${profile.handle} right now.`,
+      ),
+      tr(
+        "Private Konten liefern keine Videos. Sonst später erneut scannen oder Links einfügen.",
+        "Private accounts return no videos. Otherwise scan again later or add links.",
+      ),
     );
   }
   return items.map((item) => mapVideo(item, profile.handle)).filter((video) => video.id);
@@ -273,20 +320,24 @@ function mapVideo(item: Json, fallbackHandle: string): Video {
 }
 
 export async function getVideo(handle: string, id: string): Promise<Video> {
-  const url = `${WEB}/@${encodeURIComponent(handle)}/video/${id}?lang=de`;
+  const url = `${WEB}/@${encodeURIComponent(handle)}/video/${id}?lang=${tr("de", "en")}`;
   let html: string;
   try {
     html = await fetchHtml(url, `${WEB}/@${handle}`);
   } catch (error) {
-    wrapHttpError(error, `das Video ${id}`);
+    wrapHttpError(error, tr(`das Video ${id}`, `video ${id}`));
   }
   const scope = extractScope(html!);
   const detail = scope?.["webapp.video-detail"] as Json | undefined;
-  if (!detail) failFromResponse(html!, `das Video ${id}`);
+  if (!detail) failFromResponse(html!, tr(`das Video ${id}`, `video ${id}`));
 
   const item = ((detail!.itemInfo ?? {}) as Json).itemStruct as Json | undefined;
   if (!item) {
-    throw new TikTokError("NOT_FOUND", "TikTok liefert zu diesem Video keine Daten.", "Ist das Video noch online?");
+    throw new TikTokError(
+      "NOT_FOUND",
+      tr("TikTok liefert zu diesem Video keine Daten.", "TikTok returns no data for this video."),
+      tr("Ist das Video noch online?", "Is the video still online?"),
+    );
   }
   return mapVideo(item, handle);
 }
@@ -312,8 +363,11 @@ export async function getVideoFromInput(raw: string): Promise<Video> {
   }
   throw new TikTokError(
     "NOT_FOUND",
-    `Zu ${ref.id} fehlt der Creator-Name.`,
-    "Kopiere den vollständigen Link, z. B. https://www.tiktok.com/@name/video/123…",
+    tr(`Zu ${ref.id} fehlt der Creator-Name.`, `The creator name is missing for ${ref.id}.`),
+    tr(
+      "Kopiere den vollständigen Link, z. B. https://www.tiktok.com/@name/video/123…",
+      "Copy the full link, for example https://www.tiktok.com/@name/video/123…",
+    ),
   );
 }
 
@@ -329,11 +383,16 @@ export async function scrapeVideos(
     try {
       videos.push(await getVideoFromInput(unique[index]));
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unbekannter Fehler";
+      const message = error instanceof Error ? error.message : tr("Unbekannter Fehler", "Unknown error");
       warnings.push(`${unique[index].slice(0, 70)} → ${message}`);
       if (error instanceof TikTokError && error.code === "RATE_LIMIT") {
         // stop hammering, the remaining links would fail as well
-        warnings.push("Scan abgebrochen: TikTok drosselt. Bitte später erneut versuchen.");
+        warnings.push(
+          tr(
+            "Scan abgebrochen: TikTok drosselt. Bitte später erneut versuchen.",
+            "Scan stopped: TikTok is throttling. Please try again later.",
+          ),
+        );
         break;
       }
       await sleep(300);

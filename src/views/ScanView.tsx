@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "../api";
-import { awayFromNow, formatCompact, formatDate, formatDecimal, formatDuration, formatNumber, formatPercent, WEEKDAYS } from "../format";
+import { awayFromNow, formatCompact, formatDate, formatDecimal, formatDuration, formatNumber, formatPercent, weekdayName } from "../format";
+import { useT } from "../lang";
 import type { AiMode, ScanResult, Status } from "../types";
 import { Alert, Badge, EmptyState, ProgressBar, Section, Spinner, Stat } from "../components/ui";
 
@@ -15,6 +16,7 @@ export function ScanView({
   onOpenStudio: (mode: AiMode) => void;
   status: Status | null;
 }) {
+  const t = useT();
   const [handle, setHandle] = useState("");
   const [videoInput, setVideoInput] = useState("");
   const [track, setTrack] = useState(true);
@@ -51,7 +53,7 @@ export function ScanView({
       onScan(result);
     } catch (caught) {
       const apiError = caught as ApiError;
-      setError({ message: apiError.message ?? "Scan fehlgeschlagen.", hint: apiError.hint ?? "" });
+      setError({ message: apiError.message ?? t("Scan fehlgeschlagen.", "Scan failed."), hint: apiError.hint ?? "" });
     } finally {
       setLoading(false);
     }
@@ -63,23 +65,26 @@ export function ScanView({
   return (
     <div className="stack">
       <Section
-        title="Account scannen"
-        subtitle="Liest Profil und Post-Performance direkt von tiktok.com – ohne Login."
+        title={t("Account scannen", "Scan an account")}
+        subtitle={t(
+          "Liest Profil und Post-Performance direkt von tiktok.com – ohne Login.",
+          "Reads the profile and post performance straight from tiktok.com, no login needed.",
+        )}
       >
         <form className="scan-form" onSubmit={submit}>
           <div className="grid-two">
             <label className="field">
-              <span>TikTok-Name oder Profil-URL</span>
+              <span>{t("TikTok-Name oder Profil-URL", "TikTok name or profile URL")}</span>
               <input
                 value={handle}
                 onChange={(event) => setHandle(event.target.value)}
-                placeholder="@deinaccount oder https://www.tiktok.com/@deinaccount"
+                placeholder={t("@deinaccount oder https://www.tiktok.com/@deinaccount", "@youraccount or https://www.tiktok.com/@youraccount")}
                 spellCheck={false}
                 required
               />
             </label>
             <label className="field">
-              <span>Video-Links (optional, je Zeile einer)</span>
+              <span>{t("Video-Links (optional, je Zeile einer)", "Video links (optional, one per line)")}</span>
               <textarea
                 value={videoInput}
                 onChange={(event) => setVideoInput(event.target.value)}
@@ -88,8 +93,10 @@ export function ScanView({
                 spellCheck={false}
               />
               <small className="muted">
-                {videoUrls.length} Link(s) zusätzlich. Die neuesten 15 Videos liest der Scan selbst von TikTok, hier nur
-                ältere Videos einfügen (in TikTok: Video → Teilen → Link kopieren).
+                {t(
+                  `${videoUrls.length} Link(s) zusätzlich. Die neuesten 15 Videos liest der Scan selbst von TikTok, hier nur ältere Videos einfügen (in TikTok: Video → Teilen → Link kopieren).`,
+                  `${videoUrls.length} extra link(s). The scan reads the newest 15 videos from TikTok itself, so only add older videos here (in TikTok: video → share → copy link).`,
+                )}
               </small>
             </label>
           </div>
@@ -97,17 +104,25 @@ export function ScanView({
           <div className="row space-between wrap gap">
             <label className="checkbox">
               <input type="checkbox" checked={track} onChange={(event) => setTrack(event.target.checked)} />
-              <span>In Wachstums-Tracking aufnehmen</span>
+              <span>{t("In Wachstums-Tracking aufnehmen", "Add to growth tracking")}</span>
             </label>
             <button className="btn btn-primary" type="submit" disabled={loading || !handle.trim()}>
-              {loading ? <Spinner label={`Scanne… ${elapsed}s`} /> : "Jetzt analysieren"}
+              {loading ? <Spinner label={`${t("Scanne…", "Scanning…")} ${elapsed}s`} /> : t("Jetzt analysieren", "Analyse now")}
             </button>
           </div>
 
           {loading && (
             <p className="muted small">
-              TikTok erlaubt nur eine Anfrage alle {formatDecimal(((status?.scraping.minDelayMs ?? 1200) / 1000), 1)} s –
-              geschätzte Dauer: ca. {estimatedSeconds} s. Bitte offen lassen.
+              {t(
+                `TikTok erlaubt nur eine Anfrage alle ${formatDecimal(
+                  (status?.scraping.minDelayMs ?? 1200) / 1000,
+                  1,
+                )} s – geschätzte Dauer: ca. ${estimatedSeconds} s. Bitte offen lassen.`,
+                `TikTok allows one request every ${formatDecimal(
+                  (status?.scraping.minDelayMs ?? 1200) / 1000,
+                  1,
+                )} s, so this takes about ${estimatedSeconds} s. Please leave it open.`,
+              )}
             </p>
           )}
         </form>
@@ -122,8 +137,11 @@ export function ScanView({
 
       {!scan && !loading && (
         <EmptyState
-          title="Noch keine Analyse"
-          text="Ein Name genügt: Der Scan liest Profil und die neuesten 15 Videos mit Views, Likes, Kommentaren, Shares, Saves und Uhrzeiten direkt von tiktok.com. Für ältere Videos kannst du zusätzlich Links einfügen."
+          title={t("Noch keine Analyse", "No analysis yet")}
+          text={t(
+            "Ein Name genügt: Der Scan liest Profil und die neuesten 15 Videos mit Views, Likes, Kommentaren, Shares, Saves und Uhrzeiten direkt von tiktok.com. Für ältere Videos kannst du zusätzlich Links einfügen.",
+            "A name is enough: the scan reads the profile and the newest 15 videos with views, likes, comments, shares, saves and times straight from tiktok.com. For older videos you can add links as well.",
+          )}
         />
       )}
 
@@ -135,8 +153,8 @@ export function ScanView({
               <div className="profile-text">
                 <div className="row gap-sm center wrap">
                   <h2>{profile.nickname}</h2>
-                  {profile.verified && <Badge tone="info">verifiziert</Badge>}
-                  {profile.privateAccount && <Badge tone="warn">privat</Badge>}
+                  {profile.verified && <Badge tone="info">{t("verifiziert", "verified")}</Badge>}
+                  {profile.privateAccount && <Badge tone="warn">{t("privat", "private")}</Badge>}
                   {profile.region && <Badge>{profile.region}</Badge>}
                 </div>
                 <a className="muted" href={profile.url} target="_blank" rel="noreferrer">
@@ -144,18 +162,26 @@ export function ScanView({
                 </a>
                 {profile.bio && <p className="bio">{profile.bio}</p>}
                 <div className="row gap-sm wrap small muted">
-                  <span>{formatCompact(profile.followers)} Follower</span>
+                  <span>
+                    {formatCompact(profile.followers)} {t("Follower", "followers")}
+                  </span>
                   <span>·</span>
-                  <span>{formatNumber(profile.videos)} Videos</span>
+                  <span>
+                    {formatNumber(profile.videos)} {t("Videos", "videos")}
+                  </span>
                   <span>·</span>
-                  <span>{formatCompact(profile.hearts)} Likes gesamt</span>
+                  <span>
+                    {formatCompact(profile.hearts)} {t("Likes gesamt", "likes in total")}
+                  </span>
                   <span>·</span>
-                  <span>gescannt in {formatDecimal(scan.durationMs / 1000, 1)} s</span>
+                  <span>
+                    {t("gescannt in", "scanned in")} {formatDecimal(scan.durationMs / 1000, 1)} s
+                  </span>
                 </div>
               </div>
               <div className="score-box">
                 <span className="score-value">{metrics.score ?? "–"}</span>
-                <span className="score-label">Growth-Score von 100</span>
+                <span className="score-label">{t("Growth-Score von 100", "growth score out of 100")}</span>
                 <div className="score-meter" aria-hidden>
                   <span style={{ width: `${Math.max(0, Math.min(100, metrics.score ?? 0))}%` }} />
                 </div>
@@ -165,7 +191,7 @@ export function ScanView({
 
           {scan.warnings.length > 0 && (
             <Alert kind="warn">
-              <strong>Hinweise zum Scan</strong>
+              <strong>{t("Hinweise zum Scan", "Notes on the scan")}</strong>
               <ul className="tight">
                 {scan.warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
@@ -177,20 +203,40 @@ export function ScanView({
           {metrics.hasData ? (
             <>
               <div className="stat-grid">
-                <Stat label="Engagement-Rate" value={formatPercent(metrics.engagementRate)} hint="Benchmark 4,5 %" tone={(metrics.engagementRate ?? 0) >= 4.5 ? "good" : "warn"} />
-                <Stat label="Ø Views" value={formatCompact(metrics.avgViews)} hint={`Median ${formatCompact(metrics.medianViews)}`} />
                 <Stat
-                  label="Views / Follower"
+                  label={t("Engagement-Rate", "Engagement rate")}
+                  value={formatPercent(metrics.engagementRate)}
+                  hint={t("Benchmark 4,5 %", "benchmark 4.5%")}
+                  tone={(metrics.engagementRate ?? 0) >= 4.5 ? "good" : "warn"}
+                />
+                <Stat label={t("Ø Views", "Ø views")} value={formatCompact(metrics.avgViews)} hint={`${t("Median", "median")} ${formatCompact(metrics.medianViews)}`} />
+                <Stat
+                  label={t("Views / Follower", "Views / follower")}
                   value={formatDecimal(metrics.viewsPerFollower, 2)}
-                  hint={(metrics.viewsPerFollower ?? 0) >= 1 ? "For-You-Reichweite aktiv" : "viel Follower-Reichweite"}
+                  hint={
+                    (metrics.viewsPerFollower ?? 0) >= 1
+                      ? t("For-You-Reichweite aktiv", "reaching the For You feed")
+                      : t("viel Follower-Reichweite", "mostly follower reach")
+                  }
                   tone={(metrics.viewsPerFollower ?? 0) >= 1 ? "good" : "warn"}
                 />
-                <Stat label="Posts / Woche" value={formatDecimal(metrics.postsPerWeek, 1)} hint={`Ø ${formatDuration(metrics.avgDuration ?? 0)} pro Video`} />
-                <Stat label="Saves" value={formatPercent(metrics.saveRate)} hint="stärkstes Reichweiten-Signal" tone="accent" />
-                <Stat label="Shares" value={formatPercent(metrics.shareRate)} hint={`${metrics.outliers.count} Ausreißer nach oben`} />
+                <Stat
+                  label={t("Posts / Woche", "Posts / week")}
+                  value={formatDecimal(metrics.postsPerWeek, 1)}
+                  hint={`Ø ${formatDuration(metrics.avgDuration ?? 0)} ${t("pro Video", "per video")}`}
+                />
+                <Stat label={t("Saves", "Saves")} value={formatPercent(metrics.saveRate)} hint={t("stärkstes Reichweiten-Signal", "strongest reach signal")} tone="accent" />
+                <Stat
+                  label={t("Shares", "Shares")}
+                  value={formatPercent(metrics.shareRate)}
+                  hint={t(`${metrics.outliers.count} Ausreißer nach oben`, `${metrics.outliers.count} outliers above the median`)}
+                />
               </div>
 
-              <Section title="Was die Daten sagen" subtitle="Automatisch berechnet aus den gescrapten Videos">
+              <Section
+                title={t("Was die Daten sagen", "What the data says")}
+                subtitle={t("Automatisch berechnet aus den gescrapten Videos", "Calculated automatically from the scraped videos")}
+              >
                 <div className="insight-list">
                   {metrics.insights.map((insight) => (
                     <div className={`insight insight-${insight.kind}`} key={insight.title}>
@@ -205,15 +251,15 @@ export function ScanView({
               </Section>
 
               <div className="grid-two">
-                <Section title="Beste Zeitfenster" subtitle={`Zeitzone ${scan.timezone}`}>
+                <Section title={t("Beste Zeitfenster", "Best time windows")} subtitle={`${t("Zeitzone", "Timezone")} ${scan.timezone}`}>
                   {metrics.bestSlots.length === 0 ? (
-                    <p className="muted small">Keine Uhrzeiten berechenbar.</p>
+                    <p className="muted small">{t("Keine Uhrzeiten berechenbar.", "No times can be calculated.")}</p>
                   ) : (
                     <ul className="slot-list">
                       {metrics.bestSlots.map((slot) => (
                         <li key={`${slot.weekday}-${slot.hour}`}>
                           <span className="slot-time">
-                            {WEEKDAYS[slot.weekday - 1]} · {String(slot.hour).padStart(2, "0")}:00
+                            {weekdayName(slot.weekday - 1)} · {String(slot.hour).padStart(2, "0")}:00
                           </span>
                           <span className="slot-bar">
                             <ProgressBar value={slot.avgViews} max={metrics.bestSlots[0].avgViews} />
@@ -225,7 +271,7 @@ export function ScanView({
                   )}
                 </Section>
 
-                <Section title="Videolänge" subtitle="Ø Views je Längen-Fenster">
+                <Section title={t("Videolänge", "Video length")} subtitle={t("Ø Views je Längen-Fenster", "Ø views per length window")}>
                   <ul className="slot-list">
                     {metrics.durationBuckets.map((bucket) => (
                       <li key={bucket.label}>
@@ -237,12 +283,14 @@ export function ScanView({
                       </li>
                     ))}
                   </ul>
-                  <p className="muted small">Durchschnittliche Videolänge: {formatDuration(metrics.avgDuration)}</p>
+                  <p className="muted small">
+                    {t("Durchschnittliche Videolänge", "Average video length")}: {formatDuration(metrics.avgDuration)}
+                  </p>
                 </Section>
               </div>
 
               {metrics.hashtags.length > 0 && (
-                <Section title="Hashtags im Einsatz" subtitle="Nutzung und durchschnittliche Views">
+                <Section title={t("Hashtags im Einsatz", "Hashtags in use")} subtitle={t("Nutzung und durchschnittliche Views", "Usage and average views")}>
                   <div className="chip-row">
                     {metrics.hashtags.map((tag) => (
                       <span className="chip chip-data" key={tag.tag}>
@@ -257,54 +305,63 @@ export function ScanView({
               )}
 
               <Section
-                title="Top-Videos"
-                subtitle={`${scan.videos.length} Videos gescrapt · bewertet gegen Median ${formatCompact(metrics.medianViews)} Views`}
-                actions={<button className="btn btn-ghost" onClick={() => onOpenStudio("audit")}>KI-Audit starten</button>}
+                title={t("Top-Videos", "Top videos")}
+                subtitle={t(
+                  `${scan.videos.length} Videos gescrapt · bewertet gegen Median ${formatCompact(metrics.medianViews)} Views`,
+                  `${scan.videos.length} videos scraped · compared to the median of ${formatCompact(metrics.medianViews)} views`,
+                )}
+                actions={
+                  <button className="btn btn-ghost" onClick={() => onOpenStudio("audit")}>
+                    {t("KI-Audit starten", "Run AI audit")}
+                  </button>
+                }
               >
                 <div className="video-list">
                   {metrics.topVideos.map((video) => (
                     <a className="video-row" href={video.url} target="_blank" rel="noreferrer" key={video.id}>
                       {video.thumbnail ? <img src={video.thumbnail} alt="" referrerPolicy="no-referrer" /> : <div className="thumb" />}
                       <div className="video-text">
-                        <span className="video-desc">{video.desc || "(ohne Caption)"}</span>
+                        <span className="video-desc">{video.desc || t("(ohne Caption)", "(no caption)")}</span>
                         <span className="muted small">
                           {formatDate(video.createdAt)} · {awayFromNow(video.createdAt)} · {formatDuration(video.durationSec)}
                         </span>
                       </div>
                       <div className="video-numbers">
                         <strong>{formatCompact(video.views)}</strong>
-                        <span className="muted small">Views</span>
+                        <span className="muted small">{t("Views", "views")}</span>
                       </div>
                       <div className="video-numbers">
                         <strong>{formatPercent(video.engagementRate)}</strong>
-                        <span className="muted small">Engagement</span>
+                        <span className="muted small">{t("Engagement", "engagement")}</span>
                       </div>
                       <div className="video-numbers">
                         <strong className={video.multipleOfMedian >= 2 ? "text-good" : ""}>{formatDecimal(video.multipleOfMedian, 1)}×</strong>
-                        <span className="muted small">vs. Median</span>
+                        <span className="muted small">{t("vs. Median", "vs. median")}</span>
                       </div>
                     </a>
                   ))}
                 </div>
               </Section>
 
-              <Section title="Alle gescrapten Videos" subtitle="Rohdaten direkt aus TikTok" className="collapsible">
+              <Section title={t("Alle gescrapten Videos", "All scraped videos")} subtitle={t("Rohdaten direkt aus TikTok", "Raw data straight from TikTok")} className="collapsible">
                 <details>
-                  <summary>Tabellenansicht ({scan.videos.length})</summary>
+                  <summary>
+                    {t("Tabellenansicht", "Table view")} ({scan.videos.length})
+                  </summary>
                   <div className="table-scroll">
                     <table>
                       <thead>
                         <tr>
-                          <th>Datum</th>
+                          <th>{t("Datum", "Date")}</th>
                           <th>Caption</th>
                           <th className="right">Views</th>
                           <th className="right">Likes</th>
-                          <th className="right">Kommentare</th>
+                          <th className="right">{t("Kommentare", "Comments")}</th>
                           <th className="right">Shares</th>
                           <th className="right">Saves</th>
-                          <th className="right">Länge</th>
+                          <th className="right">{t("Länge", "Length")}</th>
                           <th>Sound</th>
-                          <th>Video-URL</th>
+                          <th>{t("Video-URL", "Video URL")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -315,7 +372,7 @@ export function ScanView({
                               <td className="nowrap">{formatDate(video.createdAt)}</td>
                               <td>
                                 <a href={video.url} target="_blank" rel="noreferrer">
-                                  {(video.desc || "(ohne Caption)").slice(0, 70)}
+                                  {(video.desc || t("(ohne Caption)", "(no caption)")).slice(0, 70)}
                                 </a>
                               </td>
                               <td className="right">{formatNumber(video.views)}</td>
@@ -324,7 +381,9 @@ export function ScanView({
                               <td className="right">{formatNumber(video.shares)}</td>
                               <td className="right">{formatNumber(video.saves)}</td>
                               <td className="right">{formatDuration(video.durationSec)}</td>
-                              <td className="nowrap">{video.originalSound ? "Originalton" : video.music || "–"}</td>
+                              <td className="nowrap">
+                                {video.originalSound ? t("Originalton", "original sound") : video.music || "–"}
+                              </td>
                               <td className="nowrap small">
                                 <a href={video.url} target="_blank" rel="noreferrer">
                                   {video.url.replace("https://www.tiktok.com/", "")}
@@ -338,19 +397,19 @@ export function ScanView({
                 </details>
               </Section>
 
-              <Section title="KI-Coach" subtitle="Arbeitet mit diesen echten Zahlen">
+              <Section title={t("KI-Coach", "AI coach")} subtitle={t("Arbeitet mit diesen echten Zahlen", "Works with these real numbers")}>
                 <div className="row gap wrap">
                   <button className="btn btn-primary" onClick={() => onOpenStudio("strategy")}>
-                    30-Tage-Strategie
+                    {t("30-Tage-Strategie", "30-day strategy")}
                   </button>
                   <button className="btn" onClick={() => onOpenStudio("ideas")}>
-                    Video-Ideen
+                    {t("Video-Ideen", "Video ideas")}
                   </button>
                   <button className="btn" onClick={() => onOpenStudio("calendar")}>
-                    7-Tage-Plan
+                    {t("7-Tage-Plan", "7-day plan")}
                   </button>
                   <button className="btn" onClick={() => onOpenStudio("audit")}>
-                    Profil-Audit
+                    {t("Profil-Audit", "Profile audit")}
                   </button>
                   <button className="btn" onClick={() => onOpenStudio("hooks")}>
                     Hooks
@@ -358,23 +417,28 @@ export function ScanView({
                 </div>
                 {status && !status.ai.configured && (
                   <Alert kind="info">
-                    Für die KI-Funktionen fehlt noch ein API-Key. Alle Messwerte oben kommen ohne KI direkt aus den TikTok-Daten.
+                    {t(
+                      "Für die KI-Funktionen fehlt noch ein API-Key. Alle Messwerte oben kommen ohne KI direkt aus den TikTok-Daten.",
+                      "The AI features still need an API key. Every metric above comes straight from the TikTok data, no AI involved.",
+                    )}
                   </Alert>
                 )}
               </Section>
             </>
           ) : (
-            <Section title="Keine Videos geliefert" subtitle="Profil-Stats oben sind live von TikTok">
+            <Section title={t("Keine Videos geliefert", "No videos returned")} subtitle={t("Profil-Stats oben sind live von TikTok", "The profile stats above are live from TikTok")}>
               <p className="muted">
-                TikTok hat für dieses Profil keine Videoliste herausgegeben. Bei einem privaten Konto bleibt es beim Profil.
-                Sonst starte den Scan später erneut oder füge einzelne Video-Links oben ein.
+                {t(
+                  "TikTok hat für dieses Profil keine Videoliste herausgegeben. Bei einem privaten Konto bleibt es beim Profil. Sonst starte den Scan später erneut oder füge einzelne Video-Links oben ein.",
+                  "TikTok returned no video list for this profile. A private account stays at the profile. Otherwise run the scan again later or paste single video links above.",
+                )}
               </p>
               <div className="row gap wrap">
                 <button className="btn btn-primary" onClick={() => onOpenStudio("strategy")}>
-                  Trotzdem Strategie erstellen
+                  {t("Trotzdem Strategie erstellen", "Build a strategy anyway")}
                 </button>
                 <button className="btn" onClick={() => onOpenStudio("ideas")}>
-                  Video-Ideen generieren
+                  {t("Video-Ideen generieren", "Generate video ideas")}
                 </button>
               </div>
             </Section>

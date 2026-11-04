@@ -6,17 +6,31 @@ import java.util.Locale
 /** Builds the same prompts the desktop app sends, grounded in the scanned numbers. */
 object Prompts {
 
-    val MODES = listOf(
-        "strategy" to "30-Tage-Strategie",
-        "audit" to "Profil-Audit",
-        "ideas" to "Video-Ideen",
-        "caption" to "Captions",
-        "hooks" to "Hooks",
-        "calendar" to "7-Tage-Plan",
-        "hashtags" to "Hashtags",
-    )
+    val MODES: List<Pair<String, String>>
+        get() = listOf(
+            "strategy" to tr("30-Tage-Strategie", "30-day strategy"),
+            "audit" to tr("Profil-Audit", "Profile audit"),
+            "ideas" to tr("Video-Ideen", "Video ideas"),
+            "caption" to "Captions",
+            "hooks" to "Hooks",
+            "calendar" to tr("7-Tage-Plan", "7-day plan"),
+            "hashtags" to "Hashtags",
+        )
 
-    private const val SYSTEM = """Du bist ein TikTok-Growth-Stratege für den DACH-Markt.
+    /** Der Systemprompt folgt der eingestellten Sprache; die JSON-Felder bleiben gleich. */
+    private fun system(): String = if (english()) {
+        """You are a TikTok growth strategist for the German-speaking market.
+You know the 2026 TikTok algorithm: watch time and retention in the first 3 seconds matter most, then shares, saves, comments and
+completion rate; follower conversion comes from recognition, recurring formats and a clear profile promise.
+Rules:
+- Answer exclusively in English.
+- Answer with valid JSON only, exactly in the given schema. No markdown, no explanations outside the JSON.
+- Work with the scraped data you receive. Never invent numbers.
+- Be radically concrete: real hooks, real times of day, real captions. No filler like "be authentic".
+- Every tip must be doable in a TikTok video without buying equipment.
+- The JSON keys stay as given; every text value inside them is in English, including weekdays."""
+    } else {
+        """Du bist ein TikTok-Growth-Stratege für den DACH-Markt.
 Du kennst den TikTok-Algorithmus 2026: Watchtime und Retention in den ersten 3 Sekunden zählen am meisten, danach Shares, Saves,
 Kommentare und Completion-Rate; Follower-Conversion entsteht über Wiedererkennung, Serienformate und klare Profil-Versprechen.
 Regeln:
@@ -25,6 +39,7 @@ Regeln:
 - Arbeite mit den gelieferten, gescrapten Daten. Erfinde keine Zahlen.
 - Sei radikal konkret: echte Hooks, echte Uhrzeiten, echte Captions. Keine Floskeln wie "sei authentisch".
 - Jeder Tipp muss in einem TikTok-Video umsetzbar sein, ohne Equipment-Käufe."""
+    }
 
     private val SCHEMAS = mapOf(
         "strategy" to """{
@@ -95,7 +110,7 @@ Regeln:
         }
         val profile = scan.profile
         val metrics = scan.metrics
-        val nf = NumberFormat.getIntegerInstance(Locale.GERMANY)
+        val nf = NumberFormat.getIntegerInstance(Language.locale)
         val lines = mutableListOf<String>()
         lines.add(
             "PROFIL: @${profile.handle} (${profile.nickname}) · ${profile.followers} Follower · ${profile.videos} Videos · ${profile.hearts} Likes gesamt · verifiziert: ${if (profile.verified) "ja" else "nein"}",
@@ -151,7 +166,13 @@ Regeln:
             appendLine(instruction(mode))
             appendLine()
             appendLine("ANGABEN DES NUTZERS:")
-            appendLine(if (topic.isBlank()) "Keine weiteren Angaben – leite alles aus dem Kontext ab." else "Konkretes Thema/Video: $topic")
+            appendLine(
+                if (topic.isBlank()) {
+                    tr("Keine weiteren Angaben – leite alles aus dem Kontext ab.", "No further details, derive everything from the context.")
+                } else {
+                    tr("Konkretes Thema/Video: $topic", "Specific topic/video: $topic")
+                },
+            )
             appendLine()
             appendLine("GESCRAPTE TIKTOK-DATEN:")
             appendLine(context(scan))
@@ -159,6 +180,6 @@ Regeln:
             appendLine("AUSGABE-SCHEMA (nur dieses JSON, keine Kommentare):")
             append(SCHEMAS[mode] ?: "{}")
         }
-        return SYSTEM to user
+        return system() to user
     }
 }

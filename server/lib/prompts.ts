@@ -1,5 +1,10 @@
 import { chat, extractJson } from "./ai.ts";
 import { WEEKDAYS, type Metrics } from "./metrics.ts";
+import { getLang, tr } from "./lang.ts";
+
+const WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const weekdayLabel = (weekday: number): string =>
+  (getLang() === "en" ? WEEKDAYS_EN : WEEKDAYS)[weekday - 1] ?? String(weekday);
 import type { Profile, Video } from "./tiktok.ts";
 
 export const AI_MODES = ["strategy", "audit", "ideas", "caption", "hooks", "calendar", "hashtags"] as const;
@@ -16,7 +21,14 @@ export type AiPayload = {
 
 export type ScanContext = { profile: Profile; videos: Video[]; metrics: Metrics };
 
-const SYSTEM_PROMPT = `Du bist ein TikTok-Growth-Stratege für den DACH-Markt (Deutschland, Österreich, Schweiz).
+/**
+ * Der Systemprompt richtet sich nach der eingestellten Sprache. Die Feldnamen
+ * im JSON bleiben gleich, damit die Oberfläche und der Export sie weiter
+ * zuordnen können; nur die Inhalte wechseln die Sprache.
+ */
+function systemPrompt(): string {
+  return tr(
+    `Du bist ein TikTok-Growth-Stratege für den DACH-Markt (Deutschland, Österreich, Schweiz).
 Du kennst den TikTok-Algorithmus 2026: Watchtime und Retention in den ersten 3 Sekunden zählen am meisten, danach Shares, Saves,
 Kommentare und Completion-Rate; Follower-Conversion entsteht über Wiedererkennung, Serienformate und klare Profil-Versprechen.
 Regeln:
@@ -25,7 +37,20 @@ Regeln:
 - Arbeite mit den gelieferten, gescrapten Daten. Erfinde keine Zahlen. Wenn Daten fehlen, sag es im dafür vorgesehenen Feld.
 - Sei radikal konkret: echte Hooks in natürlicher Sprache, echte Uhrzeiten, echte Captions. Keine Floskeln wie "sei authentisch".
 - Jeder Tipp muss in einem TikTok-Video umsetzbar sein, ohne Equipment-Käufe.
-- Zahlen in JSON-Feldern als echte Zahlen, keine Strings mit Einheiten.`;
+- Zahlen in JSON-Feldern als echte Zahlen, keine Strings mit Einheiten.`,
+    `You are a TikTok growth strategist for the German-speaking market (Germany, Austria, Switzerland).
+You know the 2026 TikTok algorithm: watch time and retention in the first 3 seconds matter most, then shares, saves, comments and
+completion rate; follower conversion comes from recognition, recurring formats and a clear profile promise.
+Rules:
+- Answer exclusively in English.
+- Answer with valid JSON only, exactly in the given schema. No markdown, no explanations outside the JSON.
+- Work with the scraped data you receive. Never invent numbers. If data is missing, say so in the field meant for it.
+- Be radically concrete: real hooks in natural language, real times of day, real captions. No filler like "be authentic".
+- Every tip must be doable in a TikTok video without buying equipment.
+- The JSON keys stay as given; every text value inside them is in English, including weekdays.
+- Numbers in JSON fields are real numbers, not strings with units.`,
+  );
+}
 
 function contextBlock(context: ScanContext | undefined): string {
   if (!context) {
@@ -59,7 +84,7 @@ function contextBlock(context: ScanContext | undefined): string {
     if (metrics.bestSlots.length > 0) {
       lines.push(
         `- Beste Zeitfenster: ${metrics.bestSlots
-          .map((slot) => `${WEEKDAYS[slot.weekday - 1]} ${slot.hour}:00 (Ø ${slot.avgViews} Views, ${slot.posts} Posts)`)
+          .map((slot) => `${weekdayLabel(slot.weekday)} ${slot.hour}:00 (Ø ${slot.avgViews} Views, ${slot.posts} Posts)`)
           .join(" · ")}`,
       );
     }
@@ -202,7 +227,7 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
 
   const { text, model, usage } = await chat(
     [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt() },
       { role: "user", content: userPrompt },
     ],
     { json: true, temperature: mode === "hooks" || mode === "ideas" ? 0.85 : 0.7 },

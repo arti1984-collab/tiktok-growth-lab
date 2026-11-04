@@ -1,4 +1,5 @@
 import type { Profile, Video } from "./tiktok.ts";
+import { locale, tr } from "./lang.ts";
 
 export type VideoSummary = {
   id: string;
@@ -58,9 +59,17 @@ export type Metrics = {
 };
 
 const WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
-const nf = new Intl.NumberFormat("de-DE");
-const compact = new Intl.NumberFormat("de-DE", { notation: "compact", maximumFractionDigits: 1 });
-const percent = (value: number) => value.toFixed(1).replace(".", ",");
+const WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const weekdayName = (weekday: number): string =>
+  (locale() === "en-US" ? WEEKDAYS_EN : WEEKDAYS)[weekday - 1] ?? String(weekday);
+const nf = () => new Intl.NumberFormat(locale());
+const compact = () => new Intl.NumberFormat(locale(), { notation: "compact", maximumFractionDigits: 1 });
+/** Fertiges Prozentzeichen inklusive Schreibweise: "4,5 %" oder "4.5%". */
+const percent = (value: number) =>
+  new Intl.NumberFormat(locale(), { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value / 100);
+const decimal = (value: number, digits = 2) =>
+  new Intl.NumberFormat(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
 
 const median = (values: number[]): number => {
   if (values.length === 0) return 0;
@@ -206,8 +215,11 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
       insights: [
         {
           kind: "info",
-          title: "Noch keine Post-Daten",
-          text: `Füge 5–30 Video-Links von @${profile.handle} hinzu, damit Engagement, beste Posting-Zeiten und Formate berechnet werden können.`,
+          title: tr("Noch keine Post-Daten", "No post data yet"),
+          text: tr(
+            `Füge 5–30 Video-Links von @${profile.handle} hinzu, damit Engagement, beste Posting-Zeiten und Formate berechnet werden können.`,
+            `Add 5–30 video links for @${profile.handle} so engagement, best posting times and formats can be calculated.`,
+          ),
         },
       ],
     };
@@ -304,45 +316,87 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
     const bestSlot = slots[0];
     insights.push({
       kind: "info",
-      title: "Bestes Zeitfenster",
-      text: `Deine stärksten Posts laufen ${WEEKDAYS[best.weekday - 1]} (Ø ${compact.format(best.avgViews)} Views).${
-        bestSlot ? ` Bestes Einzel-Zeitfenster: ${WEEKDAYS[bestSlot.weekday - 1]} um ${bestSlot.hour}:00 Uhr – Ø ${compact.format(bestSlot.avgViews)} Views aus ${bestSlot.posts} ${bestSlot.posts === 1 ? "Post" : "Posts"}.` : ""
-      }`,
+      title: tr("Bestes Zeitfenster", "Best time window"),
+      text: tr(
+        `Deine stärksten Posts laufen ${weekdayName(best.weekday)} (Ø ${compact().format(best.avgViews)} Views).${
+          bestSlot
+            ? ` Bestes Einzel-Zeitfenster: ${weekdayName(bestSlot.weekday)} um ${bestSlot.hour}:00 Uhr – Ø ${compact().format(
+                bestSlot.avgViews,
+              )} Views aus ${bestSlot.posts} ${bestSlot.posts === 1 ? "Post" : "Posts"}.`
+            : ""
+        }`,
+        `Your strongest posts run on ${weekdayName(best.weekday)} (Ø ${compact().format(best.avgViews)} views).${
+          bestSlot
+            ? ` Best single window: ${weekdayName(bestSlot.weekday)} at ${bestSlot.hour}:00, Ø ${compact().format(
+                bestSlot.avgViews,
+              )} views from ${bestSlot.posts} post${bestSlot.posts === 1 ? "" : "s"}.`
+            : ""
+        }`,
+      ),
     });
   }
 
-  const erVerdict =
-    engagementRate >= 8 ? "sehr stark" : engagementRate >= 4.5 ? "solide" : engagementRate >= 2 ? "ausbaufähig" : "kritisch niedrig";
+  const erVerdict = tr(
+    engagementRate >= 8 ? "sehr stark" : engagementRate >= 4.5 ? "solide" : engagementRate >= 2 ? "ausbaufähig" : "kritisch niedrig",
+    engagementRate >= 8 ? "very strong" : engagementRate >= 4.5 ? "solid" : engagementRate >= 2 ? "room to grow" : "critically low",
+  );
   insights.push({
     kind: engagementRate >= 4.5 ? "good" : "warn",
-    title: `Engagement-Rate ${percent(engagementRate)} % – ${erVerdict}`,
-    text: `Likes ${percent(likeRate)} % · Kommentare ${percent(commentRate)} % · Shares ${percent(shareRate)} % · Saves ${percent(saveRate)} % (Benchmark: 4,5 % gesamt). Shares und Saves sind 2026 die stärksten Reichweiten-Signale – hier lohnt Optimierung am meisten.`,
+    title: tr(`Engagement-Rate ${percent(engagementRate)} – ${erVerdict}`, `Engagement rate ${percent(engagementRate)} – ${erVerdict}`),
+    text: tr(
+      `Likes ${percent(likeRate)} · Kommentare ${percent(commentRate)} · Shares ${percent(shareRate)} · Saves ${percent(saveRate)} (Benchmark: 4,5 % gesamt). Shares und Saves sind 2026 die stärksten Reichweiten-Signale – hier lohnt Optimierung am meisten.`,
+      `Likes ${percent(likeRate)} · comments ${percent(commentRate)} · shares ${percent(shareRate)} · saves ${percent(saveRate)} (benchmark: 4.5% overall). Shares and saves are the strongest reach signals in 2026, so this is where tuning pays off most.`,
+    ),
   });
 
-  const reachVerdict =
-    viewsPerFollower >= 2 ? "Du hast echte Reichweite über deine Follower hinaus." : viewsPerFollower >= 1 ? "Solide – der For You Feed greift." : "Deine Videos laufen vor allem im eigenen Follower-Kreis.";
+  const reachVerdict = tr(
+    viewsPerFollower >= 2
+      ? "Du hast echte Reichweite über deine Follower hinaus."
+      : viewsPerFollower >= 1
+        ? "Solide – der For You Feed greift."
+        : "Deine Videos laufen vor allem im eigenen Follower-Kreis.",
+    viewsPerFollower >= 2
+      ? "You reach well beyond your own followers."
+      : viewsPerFollower >= 1
+        ? "Solid – the For You feed is picking it up."
+        : "Your videos mostly run inside your own follower circle.",
+  );
   insights.push({
     kind: viewsPerFollower >= 1 ? "good" : "warn",
-    title: `${viewsPerFollower.toFixed(2).replace(".", ",")} Views pro Follower`,
-    text: `Ø ${compact.format(avgViews)} Views bei ${compact.format(profile.followers)} Followern. ${reachVerdict}`,
+    title: tr(`${decimal(viewsPerFollower)} Views pro Follower`, `${decimal(viewsPerFollower)} views per follower`),
+    text: tr(
+      `Ø ${compact().format(avgViews)} Views bei ${compact().format(profile.followers)} Followern. ${reachVerdict}`,
+      `Ø ${compact().format(avgViews)} views with ${compact().format(profile.followers)} followers. ${reachVerdict}`,
+    ),
   });
 
   if (postsPerWeek !== null && avgDaysBetweenPosts !== null) {
     const pause = daysSinceLastPost !== null && daysSinceLastPost > 14;
     insights.push({
       kind: pause ? "warn" : postsPerWeek >= 2 ? "good" : "info",
-      title: `Rhythmus: ${postsPerWeek.toFixed(1).replace(".", ",")} Posts/Woche`,
-      text: `Ø alle ${avgDaysBetweenPosts.toFixed(1).replace(".", ",")} Tage ein Post. ${
-        daysSinceLastPost !== null ? `Letzter Post vor ${Math.round(daysSinceLastPost)} Tagen.` : ""
-      } ${pause ? "Lange Pausen kosten Reichweite – plane lieber kleine, regelmäßige Uploads." : ""}`,
+      title: tr(`Rhythmus: ${decimal(postsPerWeek, 1)} Posts/Woche`, `Cadence: ${decimal(postsPerWeek, 1)} posts/week`),
+      text: tr(
+        `Ø alle ${decimal(avgDaysBetweenPosts, 1)} Tage ein Post. ${
+          daysSinceLastPost !== null ? `Letzter Post vor ${Math.round(daysSinceLastPost)} Tagen.` : ""
+        } ${pause ? "Lange Pausen kosten Reichweite – plane lieber kleine, regelmäßige Uploads." : ""}`,
+        `One post every ${decimal(avgDaysBetweenPosts, 1)} days on average. ${
+          daysSinceLastPost !== null ? `Last post ${Math.round(daysSinceLastPost)} days ago.` : ""
+        } ${pause ? "Long breaks cost reach, so plan small, regular uploads instead." : ""}`,
+      ),
     });
   }
 
   if (medianViews > 0) {
     insights.push({
       kind: outlierVideos.length > 0 ? "good" : "info",
-      title: `${outlierVideos.length} von ${sampleSize} Videos laufen überdurchschnittlich`,
-      text: `Dein bestes Video läuft ${bestMultiple.toFixed(1).replace(".", ",")}× so gut wie der Median (${compact.format(medianViews)} Views). Analysiere genau diese Videos und baue Serien daraus.`,
+      title: tr(
+        `${outlierVideos.length} von ${sampleSize} Videos laufen überdurchschnittlich`,
+        `${outlierVideos.length} of ${sampleSize} videos beat the average`,
+      ),
+      text: tr(
+        `Dein bestes Video läuft ${decimal(bestMultiple, 1)}× so gut wie der Median (${compact().format(medianViews)} Views). Analysiere genau diese Videos und baue Serien daraus.`,
+        `Your best video does ${decimal(bestMultiple, 1)}× the median (${compact().format(medianViews)} views). Study exactly those videos and turn them into series.`,
+      ),
     });
   }
 
@@ -350,8 +404,11 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
   if (bestBucket) {
     insights.push({
       kind: "info",
-      title: `Längen-Fenster: ${bestBucket.label}`,
-      text: `In diesem Fenster holst du Ø ${compact.format(bestBucket.avgViews)} Views (${bestBucket.posts} Videos). Videos unter 3 Sekunden Hook-Retention verlieren – prüfe bei Flops die ersten 2 Sekunden.`,
+      title: tr(`Längen-Fenster: ${bestBucket.label}`, `Length window: ${bestBucket.label}`),
+      text: tr(
+        `In diesem Fenster holst du Ø ${compact().format(bestBucket.avgViews)} Views (${bestBucket.posts} Videos). Videos unter 3 Sekunden Hook-Retention verlieren – prüfe bei Flops die ersten 2 Sekunden.`,
+        `This window brings Ø ${compact().format(bestBucket.avgViews)} views (${bestBucket.posts} videos). Videos that lose hook retention under 3 seconds drop off, so check the first 2 seconds of every flop.`,
+      ),
     });
   }
 
@@ -359,19 +416,37 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
     const topTag = hashtags[0];
     insights.push({
       kind: "info",
-      title: "Hashtag-Nutzung",
-      text: `Am häufigsten: #${topTag.tag} (${topTag.posts}×, Ø ${compact.format(topTag.avgViews)} Views). Ø ${hookSignals.avgHashtags.toFixed(1).replace(".", ",")} Hashtags pro Video – 3 bis 5 passende Tags (Nische + Reichweite) reichen.`,
+      title: tr("Hashtag-Nutzung", "Hashtag usage"),
+      text: tr(
+        `Am häufigsten: #${topTag.tag} (${topTag.posts}×, Ø ${compact().format(topTag.avgViews)} Views). Ø ${decimal(
+          hookSignals.avgHashtags,
+          1,
+        )} Hashtags pro Video – 3 bis 5 passende Tags (Nische + Reichweite) reichen.`,
+        `Most used: #${topTag.tag} (${topTag.posts}×, Ø ${compact().format(topTag.avgViews)} views). Ø ${decimal(
+          hookSignals.avgHashtags,
+          1,
+        )} hashtags per video; 3 to 5 fitting tags (niche plus reach) are enough.`,
+      ),
     });
   }
 
   insights.push({
     kind: hookSignals.originalSoundShare >= 50 ? "good" : "info",
     title: "Sound & Hook",
-    text: `Ø Beschreibung ${hookSignals.avgDescLength} Zeichen, ${Math.round(hookSignals.questionShare)} % der Captions stellen eine Frage, ${Math.round(
-      hookSignals.emojiShare,
-    )} % nutzen Emojis, ${Math.round(hookSignals.originalSoundShare)} % Originalton. ${
-      hookSignals.originalSoundShare >= 50 ? "Originalton ist gut für Wiedererkennung." : "Trend-Sounds können die Reichweite kurzfristig deutlich erhöhen."
-    }`,
+    text: tr(
+      `Ø Beschreibung ${hookSignals.avgDescLength} Zeichen, ${Math.round(hookSignals.questionShare)} % der Captions stellen eine Frage, ${Math.round(
+        hookSignals.emojiShare,
+      )} % nutzen Emojis, ${Math.round(hookSignals.originalSoundShare)} % Originalton. ${
+        hookSignals.originalSoundShare >= 50 ? "Originalton ist gut für Wiedererkennung." : "Trend-Sounds können die Reichweite kurzfristig deutlich erhöhen."
+      }`,
+      `Ø caption length ${hookSignals.avgDescLength} characters, ${Math.round(
+        hookSignals.questionShare,
+      )}% of captions ask a question, ${Math.round(hookSignals.emojiShare)}% use emojis, ${Math.round(
+        hookSignals.originalSoundShare,
+      )}% original sound. ${
+        hookSignals.originalSoundShare >= 50 ? "Original sound helps recognition." : "Trend sounds can lift reach noticeably for a short time."
+      }`,
+    ),
   });
 
   return {

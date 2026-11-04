@@ -36,11 +36,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.artur.growthlab.data.AiSettings
+import de.artur.growthlab.data.Lang
+import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.Metrics
 import de.artur.growthlab.data.Profile
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
 import de.artur.growthlab.data.TrackedAccount
+import de.artur.growthlab.data.tr
 import de.artur.growthlab.ui.Accent
 import de.artur.growthlab.ui.BgColor
 import de.artur.growthlab.ui.DividerLine
@@ -97,7 +100,9 @@ class LabState(private val context: Context) {
 fun Root(context: Context) {
     val state = remember { LabState(context) }
     var tab by remember { mutableStateOf(0) }
-    val tabs = listOf("Scan", "Wachstum", "KI-Studio", "Setup", "Hilfe")
+    // The stored language drives every screen; reading it here keeps the switch instant.
+    Language.current = Lang.fromCode(state.settings.language)
+    val tabs = listOf("Scan", tr("Wachstum", "Growth"), tr("KI-Studio", "AI studio"), tr("Setup", "Setup"), tr("Hilfe", "Guide"))
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -112,13 +117,13 @@ fun Root(context: Context) {
                         Column {
                             Text("TikTok Growth Lab", fontFamily = DisplayFont, fontSize = 20.sp, color = InkColor)
                             Text(
-                                "Scraping + KI-Coach für mehr Reichweite",
+                                tr("Scraping + KI-Coach für mehr Reichweite", "Scraping + AI coach for more reach"),
                                 fontSize = 10.sp,
                                 color = MutedColor,
                             )
                         }
                         Text(
-                            if (state.settings.apiKey.isBlank()) "KI: kein Key" else "KI bereit",
+                            if (state.settings.apiKey.isBlank()) tr("KI: kein Key", "AI: no key") else tr("KI bereit", "AI ready"),
                             fontSize = 10.sp,
                             color = if (state.settings.apiKey.isBlank()) MutedColor else Accent,
                         )

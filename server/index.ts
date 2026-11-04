@@ -28,10 +28,17 @@ import {
 } from "./lib/store.ts";
 import { cacheSize, clearCache } from "./lib/http.ts";
 import { PROVIDERS } from "./lib/providers.ts";
+import { setLang, tr } from "./lib/lang.ts";
 
 const app = express();
 app.disable("x-powered-by");
 app.use(express.json({ limit: "2mb" }));
+
+/** Every response follows the language stored in the settings. */
+app.use((_req, _res, next) => {
+  setLang(effectiveSettings().language);
+  next();
+});
 
 /**
  * Defends against DNS rebinding: a website that points its own domain at
@@ -43,9 +50,9 @@ app.use((req, res, next) => {
   const hostname = (req.headers.host ?? "").replace(/:\d+$/, "").toLowerCase();
   if (!ALLOWED_HOSTNAMES.has(hostname)) {
     res.status(403).json({
-      error: "Dieser Server ist nur lokal erreichbar.",
+      error: tr("Dieser Server ist nur lokal erreichbar.", "This server is only reachable locally."),
       code: "LOCAL_ONLY",
-      hint: `Öffne http://127.0.0.1:${PORT} auf diesem Rechner.`,
+      hint: tr(`Öffne http://127.0.0.1:${PORT} auf diesem Rechner.`, `Open http://127.0.0.1:${PORT} on this computer.`),
     });
     return;
   }
@@ -119,6 +126,7 @@ app.get("/api/status", (_req, res) => {
   res.json({
     ok: true,
     version: APP_VERSION,
+    language: settings.language,
     timezone: settings.timezone,
     ai: { configured: aiConfigured(), baseUrl: config.baseUrl, model: config.model },
     server: { host: HOST, localOnly: isLoopbackHost(HOST) },
@@ -149,8 +157,8 @@ app.post(
     try {
       automatic = await getUserVideos(profile);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unbekannter Fehler";
-      warnings.push(`Videoliste von TikTok nicht lesbar: ${message}`);
+      const message = error instanceof Error ? error.message : tr("Unbekannter Fehler", "Unknown error");
+      warnings.push(tr(`Videoliste von TikTok nicht lesbar: ${message}`, `TikTok video list could not be read: ${message}`));
     }
 
     const scraped = urls.length > 0 ? await scrapeVideos(urls) : { videos: [] as Video[], warnings: [] as string[] };
@@ -166,16 +174,29 @@ app.post(
 
     const own = videos.filter((video) => video.author.toLowerCase() === profile.handle.toLowerCase());
     if (videos.length > 0 && own.length === 0) {
-      warnings.push("Kein Video gehört zu diesem Profil – die Analyse zeigt trotzdem die Performance der verlinkten Videos.");
+      warnings.push(
+        tr(
+          "Kein Video gehört zu diesem Profil – die Analyse zeigt trotzdem die Performance der verlinkten Videos.",
+          "None of the videos belongs to this profile – the analysis still shows how the linked videos performed.",
+        ),
+      );
     } else if (own.length > 0 && own.length < videos.length) {
-      warnings.push(`${videos.length - own.length} Video(s) anderer Creator wurden nicht in die Metriken gerechnet.`);
+      warnings.push(
+        tr(
+          `${videos.length - own.length} Video(s) anderer Creator wurden nicht in die Metriken gerechnet.`,
+          `${videos.length - own.length} video(s) by other creators were left out of the metrics.`,
+        ),
+      );
     }
 
     const metrics = computeMetrics(profile, own.length > 0 ? own : videos, timezone);
 
     if (videos.length === 0) {
       warnings.push(
-        "TikTok hat zu diesem Profil keine Videos geliefert. Private Konten geben keine heraus, sonst später erneut scannen oder Video-Links einfügen.",
+        tr(
+          "TikTok hat zu diesem Profil keine Videos geliefert. Private Konten geben keine heraus, sonst später erneut scannen oder Video-Links einfügen.",
+          "TikTok returned no videos for this profile. Private accounts never do; otherwise scan again later or add video links.",
+        ),
       );
     }
 
@@ -203,7 +224,7 @@ app.post(
 app.get("/api/last-scan", (_req, res) => {
   const scans = [...lastScans.values()];
   if (scans.length === 0) {
-    res.status(404).json({ error: "Es liegt noch kein Scan im Speicher." });
+    res.status(404).json({ error: tr("Es liegt noch kein Scan im Speicher.", "No scan is in memory yet.") });
     return;
   }
   res.json(scans.reduce((newest, current) => (current.scannedAt > newest.scannedAt ? current : newest)));
@@ -212,7 +233,10 @@ app.get("/api/last-scan", (_req, res) => {
 app.get("/api/last-scan/:handle", (req, res) => {
   const handle = normalizeHandle(req.params.handle);
   const scan = lastScans.get(handle.toLowerCase());
-  if (!scan) return res.status(404).json({ error: "Für diesen Account liegt kein Scan im Speicher." });
+  if (!scan)
+    return res
+      .status(404)
+      .json({ error: tr("Für diesen Account liegt kein Scan im Speicher.", "No scan for this account is in memory.") });
   res.json(scan);
 });
 
@@ -223,7 +247,7 @@ app.post(
   asyncHandler(async (req, res) => {
     const mode = String(req.body?.mode ?? "strategy") as AiMode;
     if (!AI_MODES.includes(mode)) {
-      res.status(400).json({ error: `Unbekannter KI-Modus: ${mode}` });
+      res.status(400).json({ error: tr(`Unbekannter KI-Modus: ${mode}`, `Unknown AI mode: ${mode}`) });
       return;
     }
     const payload = (req.body?.payload ?? {}) as AiPayload;
@@ -276,7 +300,7 @@ app.post(
     trackAccount(profile.handle, profile.nickname, profile.avatar);
     const withSnapshot = addSnapshot(profile.handle, snapshotFrom(profile, null));
     if (!withSnapshot) {
-      res.status(500).json({ error: "Account konnte nicht gespeichert werden." });
+      res.status(500).json({ error: tr("Account konnte nicht gespeichert werden.", "The account could not be saved.") });
       return;
     }
     res.json({ account: accountView(withSnapshot), accounts: listAccounts().map(accountView) });
@@ -292,7 +316,10 @@ app.post(
         const profile = await getProfile(account.handle);
         addSnapshot(profile.handle, snapshotFrom(profile, null));
       } catch (error) {
-        errors.push({ handle: account.handle, message: error instanceof Error ? error.message : "Unbekannter Fehler" });
+        errors.push({
+          handle: account.handle,
+          message: error instanceof Error ? error.message : tr("Unbekannter Fehler", "Unknown error"),
+        });
       }
     }
     res.json({ accounts: listAccounts().map(accountView), errors });
@@ -301,7 +328,8 @@ app.post(
 
 app.delete("/api/watchlist/:handle", (req, res) => {
   const removed = untrackAccount(req.params.handle);
-  if (!removed) return res.status(404).json({ error: "Account ist nicht in der Watchlist." });
+  if (!removed)
+    return res.status(404).json({ error: tr("Account ist nicht in der Watchlist.", "This account is not on the watchlist.") });
   res.json({ accounts: listAccounts().map(accountView) });
 });
 
@@ -345,7 +373,10 @@ async function start() {
       if (req.path.startsWith("/api")) return next();
       const indexFile = path.join(DIST_DIR, "index.html");
       if (!fs.existsSync(indexFile)) {
-        res.status(503).type("text/plain").send("Frontend nicht gebaut. Bitte `npm run build` ausführen.");
+        res
+          .status(503)
+          .type("text/plain")
+          .send(tr("Frontend nicht gebaut. Bitte `npm run build` ausführen.", "Frontend not built. Please run `npm run build`."));
         return;
       }
       res.sendFile(indexFile);
@@ -353,7 +384,7 @@ async function start() {
   }
 
   app.use((req, res) => {
-    res.status(404).json({ error: `Route nicht gefunden: ${req.method} ${req.path}` });
+    res.status(404).json({ error: tr(`Route nicht gefunden: ${req.method} ${req.path}`, `Route not found: ${req.method} ${req.path}`) });
   });
 
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
@@ -384,15 +415,15 @@ async function start() {
       return;
     }
     console.error("[server]", error);
-    res.status(500).json({ error: (error as Error)?.message || "Interner Serverfehler" });
+    res.status(500).json({ error: (error as Error)?.message || tr("Interner Serverfehler", "Internal server error") });
   });
 
   app.listen(PORT, HOST, () => {
     const url = `http://${isLoopbackHost(HOST) ? "127.0.0.1" : HOST}:${PORT}`;
-    console.log(`\n  TikTok Growth Lab läuft auf ${url}`);
-    console.log(`  Nur lokal erreichbar: ${isLoopbackHost(HOST) ? "ja" : `nein (HOST=${HOST})`}`);
-    console.log(`  Modus: ${IS_DEV ? "Entwicklung (Vite HMR)" : "Produktion"}`);
-    console.log(`  KI: ${aiConfigured() ? `bereit (${aiConfig().model})` : "kein Key hinterlegt"}\n`);
+    console.log(`\n  TikTok Growth Lab runs on ${url}`);
+    console.log(`  Local only: ${isLoopbackHost(HOST) ? "yes" : `no (HOST=${HOST})`}`);
+    console.log(`  Mode: ${IS_DEV ? "development (Vite HMR)" : "production"}`);
+    console.log(`  AI: ${aiConfigured() ? `ready (${aiConfig().model})` : "no key set"}\n`);
   });
 }
 

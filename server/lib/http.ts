@@ -1,4 +1,5 @@
 import { effectiveSettings } from "./store.ts";
+import { tr } from "./lang.ts";
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -68,7 +69,7 @@ function buildHeaders(url: string, referer: string | undefined, accept: string):
 
 async function fetchWithRetries(url: string, referer: string | undefined, accept: string): Promise<string> {
   const attempts = 3;
-  let lastError: Error = new HttpError(0, "Unbekannter Fehler");
+  let lastError: Error = new HttpError(0, tr("Unbekannter Fehler", "Unknown error"));
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
@@ -81,7 +82,7 @@ async function fetchWithRetries(url: string, referer: string | undefined, accept
       const throttled = response.status === 429 || /ratelimit triggered/i.test(text.slice(0, 120));
 
       if (throttled) {
-        lastError = new HttpError(429, "TikTok drosselt die Anfragen (Rate-Limit).");
+        lastError = new HttpError(429, tr("TikTok drosselt die Anfragen (Rate-Limit).", "TikTok is throttling the requests (rate limit)."));
         if (attempt < attempts) {
           await sleep(4000 * attempt);
           continue;
@@ -89,17 +90,24 @@ async function fetchWithRetries(url: string, referer: string | undefined, accept
         throw lastError;
       }
       if (response.status === 403) {
-        throw new HttpError(403, "TikTok blockt diese Anfrage (403).");
+        throw new HttpError(403, tr("TikTok blockt diese Anfrage (403).", "TikTok blocks this request (403)."));
       }
       if (!response.ok) {
-        throw new HttpError(response.status, `TikTok antwortet mit HTTP ${response.status}.`, text.slice(0, 300));
+        throw new HttpError(
+          response.status,
+          tr(`TikTok antwortet mit HTTP ${response.status}.`, `TikTok answers with HTTP ${response.status}.`),
+          text.slice(0, 300),
+        );
       }
       return text;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (err instanceof HttpError && (err.status === 403 || err.status === 404)) throw err;
       if (err.name === "TimeoutError" || err.name === "AbortError") {
-        lastError = new HttpError(0, "TikTok hat nicht innerhalb von 25 Sekunden geantwortet.");
+        lastError = new HttpError(
+          0,
+          tr("TikTok hat nicht innerhalb von 25 Sekunden geantwortet.", "TikTok did not answer within 25 seconds."),
+        );
       } else {
         lastError = err;
       }
