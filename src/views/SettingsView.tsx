@@ -333,6 +333,45 @@ export function SettingsView({
         </div>
       </Section>
 
+      <Section
+        title={t("Benachrichtigungen", "Notifications")}
+        subtitle={t(
+          "Meldung, wenn ein geplanter Post in den nächsten zwei Stunden fällig ist.",
+          "A message when a planned post is due within the next two hours.",
+        )}
+      >
+        <p className="muted small">
+          {t(
+            "Die Erinnerung erscheint immer als Zeile in der App. Zusätzlich als Systemmeldung, wenn der Browser es erlaubt.",
+            "The reminder always appears as a line inside the app, plus a system message if the browser allows it.",
+          )}
+        </p>
+        <div className="row gap-sm wrap">
+          <button
+            className="btn btn-sm"
+            onClick={() => {
+              if (!("Notification" in window)) return;
+              void Notification.requestPermission();
+            }}
+            disabled={!("Notification" in window)}
+          >
+            {t("Systemmeldungen erlauben", "Allow system messages")}
+          </button>
+          <button
+            className="btn btn-sm btn-ghost"
+            onClick={() => {
+              if (!("Notification" in window)) return;
+              new Notification(t("TikTok Growth Lab", "TikTok Growth Lab"), {
+                body: t("So sehen Erinnerungen aus.", "This is what reminders look like."),
+              });
+            }}
+            disabled={!("Notification" in window) || Notification.permission !== "granted"}
+          >
+            {t("Testmeldung", "Test message")}
+          </button>
+        </div>
+      </Section>
+
       {providers.length > 0 && (
         <Section
           title={t("Anbieter & kostenlose Modelle", "Providers & free models")}

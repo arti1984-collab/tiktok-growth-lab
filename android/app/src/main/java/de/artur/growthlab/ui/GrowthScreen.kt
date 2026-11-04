@@ -1,5 +1,6 @@
 package de.artur.growthlab.ui
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -62,6 +64,8 @@ fun GrowthScreen(state: LabState) {
         )
 
         PlanCard(state)
+        GoalCard(state)
+        CompareCard(state)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
@@ -313,6 +317,185 @@ private fun PlanCard(state: LabState) {
                     fontSize = 10.sp,
                     color = MutedColor,
                 )
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------ Ziel-Rechner */
+
+private fun daysUntil(date: String): Int? {
+    if (date.isBlank()) return null
+    val parsed = runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(date) }.getOrNull() ?: return null
+    return ((parsed.time - System.currentTimeMillis()) / 86_400_000L).toInt()
+}
+
+@Composable
+private fun GoalCard(state: LabState) {
+    var goal by remember(state.settings.goalFollowers) {
+        mutableStateOf(if (state.settings.goalFollowers > 0) state.settings.goalFollowers.toString() else "")
+    }
+    var date by remember(state.settings.goalDate) { mutableStateOf(state.settings.goalDate) }
+
+    val metrics = state.scan?.metrics
+    val followers = state.scan?.profile?.followers
+    val target = goal.filter { it.isDigit() }.toIntOrNull() ?: 0
+    val days = daysUntil(date)
+    val missing = if (followers != null && target > 0) target - followers else null
+    val perDay = if (missing != null && days != null && days > 0) missing.toDouble() / days else null
+    val perWeek = perDay?.times(7)
+    val viewsPerFollower = metrics?.viewsPerFollower ?: 0.0
+    val avgViews = metrics?.avgViews ?: 0L
+    val postsPerWeek = if (perWeek != null && perWeek > 0 && viewsPerFollower > 0 && avgViews > 0) {
+        (perWeek * viewsPerFollower) / avgViews
+    } else {
+        null
+    }
+
+    CardBox {
+        Text(tr("Ziel-Rechner", "Goal calculator"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(
+            tr(
+                "Ziel und Datum eintragen: daraus wird, wie viele Follower, Views und Posts pro Woche nötig sind.",
+                "Enter a target and a date: the app works out how many followers, views and posts per week that takes.",
+            ),
+            fontSize = 11.sp,
+            color = MutedColor,
+        )
+        OutlinedTextField(
+            value = goal,
+            onValueChange = { goal = it.filter { character -> character.isDigit() } },
+            label = { Text(tr("Ziel-Follower", "Target followers"), fontSize = 11.sp) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = date,
+            onValueChange = { date = it },
+            label = { Text(tr("Bis wann (JJJJ-MM-TT)", "By when (YYYY-MM-DD)"), fontSize = 11.sp) },
+            placeholder = { Text("2027-03-01") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = {
+                state.saveSettings(state.settings.copy(goalFollowers = target, goalDate = date.trim()))
+            },
+        ) {
+            Text(tr("Ziel speichern", "Save goal"), fontSize = 12.sp)
+        }
+
+        if (followers == null) {
+            Text(
+                tr(
+                    "Der Rechner braucht einen Scan: daraus kommen aktuelle Follower, Views und Views pro Follower.",
+                    "The calculator needs a scan: it takes your followers, views and views per follower from it.",
+                ),
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+        } else if (missing != null && perDay != null) {
+            DividerLine()
+            listOf(
+                tr("Heute", "Today") to num(followers),
+                tr("Noch nötig", "Still needed") to if (missing > 0) "+${num(missing)}" else tr("Ziel erreicht", "goal reached"),
+                tr("Tage", "Days") to num((days ?: 0).toLong()),
+                tr("Follower pro Tag", "Followers per day") to dec(perDay, 1),
+                tr("Follower pro Woche", "Followers per week") to dec(perWeek ?: 0.0, 0),
+                tr("Views pro Woche", "Views per week") to num(((perWeek ?: 0.0) * viewsPerFollower).toLong()),
+                tr("Posts pro Woche", "Posts per week") to (postsPerWeek?.let { dec(it, 1) } ?: "–"),
+            ).forEach { (label, value) ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(label, fontSize = 12.sp, color = MutedColor)
+                    Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            if ((postsPerWeek ?: 0.0) > 14) {
+                Text(
+                    tr(
+                        "Mehr als zwei Posts am Tag: Ziel weiter nach hinten legen oder realistischer setzen.",
+                        "More than two posts a day: move the goal further out or set a realistic number.",
+                    ),
+                    fontSize = 11.sp,
+                    color = WarnColor,
+                )
+            }
+        } else if (target > 0) {
+            Text(
+                tr("Datum fehlt oder liegt in der Vergangenheit.", "The date is missing or in the past."),
+                fontSize = 11.sp,
+                color = WarnColor,
+            )
+        }
+    }
+}
+
+/* ---------------------------------------------------------------- Vergleich */
+
+@Composable
+private fun CompareCard(state: LabState) {
+    if (state.accounts.size < 2) return
+    var selected by remember { mutableStateOf(state.accounts.take(3).map { it.handle }) }
+    val chosen = state.accounts.filter { selected.contains(it.handle) }
+
+    CardBox {
+        Text(tr("Vergleich", "Comparison"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(
+            tr(
+                "Bis zu drei Accounts nebeneinander, aus den Messpunkten der Watchlist.",
+                "Up to three accounts side by side, from the watchlist measurements.",
+            ),
+            fontSize = 11.sp,
+            color = MutedColor,
+        )
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            state.accounts.forEach { account ->
+                val active = selected.contains(account.handle)
+                FilterChip(
+                    selected = active,
+                    onClick = {
+                        selected = when {
+                            active -> selected - account.handle
+                            selected.size >= 3 -> selected
+                            else -> selected + account.handle
+                        }
+                    },
+                    label = { Text("@${account.handle}", fontSize = 11.sp) },
+                )
+            }
+        }
+
+        if (chosen.size < 2) {
+            Text(tr("Mindestens zwei Accounts auswählen.", "Pick at least two accounts."), fontSize = 11.sp, color = MutedColor)
+            return@CardBox
+        }
+
+        DividerLine()
+        Row(Modifier.fillMaxWidth()) {
+            Text("", modifier = Modifier.weight(1.2f))
+            chosen.forEach { account ->
+                Text(
+                    "@${account.handle}",
+                    modifier = Modifier.weight(1f),
+                    fontSize = 10.sp,
+                    color = MutedColor,
+                    maxLines = 1,
+                )
+            }
+        }
+        listOf(
+            tr("Follower", "Followers") to { account: TrackedAccount -> account.latest()?.let { num(it.followers) } ?: "–" },
+            tr("Gesamt", "Total") to { account: TrackedAccount -> account.deltaAll()?.let { if (it >= 0) "+${num(it)}" else num(it) } ?: "–" },
+            tr("Videos", "Videos") to { account: TrackedAccount -> account.latest()?.let { num(it.videos) } ?: "–" },
+            tr("Engagement", "Engagement") to { account: TrackedAccount -> account.latest()?.engagementRate?.let { "${dec(it)} %" } ?: "–" },
+            tr("Score", "Score") to { account: TrackedAccount -> account.latest()?.score?.let { "$it/100" } ?: "–" },
+            tr("Messpunkte", "Measurements") to { account: TrackedAccount -> account.snapshots.size.toString() },
+        ).forEach { (label, value) ->
+            Row(Modifier.fillMaxWidth()) {
+                Text(label, modifier = Modifier.weight(1.2f), fontSize = 11.sp, color = MutedColor)
+                chosen.forEach { account ->
+                    Text(value(account), modifier = Modifier.weight(1f), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }

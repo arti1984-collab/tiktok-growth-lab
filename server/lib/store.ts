@@ -28,6 +28,8 @@ export type Settings = {
   cookie?: string;
   minDelayMs?: number;
   timezone?: string;
+  goalFollowers?: number;
+  goalDate?: string;
 };
 
 export type PlanStatus = "planned" | "done" | "skipped";
@@ -107,6 +109,8 @@ export function effectiveSettings() {
     minDelayMs: Number(s.minDelayMs && s.minDelayMs > 0 ? s.minDelayMs : ENV_DEFAULTS.minDelayMs),
     cacheTtlMs: ENV_DEFAULTS.cacheTtlMs,
     timezone: s.timezone || ENV_DEFAULTS.timezone,
+    goalFollowers: Number(s.goalFollowers && s.goalFollowers > 0 ? Math.round(s.goalFollowers) : 0),
+    goalDate: s.goalDate || "",
   };
 }
 
@@ -125,6 +129,8 @@ export function publicSettings() {
     cookieSource: data.settings.cookie ? "ui" : ENV_DEFAULTS.cookie ? "env" : "none",
     minDelayMs: eff.minDelayMs,
     timezone: eff.timezone,
+    goalFollowers: eff.goalFollowers,
+    goalDate: eff.goalDate,
   };
 }
 
@@ -134,13 +140,18 @@ export function updateSettings(patch: Settings) {
   if (patch.language === "de" || patch.language === "en") {
     next.language = patch.language;
   }
-  for (const key of ["aiBaseUrl", "aiModel", "aiApiKey", "githubToken", "cookie", "timezone"] as const) {
+  for (const key of ["aiBaseUrl", "aiModel", "aiApiKey", "githubToken", "cookie", "timezone", "goalDate"] as const) {
     const value = patch[key];
     if (typeof value !== "string") continue;
     const trimmed = value.trim();
     // empty string clears the override and falls back to .env
     if (trimmed === "") delete next[key];
     else next[key] = trimmed;
+  }
+  if (typeof patch.goalFollowers === "number" && Number.isFinite(patch.goalFollowers)) {
+    const goal = Math.round(patch.goalFollowers);
+    if (goal > 0) next.goalFollowers = goal;
+    else delete next.goalFollowers;
   }
   if (typeof patch.minDelayMs === "number" && Number.isFinite(patch.minDelayMs)) {
     const delay = Math.max(400, Math.min(10_000, Math.round(patch.minDelayMs)));

@@ -6,6 +6,7 @@ import { computeMetrics, type Metrics } from "./lib/metrics.ts";
 import {
   getProfile,
   getUserVideos,
+  getVideoFromInput,
   normalizeHandle,
   scrapeVideos,
   TikTokError,
@@ -350,6 +351,20 @@ app.delete("/api/watchlist/:handle", (req, res) => {
     return res.status(404).json({ error: tr("Account ist nicht in der Watchlist.", "This account is not on the watchlist.") });
   res.json({ accounts: listAccounts().map(accountView) });
 });
+
+/* ------------------------------------------------------------------- video */
+
+app.post(
+  "/api/video",
+  asyncHandler(async (req, res) => {
+    const url = String(req.body?.url ?? "").trim();
+    if (!url) {
+      res.status(400).json({ error: tr("Bitte eine Video-URL eingeben.", "Please enter a video URL.") });
+      return;
+    }
+    res.json({ video: await getVideoFromInput(url) });
+  }),
+);
 
 /* -------------------------------------------------------------------- plan */
 

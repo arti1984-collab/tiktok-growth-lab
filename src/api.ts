@@ -10,6 +10,7 @@ import type {
   ScanResult,
   Status,
   UpdateInfo,
+  Video,
 } from "./types";
 
 export class ApiError extends Error {
@@ -75,6 +76,8 @@ export const api = {
   providers: () => request<{ providers: Provider[] }>("/api/ai/providers"),
 
   watchlist: () => request<{ accounts: Account[] }>("/api/watchlist"),
+
+  video: (url: string) => request<{ video: Video }>("/api/video", { method: "POST", body: JSON.stringify({ url }) }),
 
   plan: () => request<{ items: PlanItem[] }>("/api/plan"),
 

@@ -105,6 +105,17 @@ fun InsightRow(kind: String, title: String, text: String) {
 }
 
 /** Öffnet einen Link im Browser; ohne Ziel passiert nichts. */
+fun shareText(context: Context, text: String, subject: String) {
+    runCatching {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, subject)
+            putExtra(Intent.EXTRA_TEXT, text)
+        }
+        context.startActivity(Intent.createChooser(intent, subject))
+    }
+}
+
 fun openUrl(context: Context, url: String?) {
     if (url.isNullOrBlank()) return
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }

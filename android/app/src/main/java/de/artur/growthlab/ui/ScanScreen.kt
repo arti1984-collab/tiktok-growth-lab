@@ -16,6 +16,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ import de.artur.growthlab.data.Metrics
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.TikTok
 import de.artur.growthlab.data.TikTokException
+import de.artur.growthlab.data.Video
 import de.artur.growthlab.data.VideoSummary
 import de.artur.growthlab.data.tr
 import de.artur.growthlab.data.weekdayName
@@ -122,6 +125,8 @@ fun ScanScreen(state: LabState) {
             Text(state.progress, fontSize = 11.sp, color = MutedColor)
         }
 
+        VideoCheckCard(state)
+
         state.error?.let { message ->
             CardBox {
                 Text(tr("Das hat nicht geklappt", "That did not work"), color = Danger, fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -192,10 +197,115 @@ private fun ScanResultView(scan: ScanResult) {
         }
     }
 
+    val context = LocalContext.current
+    CardBox {
+        Text(tr("Wochenbericht", "Weekly report"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(
+            tr(
+                "Als Text teilen: Zahlen, beste Videos und die wichtigsten Sätze. Auf dem Rechner gibt es denselben Bericht als PDF.",
+                "Share as text: numbers, best videos and the key sentences. The desktop version prints the same report as a PDF.",
+            ),
+            fontSize = 11.sp,
+            color = MutedColor,
+        )
+        TextButton(onClick = { shareText(context, reportText(scan), "@${profile.handle}") }) {
+            Text(tr("Bericht teilen", "Share report"), fontSize = 12.sp)
+        }
+    }
+
     if (scan.warnings.isNotEmpty()) {
         CardBox {
             Text(tr("Hinweise", "Notes"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
             scan.warnings.forEach { warning -> Text("• $warning", fontSize = 11.sp, color = MutedColor) }
+        }
+    }
+}
+
+private fun reportText(scan: ScanResult): String {
+    val metrics = scan.metrics
+    val lines = mutableListOf(
+        "TikTok Growth Lab · @${scan.profile.handle}",
+        "${tr("Stand", "As of")}: ${dateOnly(scan.scannedAt)}",
+        "",
+        "${tr("Follower", "Followers")}: ${num(scan.profile.followers)}",
+        "${tr("Videos im Sample", "Videos in the sample")}: ${metrics.sampleSize}",
+        "Score: ${metrics.score ?: "–"}/100",
+        "Engagement: ${dec(metrics.engagementRate ?: 0.0)} %",
+        "${tr("Views je Video", "Views per video")}: ${num(metrics.avgViews)}",
+        "${tr("Posts pro Woche", "Posts per week")}: ${dec(metrics.postsPerWeek ?: 0.0, 1)}",
+        "",
+        tr("Beste Videos", "Best videos"),
+    )
+    metrics.topVideos.take(3).forEachIndexed { index, video ->
+        lines.add("${index + 1}. ${num(video.views)} Views · ${video.desc.take(60).ifBlank { tr("ohne Text", "no text") }}")
+    }
+    lines.add("")
+    lines.add(tr("Was die Daten sagen", "What the data says"))
+    metrics.insights.forEach { insight -> lines.add("- ${insight.title}: ${insight.text}") }
+    return lines.joinToString("\n")
+}
+
+@Composable
+private fun VideoCheckCard(state: LabState) {
+    val scope = rememberCoroutineScope()
+    var url by remember { mutableStateOf("") }
+    var video by remember { mutableStateOf<Video?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val metrics = state.scan?.metrics
+
+    CardBox {
+        Text(tr("Video-Check", "Video check"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(
+            tr(
+                "Einzelnes Video gegen deinen Median, dein Engagement und deine Längenfenster prüfen.",
+                "Check one video against your median, your engagement and your length windows.",
+            ),
+            fontSize = 11.sp,
+            color = MutedColor,
+        )
+        OutlinedTextField(
+            value = url,
+            onValueChange = { url = it },
+            label = { Text(tr("Video-URL", "Video URL"), fontSize = 11.sp) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            onClick = {
+                scope.launch {
+                    busy = true
+                    error = null
+                    try {
+                        video = TikTok.getVideoFromInput(url)
+                    } catch (failure: Exception) {
+                        video = null
+                        error = failure.message
+                    } finally {
+                        busy = false
+                    }
+                }
+            },
+            enabled = !busy && url.isNotBlank(),
+        ) {
+            Text(if (busy) tr("Lade Video…", "Loading video…") else tr("Prüfen", "Check"), fontSize = 12.sp)
+        }
+        error?.let { Text(it, color = Danger, fontSize = 12.sp) }
+        video?.let { entry ->
+            val median = metrics?.medianViews ?: 0L
+            Text("@${entry.author} · ${num(entry.views)} ${tr("Views", "views")}", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(
+                if (median > 0) tr("${dec(entry.views.toDouble() / median, 1)}× Median", "${dec(entry.views.toDouble() / median, 1)}x median")
+                else tr("Ohne Scan kein Vergleich", "No comparison without a scan"),
+                fontSize = 11.sp,
+                color = Accent,
+            )
+            Text(
+                "${entry.durationSec}s · ${entry.hashtags.size} ${tr("Hashtags", "hashtags")} · ${dateOnly(entry.createdAt * 1000)}",
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+            Text(entry.desc.take(120).ifBlank { tr("Ohne Beschreibung", "No caption") }, fontSize = 12.sp)
         }
     }
 }

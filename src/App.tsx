@@ -7,6 +7,7 @@ import { WatchView } from "./views/WatchView";
 import { StudioView } from "./views/StudioView";
 import { SettingsView } from "./views/SettingsView";
 import { TutorialView } from "./views/TutorialView";
+import { Reminder } from "./components/Reminder";
 
 type Tab = "scan" | "watch" | "studio" | "settings" | "guide";
 
@@ -123,6 +124,8 @@ export default function App() {
             </span>
           </div>
         )}
+
+        <Reminder />
 
         <nav className="tabs">
           {TABS.map((entry) => (
