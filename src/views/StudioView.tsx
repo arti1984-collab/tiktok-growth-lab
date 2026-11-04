@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import type { AiMode, AiResponse, ScanResult, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { JsonView } from "../components/JsonView";
-import { HashtagPanel, extractHashtagGroups } from "../components/HashtagPanel";
 import { buildTextExport, downloadTextFile, textFilename } from "../textExport";
 
 const MODES: { id: AiMode; label: string; description: string }[] = [
@@ -72,7 +71,6 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
   }
 
   const activeMode = MODES.find((entry) => entry.id === mode);
-  const hashtagGroups = useMemo(() => (response ? extractHashtagGroups(response.result) : []), [response]);
 
   return (
     <div className="stack">
@@ -167,37 +165,6 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </Alert>
           )}
         </form>
-      </Section>
-
-      <Section
-        title="Hashtag-Bereich"
-        subtitle={
-          mode === "hashtags"
-            ? "Sets für Nische, Reichweite und Marke, passend zu deinem Thema"
-            : "Tags aus der letzten Antwort, nach Aufgabe sortiert"
-        }
-        actions={
-          mode === "hashtags" ? undefined : (
-            <button className="btn btn-sm" type="button" onClick={() => setMode("hashtags")}>
-              Hashtags erzeugen
-            </button>
-          )
-        }
-      >
-        {response && hashtagGroups.length > 0 ? (
-          <HashtagPanel result={response.result} embedded />
-        ) : (
-          <div className="hashtag-empty">
-            <p className="muted">
-              Hier sammeln sich die Tag-Sets. Wähle den Modus „Hashtags“, trage deine Nische oder dein Thema ein und
-              starte: 8 bis 12 Nischen-Tags, 8 bis 12 Reichweiten-Tags und 3 bis 5 Marken-Tags für den DACH-Raum. Jeder
-              Tag lässt sich einzeln oder als ganzes Set kopieren.
-            </p>
-            <button className="btn" type="button" onClick={() => setMode("hashtags")}>
-              Modus „Hashtags“ wählen
-            </button>
-          </div>
-        )}
       </Section>
 
       {loading && (

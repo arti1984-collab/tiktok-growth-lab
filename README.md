@@ -123,7 +123,7 @@ Android teilen Palette, Kanten und Typo-Hierarchie.
 - 30-Tage-Strategie: Positionierung, Content-Säulen, Posting-Plan, Hashtag-Strategie, KPI-Ziele
 - Profil-Audit mit den schnellsten Wins
 - Video-Ideen mit Hook und Drehbuch in Sekunden-Abschnitten
-- Hashtag-Bereich mit Gruppen für Nische, Reichweite und Marke, jede Gruppe einzeln kopierbar
+- Hashtags als eigener Modus: Tag-Sets für Nische, Reichweite und Marke im DACH-Raum
 - Captions (inkl. On-Screen-Text und Hashtags), Hooks, 7-Tage-Plan
 - Jede Antwort als Textdatei speicherbar: Überschriften je Block, 88 Zeichen pro Zeile, zwei Leerzeichen Einzug, Dateiname mit Modus und Datum
 - Die KI bekommt die echten gescrapten Zahlen als Kontext – keine generischen Ratschläge aus dem Nichts

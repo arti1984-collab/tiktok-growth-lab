@@ -97,17 +97,6 @@ fun StudioScreen(state: LabState) {
             }
         }
 
-        if (mode == "hashtags" && answer == null && !state.busy) {
-            CardBox {
-                Text("Hashtag-Bereich", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = InkColor)
-                Text(
-                    "Trage oben Nische oder Thema ein und starte. Du bekommst getrennte Sets für Nische, Reichweite und Marke, dazu eine Begründung. Die Tags erscheinen danach mit Kopierknopf.",
-                    fontSize = 12.sp,
-                    color = MutedColor,
-                )
-            }
-        }
-
         OutlinedTextField(
             value = topic,
             onValueChange = { topic = it },
@@ -179,7 +168,6 @@ fun StudioScreen(state: LabState) {
                         Text(if (copied) "Kopiert" else "Kopieren", fontSize = 12.sp)
                     }
                 }
-                if (parsed) HashtagSection(raw = text)
                 androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = {
                         val title = Prompts.MODES.firstOrNull { it.first == mode }?.second ?: "KI-Antwort"
@@ -205,64 +193,4 @@ fun StudioScreen(state: LabState) {
             }
         }
     }
-}
-
-/** Hashtags from the strategy block and from the per-item suggestions. */
-@Composable
-private fun HashtagSection(raw: String) {
-    val groups = remember(raw) { extractHashtagGroups(raw) }
-    if (groups.isEmpty()) return
-
-    val clipboard = LocalClipboardManager.current
-    val allTags = groups.flatMap { it.second }.distinct()
-
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text("Hashtag-Bereich", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        Text(
-            "${allTags.size} Tags, sortiert nach Aufgabe. Ein Tipp auf den Knopf kopiert alle.",
-            fontSize = 11.sp,
-            color = MutedColor,
-        )
-        groups.forEach { (name, tags) ->
-            Text(name, fontSize = 11.sp, color = MutedColor)
-            Text(tags.joinToString("  ") { "#$it" }, fontSize = 12.sp)
-        }
-        TextButton(onClick = { clipboard.setText(AnnotatedString(allTags.joinToString(" ") { "#$it" })) }) {
-            Text("Alle Hashtags kopieren", fontSize = 12.sp)
-        }
-    }
-}
-
-private fun extractHashtagGroups(raw: String): List<Pair<String, List<String>>> {
-    val root = runCatching { JSONObject(raw) }.getOrNull() ?: return emptyList()
-    val groups = mutableListOf<Pair<String, List<String>>>()
-
-    root.optJSONObject("hashtagStrategie")?.let { strategy ->
-        listOf("nische" to "Nische", "reichweite" to "Reichweite", "marke" to "Marke").forEach { (key, name) ->
-            val tags = arrayOfTags(strategy.optJSONArray(key))
-            if (tags.isNotEmpty()) groups.add(name to tags.distinct())
-        }
-    }
-
-    val extra = mutableListOf<String>()
-    listOf("captions", "ideen", "tage").forEach { key ->
-        val list = root.optJSONArray(key) ?: return@forEach
-        for (index in 0 until list.length()) {
-            val item = list.optJSONObject(index) ?: continue
-            extra.addAll(arrayOfTags(item.optJSONArray("hashtags")))
-        }
-    }
-    if (extra.isNotEmpty()) groups.add("Aus den Vorschlägen" to extra.distinct().take(30))
-
-    return groups
-}
-
-private fun arrayOfTags(array: org.json.JSONArray?): List<String> {
-    if (array == null) return emptyList()
-    val result = mutableListOf<String>()
-    for (index in 0 until array.length()) {
-        val tag = array.optString(index, "").trim().trimStart('#').filter { it.isLetterOrDigit() || it == '_' }
-        if (tag.isNotEmpty() && tag.length <= 40) result.add(tag)
-    }
-    return result
 }
