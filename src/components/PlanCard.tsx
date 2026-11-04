@@ -147,6 +147,7 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
         <ul className="plan-list">
           {items.map((item) => {
             const result = measured(item);
+            const views = item.actualViews > 0 ? item.actualViews : (result?.views ?? null);
             const date = new Date(`${item.date}T${item.time}:00`);
             const weekday = Number.isNaN(date.getTime()) ? "" : weekdayName((date.getDay() + 6) % 7);
             return (
@@ -178,15 +179,29 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
                           void run(`url-${item.id}`, () => api.updatePlan(item.id, { videoUrl: event.target.value }));
                         }}
                       />
+                      <input
+                        className="inline-input"
+                        type="number"
+                        min={0}
+                        defaultValue={item.actualViews > 0 ? item.actualViews : ""}
+                        placeholder={t("Views von Hand, wenn der Scan sie noch nicht hat", "views by hand until the scan has them")}
+                        onBlur={(event) => {
+                          const value = Number(event.target.value);
+                          if (!Number.isFinite(value) || Math.round(value) === item.actualViews) return;
+                          void run(`views-${item.id}`, () =>
+                            api.updatePlan(item.id, { actualViews: Math.max(0, Math.round(value)) }),
+                          );
+                        }}
+                      />
                       <span className="muted small">
-                        {result
+                        {views !== null
                           ? t(
-                              `${formatNumber(result.views)} Views, ${formatCompact(result.multiple * 100)} % des Medians`,
-                              `${formatNumber(result.views)} views, ${formatCompact(result.multiple * 100)}% of the median`,
+                              `${formatNumber(views)} Views, ${formatCompact(median > 0 ? (views / median) * 100 : 0)} % des Medians`,
+                              `${formatNumber(views)} views, ${formatCompact(median > 0 ? (views / median) * 100 : 0)}% of the median`,
                             )
                           : t(
-                              "Noch nicht im letzten Scan. Nach dem nächsten Scan erscheint hier der Vergleich.",
-                              "Not in the last scan yet. The comparison appears after the next scan.",
+                              "Noch keine Zahlen zu diesem Post. Nach dem nächsten Scan oder von Hand oben.",
+                              "No numbers for this post yet. After the next scan or by hand above.",
                             )}
                       </span>
                     </>
@@ -197,7 +212,12 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
                     className={`btn btn-sm ${item.status === "done" ? "btn-ghost" : "btn-primary"}`}
                     onClick={() =>
                       void run(`status-${item.id}`, () =>
-                        api.updatePlan(item.id, { status: item.status === "done" ? "planned" : "done" }),
+                        api.updatePlan(
+                          item.id,
+                          item.status === "done"
+                            ? { status: "planned" }
+                            : { status: "done", postedAt: item.postedAt > 0 ? item.postedAt : Date.now() },
+                        ),
                       )
                     }
                     disabled={busy !== null}

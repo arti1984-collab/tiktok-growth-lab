@@ -381,6 +381,12 @@ select:disabled {
   font-size: 0.9rem;
 }
 
+/* Druck: A4 mit Rand, damit der Bericht auf Papier passt. */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
 @media print {
   body * {
     visibility: hidden;
@@ -401,6 +407,26 @@ select:disabled {
   .report-sheet {
     box-shadow: none;
     width: 100%;
+  }
+
+  /* Zeilen und Ueberschriften nicht über Seitenkanten zerreissen. */
+  .report-sheet table {
+    font-size: 10pt;
+  }
+
+  .report-sheet tr,
+  .report-sheet li {
+    break-inside: avoid;
+  }
+
+  .report-sheet h2,
+  .report-sheet h3 {
+    break-after: avoid;
+  }
+
+  .report-overlay {
+    overflow: visible !important;
+    height: auto !important;
   }
 
   .no-print {

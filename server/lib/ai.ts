@@ -2,6 +2,7 @@ import { effectiveSettings } from "./store.ts";
 import { getJson, postJson } from "./http.ts";
 import { tr } from "./lang.ts";
 import { isLocalBaseUrl } from "./providers.ts";
+import { recordFailure } from "./stats.ts";
 
 export type AiConfig = { baseUrl: string; model: string; apiKey: string; keyless: boolean };
 
@@ -123,6 +124,7 @@ function mapHttpError(status: number, text: string): AiError {
     );
   }
   if (status === 404) {
+    recordFailure("ai 404");
     return new AiError(
       "MODEL",
       tr("Modell oder Basis-URL nicht gefunden (404).", "Model or base URL not found (404)."),

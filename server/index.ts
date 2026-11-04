@@ -16,6 +16,9 @@ import {
 import { AI_MODES, generate, type AiMode, type AiPayload } from "./lib/prompts.ts";
 import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
 import { scanFreeModels } from "./lib/modelScan.ts";
+import { normalizeScanInput } from "./lib/scanInput.ts";
+import { assessQuality } from "./lib/quality.ts";
+import { diagnostics, recordScan, recordScanStart } from "./lib/stats.ts";
 import {
   addPlan,
   addSnapshot,
@@ -86,13 +89,6 @@ const asyncHandler =
     handler(req, res).catch(next);
   };
 
-function splitInputs(input: string[]): string[] {
-  return input
-    .flatMap((value) => String(value).split(/[\s,;]+/))
-    .map((value) => value.trim())
-    .filter(Boolean);
-}
-
 function snapshotFrom(profile: Profile, metrics?: Metrics | null): Snapshot {
   return {
     at: Date.now(),
@@ -144,6 +140,7 @@ app.get("/api/status", (_req, res) => {
       cacheEntries: cacheSize(),
       browserFallback: browserFallbackAvailable(),
     },
+    diagnostics: diagnostics(),
   });
 });
 
@@ -192,15 +189,23 @@ app.get("/api/version", (_req, res) => {
 
 app.post(
   "/api/scan",
-  asyncHandler(async (req, res) => {
-    const started = Date.now();
-    const handle = normalizeHandle(String(req.body?.handle ?? ""));
-    const rawUrls = Array.isArray(req.body?.videoUrls) ? req.body.videoUrls.map((value: unknown) => String(value)) : [];
-    const urls = splitInputs(rawUrls).slice(0, 40);
-    const timezone = effectiveSettings().timezone;
-
-    const profile = await getProfile(handle);
-    const warnings: string[] = [];
+  asyncHandler(async (req, res) => {      const started = Date.now();
+      const rawUrls = Array.isArray(req.body?.videoUrls) ? req.body.videoUrls.map((value: unknown) => String(value)) : [];
+      const input = normalizeScanInput(String(req.body?.handle ?? ""), rawUrls);
+      const handle = input.handle;
+      const urls = input.videoUrls;
+      recordScanStart();
+      if (!handle) {
+        res.status(400).json({
+          error: tr("Bitte ein TikTok-Handle angeben (@name oder Profil-URL).", "Please add a TikTok handle (@name or profile URL)."),
+        });
+        return;
+      }
+      const timezone = effectiveSettings().timezone;      const profile = await getProfile(handle);
+      const warnings: string[] = [];
+      for (const entry of input.rejected) {
+        warnings.push(tr(`Link ignoriert (${entry.reason}): ${entry.value}`, `Link ignored (${entry.reason}): ${entry.value}`));
+      }
 
     // The newest videos come straight from TikTok, manual links add older ones.
     let automatic: Video[] = [];
@@ -237,9 +242,18 @@ app.post(
           `${videos.length - own.length} video(s) by other creators were left out of the metrics.`,
         ),
       );
-    }
+    }      const metrics = computeMetrics(profile, own.length > 0 ? own : videos, timezone);
 
-    const metrics = computeMetrics(profile, own.length > 0 ? own : videos, timezone);
+      // Datenlage vor der KI-Auswertung sichtbar machen.
+      const quality = assessQuality({ profile, videos: own.length > 0 ? own : videos });
+      if (quality.score < 0.7) {
+        warnings.push(
+          tr(
+            `Datenlage duenn (${Math.round(quality.score * 100)} %): ${quality.missing.join(", ")} fehlen.`,
+            `Thin data (${Math.round(quality.score * 100)}%): ${quality.missing.join(", ")} missing.`,
+          ),
+        );
+      }
 
     if (videos.length === 0) {
       warnings.push(
@@ -264,13 +278,12 @@ app.post(
     if (req.body?.track) {
       trackAccount(profile.handle, profile.nickname, profile.avatar);
       addSnapshot(profile.handle, snapshotFrom(profile, metrics));
-    }
+    }      res.json(result);
+      recordScan(true);
+    }),
+  );
 
-    res.json(result);
-  }),
-);
-
-/** Most recent scan across all handles, so the UI keeps its context after a reload. */
+  /** Most recent scan across all handles, so the UI keeps its context after a reload. */
 app.get("/api/last-scan", (_req, res) => {
   const scans = [...lastScans.values()];
   if (scans.length === 0) {

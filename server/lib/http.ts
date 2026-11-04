@@ -1,5 +1,6 @@
 import { effectiveSettings, updateSettings } from "./store.ts";
 import { tr } from "./lang.ts";
+import { recordRateLimit } from "./stats.ts";
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -82,6 +83,7 @@ async function fetchWithRetries(url: string, referer: string | undefined, accept
       const throttled = response.status === 429 || /ratelimit triggered/i.test(text.slice(0, 120));
 
       if (throttled) {
+        recordRateLimit();
         lastError = new HttpError(429, tr("TikTok drosselt die Anfragen (Rate-Limit).", "TikTok is throttling the requests (rate limit)."));
         if (attempt < attempts) {
           await sleep(4000 * attempt);
