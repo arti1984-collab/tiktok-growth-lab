@@ -24,6 +24,8 @@ export type Settings = {
   aiBaseUrl?: string;
   aiModel?: string;
   aiApiKey?: string;
+  /** Nur noetig, wenn das Release-Repo privat ist. */
+  githubToken?: string;
   cookie?: string;
   minDelayMs?: number;
   timezone?: string;
@@ -131,6 +133,7 @@ export function effectiveSettings() {
     aiBaseUrl: s.aiBaseUrl || ENV_DEFAULTS.aiBaseUrl,
     aiModel: s.aiModel || ENV_DEFAULTS.aiModel,
     aiApiKey: s.aiApiKey || ENV_DEFAULTS.aiApiKey,
+    githubToken: s.githubToken || ENV_DEFAULTS.githubToken,
     cookie: s.cookie || ENV_DEFAULTS.cookie,
     minDelayMs: Number(s.minDelayMs && s.minDelayMs > 0 ? s.minDelayMs : ENV_DEFAULTS.minDelayMs),
     cacheTtlMs: ENV_DEFAULTS.cacheTtlMs,
@@ -149,6 +152,8 @@ export function publicSettings() {
     aiModel: eff.aiModel,
     hasApiKey: Boolean(eff.aiApiKey),
     apiKeySource: data.settings.aiApiKey ? "ui" : ENV_DEFAULTS.aiApiKey ? "env" : "none",
+    hasGithubToken: Boolean(eff.githubToken),
+    githubTokenSource: data.settings.githubToken ? "ui" : ENV_DEFAULTS.githubToken ? "env" : "none",
     cookieSet: Boolean(eff.cookie),
     cookieSource: data.settings.cookie ? "ui" : ENV_DEFAULTS.cookie ? "env" : "none",
     minDelayMs: eff.minDelayMs,
@@ -164,7 +169,15 @@ export function updateSettings(patch: Settings) {
   if (patch.language === "de" || patch.language === "en") {
     next.language = patch.language;
   }
-  for (const key of ["aiBaseUrl", "aiModel", "aiApiKey", "cookie", "timezone", "goalDate"] as const) {
+  for (const key of [
+    "aiBaseUrl",
+    "aiModel",
+    "aiApiKey",
+    "githubToken",
+    "cookie",
+    "timezone",
+    "goalDate",
+  ] as const) {
     const value = patch[key];
     if (typeof value !== "string") continue;
     const trimmed = value.trim();

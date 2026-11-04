@@ -21,6 +21,7 @@ export function SettingsView({
   const [model, setModel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [cookie, setCookie] = useState("");
+  const [githubToken, setGithubToken] = useState("");
   const [delay, setDelay] = useState(1200);
   const [timezone, setTimezone] = useState("Europe/Berlin");
   const [models, setModels] = useState<string[]>([]);
@@ -134,10 +135,12 @@ export function SettingsView({
       const patch: Record<string, unknown> = { aiBaseUrl: baseUrl, aiModel: model, minDelayMs: delay, timezone };
       if (apiKey.trim() !== "") patch.aiApiKey = apiKey.trim();
       if (cookie.trim() !== "") patch.cookie = cookie.trim();
+      if (githubToken.trim() !== "") patch.githubToken = githubToken.trim();
       const data = await api.saveSettings(patch);
       setSettings(data);
       setApiKey("");
       setCookie("");
+      setGithubToken("");
       setMessage({ kind: "success", text: t("Gespeichert.", "Saved.") });
       onStatusChange();
     } catch (caught) {
@@ -288,6 +291,31 @@ export function SettingsView({
             <strong>{update?.latest ?? "–"}</strong>
           </li>
         </ul>
+
+        <label className="field">
+          <span>
+            {t("GitHub-Token (nur bei privatem Repo)", "GitHub token (private repo only)")}{" "}
+            {settings?.hasGithubToken && (
+              <Badge tone="good">
+                {t("gesetzt", "set")} · {settings.githubTokenSource}
+              </Badge>
+            )}
+          </span>
+          <input
+            type="password"
+            value={githubToken}
+            onChange={(event) => setGithubToken(event.target.value)}
+            placeholder={settings?.hasGithubToken ? t("leer lassen zum Behalten", "leave empty to keep") : "github_pat_…"}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <small className="muted">
+            {t(
+              "Fein abgestuftes Token mit Lesezugriff auf Contents. Bleibt lokal in der Datendatei. Ohne Token findet die Prüfung in einem privaten Repo nichts.",
+              "Fine-grained token with read access to contents. Stays local in the data file. Without a token the check finds nothing in a private repo.",
+            )}
+          </small>
+        </label>
 
         {update?.error && <Alert kind="info">{update.error}</Alert>}
 

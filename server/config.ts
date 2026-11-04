@@ -63,6 +63,7 @@ export const ENV_DEFAULTS = {
   aiBaseUrl: (process.env.AI_BASE_URL || "https://api.openai.com/v1").trim(),
   aiModel: (process.env.AI_MODEL || "gpt-4o-mini").trim(),
   aiApiKey: (process.env.AI_API_KEY || "").trim(),
+  githubToken: (process.env.GITHUB_TOKEN || process.env.UPDATE_TOKEN || "").trim(),
   cookie: (process.env.TIKTOK_COOKIE || "").trim(),
   minDelayMs: Number(process.env.SCRAPE_MIN_DELAY_MS || 1200),
   cacheTtlMs: Number(process.env.SCRAPE_CACHE_TTL_MS || 900_000),
