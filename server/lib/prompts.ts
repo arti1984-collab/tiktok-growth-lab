@@ -131,7 +131,7 @@ const SCHEMAS: Record<AiMode, string> = {
   "positionierung": { "nische": "", "zielgruppe": "", "alleinstellung": "", "profilVersprechen": "", "bioVorschlag": "" },
   "contentSaeulen": [ { "name": "", "anteilProzent": 0, "warum": "", "beispielThemen": ["", ""] } ],
   "hooks": ["10 fertige Hook-Sätze, die in den ersten 2 Sekunden funktionieren"],
-  "postingPlan": [ { "tag": "Montag", "uhrzeit": "18:30", "format": "", "thema": "", "hook": "" } ],
+  "postingPlan": [ { "woche": 1, "tag": "Montag", "uhrzeit": "18:30", "format": "", "thema": "", "hook": "" } ],
   "hashtagStrategie": { "nische": [""], "reichweite": [""], "marke": [""] },
   "soundStrategie": ["", ""],
   "seoKeywords": ["Begriffe, die in Caption und On-Screen-Text vorkommen sollten"],
@@ -198,7 +198,7 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
   const count = Math.max(1, Math.min(20, payload.count ?? 5));
   switch (mode) {
     case "strategy":
-      return `Erstelle eine vollständige 30-Tage-Wachstumsstrategie. Nutze die echten besten Zeitfenster aus den Metriken. Der Posting-Plan enthält 7 Einträge (eine Woche). Fülle hashtagStrategie vollständig: 5 bis 8 Nischen-Tags, 5 bis 8 Reichweiten-Tags und 2 bis 4 Marken-Tags, jeweils mit #, in Kleinbuchstaben, ohne Duplikate zwischen den Gruppen.`;
+      return `Erstelle eine vollständige 30-Tage-Wachstumsstrategie. Nutze die echten besten Zeitfenster aus den Metriken. Der Posting-Plan enthält 28 Einträge: vier Wochen zu je sieben Tagen, Montag bis Sonntag, mit dem Feld woche von 1 bis 4. Die Themen bauen über die vier Wochen aufeinander auf, Woche 1 setzt die schnellsten Wins um, Woche 4 festigt das Format. Fülle hashtagStrategie vollständig: 5 bis 8 Nischen-Tags, 5 bis 8 Reichweiten-Tags und 2 bis 4 Marken-Tags, jeweils mit #, in Kleinbuchstaben, ohne Duplikate zwischen den Gruppen.`;
     case "audit":
       return `Mache ein schonungsloses Profil-Audit. Bewerte Score 0-100 auf Basis der gelieferten Daten. Nenne die 3 Maßnahmen mit dem besten Wirkung/Aufwand-Verhältnis zuerst.`;
     case "ideas":
@@ -235,22 +235,40 @@ export async function generate(
 
   const guard = gate ? gateInstruction(gate) : "";
 
-  const { text, model, usage, note } = await chat(
+  const { text, model, usage, note, finish } = await chat(
     [
       { role: "system", content: guard ? `${systemPrompt()}\n\n${guard}` : systemPrompt() },
       { role: "user", content: userPrompt },
     ],
-    { json: true, temperature: mode === "hooks" || mode === "ideas" ? 0.85 : 0.7 },
+    {
+      json: true,
+      // Ein 28-Tage-Plan passt nicht in die Standardgrenze, sonst bricht die Antwort ab.
+      maxTokens: mode === "strategy" ? 8000 : 3000,
+      temperature: mode === "hooks" || mode === "ideas" ? 0.85 : 0.7,
+    },
   );
 
   const parsed = extractJson(text);
   recordAiCall(parsed === null);
   const issues = parsed === null ? [] : checkSchema(mode, parsed).slice(0, 6);
+
+  // Eine abgeschnittene Antwort sieht sonst aus wie ein halber Plan.
+  const truncated = finish === "length";
+  const noteText =
+    note ??
+    (truncated
+      ? tr(
+          "Die Antwort lief in die Ausgabegrenze des Modells und ist unvollstaendig. Kuerzer fragen oder ein Modell mit groesserer Ausgabe waehlen.",
+          "The answer hit the model output limit and is incomplete. Ask for less or pick a model with a larger output.",
+        )
+      : undefined);
+
   return {
     mode,
     model,
     usage,
-    note,
+    note: noteText,
+    finish,
     issues,
     guard: gate && gate.level !== "ok" ? { level: gate.level, warning: gate.warning } : undefined,
     parsed: parsed !== null,

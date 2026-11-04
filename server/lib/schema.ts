@@ -11,6 +11,8 @@ type Kind = "string" | "number" | "array" | "object";
 type ModeSchema = {
   required: Record<string, Kind>;
   itemFields?: Record<string, string[]>;
+  /** Mindestlaenge fuer Listen, damit ein halber Plan nicht als Plan gilt. */
+  lengths?: { key: string; min: number }[];
 };
 
 const SCHEMAS: Record<string, ModeSchema> = {
@@ -26,9 +28,10 @@ const SCHEMAS: Record<string, ModeSchema> = {
     },
     itemFields: {
       contentSaeulen: ["name", "warum"],
-      postingPlan: ["tag", "uhrzeit", "thema", "hook"],
+      postingPlan: ["woche", "tag", "uhrzeit", "thema", "hook"],
       wachstumshebel: ["hebel"],
     },
+    lengths: [{ key: "postingPlan", min: 28 }],
   },
   audit: {
     required: {
@@ -83,6 +86,12 @@ export function checkSchema(mode: AiMode | string, value: unknown): string[] {
     const found = kindOf(record[key]);
     if (found === "none") issues.push(`${key} fehlt`);
     else if (found !== expected) issues.push(`${key} ist ${found}, erwartet ${expected}`);
+  }
+
+  for (const rule of schema.lengths ?? []) {
+    const list = record[rule.key];
+    if (!Array.isArray(list)) continue;
+    if (list.length < rule.min) issues.push(`${rule.key} hat ${list.length} von ${rule.min} Eintraegen`);
   }
 
   for (const [key, fields] of Object.entries(schema.itemFields ?? {})) {

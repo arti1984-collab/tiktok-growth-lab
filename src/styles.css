@@ -1664,6 +1664,27 @@ details summary:hover {
   margin-top: 12px;
 }
 
+.week-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.week-heading {
+  margin: 0;
+  padding: 10px 18px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.week-block:first-child .week-heading {
+  border-top: 0;
+}
+
 @media (max-width: 720px) {
   .week-day-rows {
     grid-template-columns: 1fr;

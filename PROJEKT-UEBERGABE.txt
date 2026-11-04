@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.10.0, Branch main
+Stand: 04.11.2026, Version 2.11.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -209,6 +209,20 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.11.0 Echter 30-Tage-Plan:
+       - Der Modus strategy verlangt 28 Eintraege im postingPlan, vier
+         Wochen zu je sieben Tagen, Feld woche 1 bis 4, Themen bauen
+         aufeinander auf (server/lib/prompts.ts).
+       - checkSchema meldet einen zu kurzen Plan als Hinweis, statt ihn als
+         vollstaendig durchgehen zu lassen (lengths in server/lib/schema.ts).
+       - Der Wochenplan gruppiert nach Woche und zeigt vor jedem Block
+         "Woche 1" bis "Woche 4" (components/WeekPlan.tsx, CSS .week-heading).
+         In der Strategie steht der Plan ueber der JSON-Ansicht.
+       - strategy fragt 8000 Ausgabe-Token an statt 3000, sonst bricht der
+         Plan ab. chat() gibt finish zurueck; finish=length setzt unter der
+         Antwort einen Hinweis, statt einen halben Plan als Ergebnis zu
+         zeigen.
+       Version 2.11.0.
 2.10.0 Fixtures aus einem echten Scan:
        - Profilseite, Videoseite und Videoliste von @tiktok liegen als
          gekuerzte Mitschnitte in test/fixtures/. Die Tests fahren damit

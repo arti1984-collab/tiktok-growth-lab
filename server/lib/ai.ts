@@ -152,7 +152,7 @@ function mapHttpError(status: number, text: string): AiError {
 }
 
 type ChatCompletion = {
-  choices?: { message?: { content?: string } }[];
+  choices?: { message?: { content?: string }; finish_reason?: string }[];
   model?: string;
   usage?: { prompt_tokens?: number; completion_tokens?: number };
   error?: { message?: string; type?: string };
@@ -233,7 +233,7 @@ const RETRY_DELAYS_MS = [900, 2500];
 export async function chat(
   messages: { role: "system" | "user"; content: string }[],
   options: { json?: boolean; temperature?: number; maxTokens?: number } = {},
-): Promise<{ text: string; model: string; usage?: ChatCompletion["usage"]; note?: string }> {
+): Promise<{ text: string; model: string; usage?: ChatCompletion["usage"]; note?: string; finish?: string }> {
   const config = aiConfig();
   if (!config.apiKey && !config.keyless) {
     throw new AiError(
@@ -307,7 +307,13 @@ export async function chat(
         `The provider does not serve ${replaced.from}; ${replaced.to} answered instead. Change it in the settings to keep that.`,
       )
     : undefined;
-  return { text: content, model: response.data?.model || config.model, usage: response.data?.usage, note };
+  return {
+    text: content,
+    model: response.data?.model || config.model,
+    usage: response.data?.usage,
+    note,
+    finish: response.data?.choices?.[0]?.finish_reason,
+  };
 }
 
 /**
