@@ -81,10 +81,21 @@ fun StudioScreen(state: LabState) {
             }
         }
 
+        if (mode == "hashtags" && answer == null && !state.busy) {
+            CardBox {
+                Text("Hashtag-Bereich", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = InkColor)
+                Text(
+                    "Trage oben Nische oder Thema ein und starte. Du bekommst getrennte Sets für Nische, Reichweite und Marke, dazu eine Begründung. Die Tags erscheinen danach mit Kopierknopf.",
+                    fontSize = 12.sp,
+                    color = MutedColor,
+                )
+            }
+        }
+
         OutlinedTextField(
             value = topic,
             onValueChange = { topic = it },
-            label = { Text("Thema / konkretes Video (optional)") },
+            label = { Text("Nische oder Thema (optional)") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
         )
