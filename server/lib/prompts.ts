@@ -225,7 +225,7 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
     SCHEMAS[mode],
   ].join("\n");
 
-  const { text, model, usage } = await chat(
+  const { text, model, usage, note } = await chat(
     [
       { role: "system", content: systemPrompt() },
       { role: "user", content: userPrompt },
@@ -238,6 +238,7 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
     mode,
     model,
     usage,
+    note,
     parsed: parsed !== null,
     result: parsed ?? { rohtext: text },
   };

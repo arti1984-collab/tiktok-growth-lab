@@ -243,6 +243,7 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </>
           }
         >
+          {response.note && <p className="muted small">{response.note}</p>}
           {response.mode === "calendar" && Array.isArray((response.result as { tage?: unknown })?.tage) ? (
             <WeekPlan days={(response.result as { tage: unknown[] }).tage} />
           ) : (

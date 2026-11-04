@@ -16,12 +16,30 @@ export class AiError extends Error {
   }
 }
 
+/**
+ * Base URL of an OpenAI-compatible endpoint. People paste the whole endpoint
+ * now and then, so a trailing /chat/completions or /models is dropped: the app
+ * adds that path itself and would otherwise call it twice (404).
+ */
+export function normalizeBaseUrl(value: string): string {
+  return value
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/(chat\/completions|completions|responses|embeddings|models)$/i, "")
+    .replace(/\/+$/, "");
+}
+
+/** Gemini's native ids carry a "models/" prefix that the API path adds again. */
+function normalizeModel(value: string): string {
+  return value.trim().replace(/^models\//i, "");
+}
+
 export function aiConfig(): AiConfig {
   const settings = effectiveSettings();
-  const baseUrl = settings.aiBaseUrl.replace(/\/+$/, "");
+  const baseUrl = normalizeBaseUrl(settings.aiBaseUrl);
   return {
     baseUrl,
-    model: settings.aiModel,
+    model: normalizeModel(settings.aiModel),
     apiKey: settings.aiApiKey,
     // Local servers (Ollama, LM Studio) need no key at all.
     keyless: isLocalBaseUrl(baseUrl),
@@ -109,8 +127,8 @@ function mapHttpError(status: number, text: string): AiError {
       "MODEL",
       tr("Modell oder Basis-URL nicht gefunden (404).", "Model or base URL not found (404)."),
       tr(
-        "Prüfe AI_BASE_URL und den Modellnamen – über „Modelle laden“ siehst du die verfügbaren Modelle.",
-        "Check the base URL and the model name – \"Load models\" shows what the provider offers.",
+        `Prüfe Basis-URL und Modellnamen, „Modelle laden“ in den Einstellungen zeigt die verfügbaren Modelle. Anbieter-Meldung: ${detail || "keine"}`,
+        `Check the base URL and the model name, "Load models" in the settings shows what the provider offers. Provider message: ${detail || "none"}`,
       ),
     );
   }
@@ -144,7 +162,7 @@ type ChatCompletion = {
  */
 export async function listModels(overrides: { baseUrl?: string; apiKey?: string } = {}): Promise<string[]> {
   const stored = aiConfig();
-  const baseUrl = (overrides.baseUrl?.trim() || stored.baseUrl).replace(/\/+$/, "");
+  const baseUrl = normalizeBaseUrl(overrides.baseUrl?.trim() || stored.baseUrl);
   const config: AiConfig = {
     baseUrl,
     model: stored.model,
@@ -159,13 +177,52 @@ export async function listModels(overrides: { baseUrl?: string; apiKey?: string 
   return models.sort((a, b) => a.localeCompare(b));
 }
 
+/** Model lists change rarely, so one lookup serves many answers. */
+const modelCache = new Map<string, { at: number; models: string[] }>();
+const MODEL_CACHE_MS = 10 * 60_000;
+
+async function knownModels(config: AiConfig): Promise<string[]> {
+  const key = config.baseUrl.toLowerCase();
+  const hit = modelCache.get(key);
+  if (hit && Date.now() - hit.at < MODEL_CACHE_MS) return hit.models;
+  try {
+    const models = await listModels({ baseUrl: config.baseUrl, apiKey: config.apiKey });
+    modelCache.set(key, { at: Date.now(), models });
+    return models;
+  } catch {
+    // Ohne Modellliste bleibt nur die klare Fehlermeldung.
+    return [];
+  }
+}
+
+function sameModel(candidate: string, wanted: string): boolean {
+  const clean = (value: string) => value.trim().toLowerCase().replace(/^models\//, "");
+  return clean(candidate) === clean(wanted);
+}
+
+/**
+ * Closest model that the provider really serves: same family first, then a free
+ * one, then whatever it lists first. The caller tells the user about the swap.
+ */
+function pickModel(wanted: string, models: string[]): string | null {
+  if (models.length === 0) return null;
+  const lower = wanted.toLowerCase();
+  const version = models.find((id) => id.toLowerCase().startsWith(`${lower}-`));
+  if (version) return version;
+  const family = lower.split(/[:/]/)[0];
+  const sameFamily = models.find((id) => id.toLowerCase().startsWith(family));
+  if (sameFamily) return sameFamily;
+  const free = models.find((id) => id.toLowerCase().endsWith(":free"));
+  return free ?? models[0];
+}
+
 /** Providers drop requests under load; two quick retries fix most of those 503s. */
 const RETRY_DELAYS_MS = [900, 2500];
 
 export async function chat(
   messages: { role: "system" | "user"; content: string }[],
   options: { json?: boolean; temperature?: number; maxTokens?: number } = {},
-): Promise<{ text: string; model: string; usage?: ChatCompletion["usage"] }> {
+): Promise<{ text: string; model: string; usage?: ChatCompletion["usage"]; note?: string }> {
   const config = aiConfig();
   if (!config.apiKey && !config.keyless) {
     throw new AiError(
@@ -179,7 +236,7 @@ export async function chat(
   }
 
   const body: Record<string, unknown> = {
-    model: config.model,
+    model: normalizeModel(config.model),
     messages,
     temperature: options.temperature ?? 0.7,
     max_tokens: options.maxTokens ?? 3000,
@@ -206,6 +263,22 @@ export async function chat(
     lastMessage = providerMessage(response.data, response.text);
   }
 
+  // A 404 nearly always means the model name is gone or never existed (free
+  // tiers rotate). Ask the provider what it has and answer with that model once
+  // instead of stopping at the error.
+  let replaced: { from: string; to: string } | null = null;
+  if (response.status === 404) {
+    const models = await knownModels(config);
+    const wanted = String(body.model);
+    const existing = models.find((id) => sameModel(id, wanted)) ?? pickModel(wanted, models);
+    if (existing && !sameModel(existing, wanted)) {
+      replaced = { from: wanted, to: existing };
+      body.model = existing;
+      response = await send();
+      lastMessage = providerMessage(response.data, response.text);
+    }
+  }
+
   if (response.status !== 200) throw mapHttpError(response.status, lastMessage);
 
   const content = response.data?.choices?.[0]?.message?.content ?? "";
@@ -217,7 +290,13 @@ export async function chat(
         tr("Oft ein Zeichen für Überlastung – bitte erneut versuchen.", "Often a sign of overload – please try again."),
     );
   }
-  return { text: content, model: response.data?.model || config.model, usage: response.data?.usage };
+  const note = replaced
+    ? tr(
+        `Das Modell ${replaced.from} gibt es beim Anbieter nicht, geantwortet hat ${replaced.to}. In den Einstellungen umstellen, damit es dauerhaft gilt.`,
+        `The provider does not serve ${replaced.from}; ${replaced.to} answered instead. Change it in the settings to keep that.`,
+      )
+    : undefined;
+  return { text: content, model: response.data?.model || config.model, usage: response.data?.usage, note };
 }
 
 /**

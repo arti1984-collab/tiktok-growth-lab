@@ -212,6 +212,7 @@ export type AiResponse = {
   model: string;
   parsed: boolean;
   result: unknown;
+  note?: string;
 };
 
 export type AiMode = "strategy" | "audit" | "ideas" | "caption" | "hooks" | "calendar" | "hashtags";

@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.5.0, Branch main
+Stand: 04.11.2026, Version 2.6.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -197,6 +197,14 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.6.0  KI-Fehler 404 aufgeloest: die Basis-URL wird normalisiert, ein
+       angehaengtes /chat/completions oder /models faellt weg, ein
+       models/-Praefix im Modellnamen auch. Antwortet der Anbieter mit
+       404, holt die App seine Modellliste (zehn Minuten zwischen-
+       gespeichert), wiederholt die Anfrage einmal mit einem vorhandenen
+       Modell und nennt den Tausch unter der Antwort (note in /api/ai,
+       server/lib/ai.ts). Die Fehlermeldung enthaelt die Anbieter-Meldung.
+       Version 2.6.0.
 2.5.0  Update laedt sich selbst: /api/update startet im Hintergrund einen
        Download der neuen exe nach data/updates/ (server/lib/updater.ts),
        der Fortschritt steht als download-Feld in der Antwort. Die fertige
