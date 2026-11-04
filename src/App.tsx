@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api";
 import { LangProvider, setActiveLang, type Lang } from "./lang";
-import type { AiMode, ScanResult, Status } from "./types";
+import type { AiMode, ScanResult, Status, UpdateInfo } from "./types";
 import { ScanView } from "./views/ScanView";
 import { WatchView } from "./views/WatchView";
 import { StudioView } from "./views/StudioView";
@@ -22,6 +22,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("scan");
   const [status, setStatus] = useState<Status | null>(null);
   const [scan, setScan] = useState<ScanResult | null>(null);
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [updateHidden, setUpdateHidden] = useState(false);
   const [studioMode, setStudioMode] = useState<AiMode>("strategy");
 
   const refreshStatus = useCallback(() => {
@@ -34,6 +36,14 @@ export default function App() {
   useEffect(() => {
     refreshStatus();
   }, [refreshStatus]);
+
+  // One check per start; the server caches the answer for a quarter of an hour.
+  useEffect(() => {
+    api
+      .update()
+      .then(setUpdate)
+      .catch(() => undefined);
+  }, []);
 
   // A reload starts with an empty scan state, but the server still holds the last scan.
   useEffect(() => {
@@ -85,6 +95,34 @@ export default function App() {
             <span className="pill">{status?.timezone ?? "–"}</span>
           </div>
         </header>
+
+        {update?.updateAvailable && !updateHidden && (
+          <div className="update-bar">
+            <span>
+              {t(
+                `Version ${update.latest} ist verfügbar, du nutzt ${update.current}.`,
+                `Version ${update.latest} is available, you are on ${update.current}.`,
+              )}
+            </span>
+            <span className="row gap-sm">
+              <a
+                className="btn btn-sm btn-primary"
+                href={update.exe ?? update.url ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t("Herunterladen", "Download")}
+              </a>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setUpdateHidden(true)}
+                aria-label={t("Meldung schließen", "Dismiss notice")}
+              >
+                ✕
+              </button>
+            </span>
+          </div>
+        )}
 
         <nav className="tabs">
           {TABS.map((entry) => (

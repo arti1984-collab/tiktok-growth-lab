@@ -21,15 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.artur.growthlab.BuildConfig
 import de.artur.growthlab.LabState
 import de.artur.growthlab.data.Ai
 import de.artur.growthlab.data.AiSettings
 import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.Provider
+import de.artur.growthlab.data.Update
 import de.artur.growthlab.data.english
 import de.artur.growthlab.data.tr
 import kotlinx.coroutines.launch
@@ -43,6 +46,9 @@ fun SettingsScreen(state: LabState) {
     var models by remember { mutableStateOf<List<String>>(emptyList()) }
     var message by remember { mutableStateOf<String?>(null) }
     var loadingModels by remember { mutableStateOf(false) }
+    var checkingUpdate by remember { mutableStateOf(false) }
+    var githubToken by remember { mutableStateOf(state.settings.githubToken) }
+    val context = LocalContext.current
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -72,6 +78,86 @@ fun SettingsScreen(state: LabState) {
                     label = { Text("English", fontSize = 12.sp) },
                 )
             }
+        }
+
+        CardBox {
+            Text(tr("Updates", "Updates"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                tr("Installiert: ${BuildConfig.VERSION_NAME}", "Installed: ${BuildConfig.VERSION_NAME}"),
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+            state.update?.let { info ->
+                Text(
+                    when {
+                        info.available -> tr("Version ${info.latest} ist verfügbar.", "Version ${info.latest} is available.")
+                        info.error != null -> info.error
+                        else -> tr("Du nutzt die neueste Version.", "You are on the newest version.")
+                    },
+                    fontSize = 12.sp,
+                    color = if (info.available) Accent else MutedColor,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            checkingUpdate = true
+                            state.update = Update.check(githubToken)
+                            checkingUpdate = false
+                        }
+                    },
+                    enabled = !checkingUpdate,
+                ) {
+                    Text(
+                        if (checkingUpdate) tr("Prüfe…", "Checking…") else tr("Nach Updates suchen", "Check for updates"),
+                        fontSize = 12.sp,
+                    )
+                }
+                if (state.update?.available == true) {
+                    TextButton(onClick = { openUrl(context, state.update?.apk ?: state.update?.url) }) {
+                        Text(tr("Herunterladen", "Download"), fontSize = 12.sp)
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = githubToken,
+                onValueChange = { githubToken = it },
+                label = { Text(tr("GitHub-Token (nur Lesezugriff)", "GitHub token (read only)"), fontSize = 11.sp) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        state.saveSettings(state.settings.copy(githubToken = githubToken.trim()))
+                        message = tr("Token gespeichert.", "Token saved.")
+                    },
+                ) {
+                    Text(tr("Token speichern", "Save token"), fontSize = 12.sp)
+                }
+                if (state.settings.githubToken.isNotBlank()) {
+                    TextButton(
+                        onClick = {
+                            githubToken = ""
+                            state.saveSettings(state.settings.copy(githubToken = ""))
+                            state.update = null
+                            message = tr("Token entfernt.", "Token removed.")
+                        },
+                    ) {
+                        Text(tr("Entfernen", "Remove"), fontSize = 12.sp)
+                    }
+                }
+            }
+            Text(
+                tr(
+                    "Der Token wird nur für die Versionsabfrage benutzt und bleibt auf dem Gerät.",
+                    "The token is used only for the version check and stays on the device.",
+                ),
+                fontSize = 10.sp,
+                color = MutedColor,
+            )
         }
 
         CardBox {

@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.sp
 import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.formatDateOnly
 import de.artur.growthlab.data.formatDateTime
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import java.text.NumberFormat
 
 fun num(value: Long): String = NumberFormat.getIntegerInstance(Language.locale).format(value)
@@ -99,6 +102,12 @@ fun InsightRow(kind: String, title: String, text: String) {
             }
         }
     }
+}
+
+/** Öffnet einen Link im Browser; ohne Ziel passiert nichts. */
+fun openUrl(context: Context, url: String?) {
+    if (url.isNullOrBlank()) return
+    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
 }
 
 @Composable

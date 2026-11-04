@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import de.artur.growthlab.data.Profile
 import de.artur.growthlab.data.ScanResult
 import de.artur.growthlab.data.Store
 import de.artur.growthlab.data.TrackedAccount
+import de.artur.growthlab.data.Update
 import de.artur.growthlab.data.tr
 import de.artur.growthlab.ui.Accent
 import de.artur.growthlab.ui.BgColor
@@ -57,6 +59,7 @@ import de.artur.growthlab.ui.ScanScreen
 import de.artur.growthlab.ui.SettingsScreen
 import de.artur.growthlab.ui.StudioScreen
 import de.artur.growthlab.ui.TutorialScreen
+import de.artur.growthlab.ui.openUrl
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +80,7 @@ class LabState(private val context: Context) {
     var busy by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
     var progress by mutableStateOf("")
+    var update by mutableStateOf<Update.Info?>(null)
 
     fun saveSettings(next: AiSettings) {
         settings = next
@@ -103,6 +107,9 @@ fun Root(context: Context) {
     // The stored language drives every screen; reading it here keeps the switch instant.
     Language.current = Lang.fromCode(state.settings.language)
     val tabs = listOf("Scan", tr("Wachstum", "Growth"), tr("KI-Studio", "AI studio"), tr("Setup", "Setup"), tr("Hilfe", "Guide"))
+    var updateHidden by remember { mutableStateOf(false) }
+    // One check per start, so a new release shows up without opening the setup tab.
+    LaunchedEffect(Unit) { state.update = Update.check(state.settings.githubToken) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -172,6 +179,18 @@ fun Root(context: Context) {
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            val info = state.update
+            if (info?.available == true && info.latest != null && !updateHidden) {
+                UpdateBanner(
+                    text = tr(
+                        "Version ${info.latest} ist verfügbar, du nutzt ${info.current}.",
+                        "Version ${info.latest} is available, you are on ${info.current}.",
+                    ),
+                    action = tr("Herunterladen", "Download"),
+                    onAction = { openUrl(context, info.apk ?: info.url) },
+                    onDismiss = { updateHidden = true },
+                )
+            }
             when (tab) {
                 0 -> ScanScreen(state)
                 1 -> GrowthScreen(state)
@@ -181,6 +200,25 @@ fun Root(context: Context) {
             }
         }
     }
+}
+
+/** One line above the content, so an available update is hard to miss. */
+@Composable
+private fun UpdateBanner(text: String, action: String, onAction: () -> Unit, onDismiss: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(text, fontSize = 11.sp, color = InkColor, modifier = Modifier.weight(1f))
+        androidx.compose.material3.TextButton(onClick = onAction) {
+            Text(action, fontSize = 11.sp, color = Accent)
+        }
+        androidx.compose.material3.TextButton(onClick = onDismiss) {
+            Text("✕", fontSize = 11.sp, color = MutedColor)
+        }
+    }
+    DividerLine()
 }
 
 /**

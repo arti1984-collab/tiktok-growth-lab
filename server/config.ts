@@ -64,6 +64,8 @@ export const ENV_DEFAULTS = {
   aiModel: (process.env.AI_MODEL || "gpt-4o-mini").trim(),
   aiApiKey: (process.env.AI_API_KEY || "").trim(),
   cookie: (process.env.TIKTOK_COOKIE || "").trim(),
+  // Read-only GitHub token for the update check; the repo is private.
+  githubToken: (process.env.GITHUB_TOKEN || "").trim(),
   minDelayMs: Number(process.env.SCRAPE_MIN_DELAY_MS || 1200),
   cacheTtlMs: Number(process.env.SCRAPE_CACHE_TTL_MS || 900_000),
   timezone: process.env.TIMEZONE || "Europe/Berlin",

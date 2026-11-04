@@ -313,6 +313,24 @@ select:disabled {
   gap: 16px;
 }
 
+/* Update-Hinweis: eine Zeile über den Reitern, nicht als Fenster. */
+.update-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  margin: 0 clamp(18px, 4vw, 44px);
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  font-size: 0.9rem;
+}
+
+.update-bar .btn {
+  flex-shrink: 0;
+}
+
 .footer {
   margin-top: auto;
   padding: 20px clamp(18px, 4vw, 44px) 34px;

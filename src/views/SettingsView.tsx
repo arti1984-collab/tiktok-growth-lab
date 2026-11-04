@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import { useT } from "../lang";
-import type { Provider, PublicSettings, Status } from "../types";
+import type { Provider, PublicSettings, Status, UpdateInfo } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { formatDecimal } from "../format";
 
@@ -27,6 +27,9 @@ export function SettingsView({
   const [freeModels, setFreeModels] = useState<string[]>([]);
   const [freeOnly, setFreeOnly] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [githubToken, setGithubToken] = useState("");
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info" | "warn"; text: string } | null>(null);
 
   useEffect(() => {
@@ -44,6 +47,10 @@ export function SettingsView({
       .providers()
       .then((data) => setProviders(data.providers))
       .catch(() => setProviders([]));
+    api
+      .update()
+      .then(setUpdate)
+      .catch(() => setUpdate(null));
   }, []);
 
   useEffect(() => {
@@ -119,6 +126,37 @@ export function SettingsView({
       setApiKey("");
       setCookie("");
       setMessage({ kind: "success", text: t("Gespeichert.", "Saved.") });
+      onStatusChange();
+    } catch (caught) {
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function checkUpdate() {
+    setCheckingUpdate(true);
+    try {
+      setUpdate(await api.update(true));
+    } catch (caught) {
+      setUpdate(null);
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }
+
+  async function saveToken(clear = false) {
+    setBusy("token");
+    try {
+      const next = await api.saveSettings({ githubToken: clear ? "" : githubToken.trim() });
+      setSettings(next);
+      setGithubToken("");
+      setUpdate(null);
+      setMessage({
+        kind: "success",
+        text: clear ? t("Token entfernt.", "Token removed.") : t("Token gespeichert.", "Token saved."),
+      });
       onStatusChange();
     } catch (caught) {
       setMessage({ kind: "error", text: (caught as ApiError).message });
@@ -207,6 +245,91 @@ export function SettingsView({
             English
           </button>
           {busy === "language" && <Spinner label={t("Speichere…", "Saving…")} />}
+        </div>
+      </Section>
+
+      <Section
+        title={t("Updates", "Updates")}
+        subtitle={t(
+          "Prüft die neueste Veröffentlichung auf GitHub. Der Hinweis erscheint auch oben auf jeder Seite, sobald eine höhere Version bereitliegt.",
+          "Checks the newest GitHub release. The notice also appears on top of every page as soon as a higher version is out.",
+        )}
+        actions={
+          <button className="btn" onClick={() => void checkUpdate()} disabled={checkingUpdate}>
+            {checkingUpdate ? <Spinner label={t("Prüfe…", "Checking…")} /> : t("Nach Updates suchen", "Check for updates")}
+          </button>
+        }
+      >
+        <ul className="kv">
+          <li>
+            <span>{t("Installiert", "Installed")}</span>
+            <strong>{status?.version ?? "–"}</strong>
+          </li>
+          <li>
+            <span>{t("Neueste veröffentlicht", "Newest published")}</span>
+            <strong>{update?.latest ?? "–"}</strong>
+          </li>
+        </ul>
+
+        {update?.error && <Alert kind="info">{update.error}</Alert>}
+
+        {update && !update.error &&
+          (update.updateAvailable ? (
+            <Alert kind="info">
+              <strong>{t(`Version ${update.latest} ist verfügbar.`, `Version ${update.latest} is available.`)}</strong>
+              <div className="row gap-sm wrap" style={{ marginTop: 8 }}>
+                {update.exe && (
+                  <a className="btn btn-sm btn-primary" href={update.exe} target="_blank" rel="noreferrer">
+                    {t("Windows-Datei", "Windows file")}
+                  </a>
+                )}
+                {update.apk && (
+                  <a className="btn btn-sm" href={update.apk} target="_blank" rel="noreferrer">
+                    {t("Android-Datei", "Android file")}
+                  </a>
+                )}
+                {update.url && (
+                  <a className="btn btn-sm btn-ghost" href={update.url} target="_blank" rel="noreferrer">
+                    {t("Release-Seite", "Release page")}
+                  </a>
+                )}
+              </div>
+            </Alert>
+          ) : (
+            <p className="muted small">{t("Du nutzt die neueste Version.", "You are on the newest version.")}</p>
+          ))}
+
+        <label className="field">
+          <span>{t("GitHub-Token", "GitHub token")}</span>
+          <input
+            type="password"
+            value={githubToken}
+            onChange={(event) => setGithubToken(event.target.value)}
+            placeholder={
+              settings?.hasGithubToken
+                ? t("Ein Token ist hinterlegt", "A token is stored")
+                : "github_pat_… / ghp_…"
+            }
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <small className="muted">
+            {t(
+              "Nur Lesezugriff auf die Releases. Wird ausschließlich für diese Abfrage benutzt und bleibt in der lokalen Datendatei.",
+              "Read access to the releases only. Used solely for this check and kept in the local data file.",
+            )}
+          </small>
+        </label>
+
+        <div className="row gap-sm">
+          <button className="btn btn-sm" onClick={() => void saveToken()} disabled={busy === "token"}>
+            {t("Token speichern", "Save token")}
+          </button>
+          {settings?.hasGithubToken && (
+            <button className="btn btn-sm btn-ghost" onClick={() => void saveToken(true)} disabled={busy === "token"}>
+              {t("Entfernen", "Remove")}
+            </button>
+          )}
         </div>
       </Section>
 
