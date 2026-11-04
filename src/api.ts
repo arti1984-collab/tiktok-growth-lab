@@ -10,6 +10,7 @@ import type {
   PublicSettings,
   ScanResult,
   Status,
+  TokenProbe,
   UpdateInfo,
   Video,
 } from "./types";
@@ -61,6 +62,10 @@ export const api = {
 
   /** Latest GitHub release compared to the running version. */
   update: (force = false) => request<UpdateInfo>(`/api/update${force ? "?force=1" : ""}`),
+
+  /** Does this token have read access to the release repo? */
+  probeGithubToken: (token: string) =>
+    request<TokenProbe>("/api/update/token", { method: "POST", body: JSON.stringify({ token }) }),
 
   /** Quit and start again, so the downloaded file takes over. */
   restartUpdate: () => request<{ ok: boolean }>("/api/update/restart", { method: "POST", body: JSON.stringify({}) }),

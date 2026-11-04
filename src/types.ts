@@ -153,6 +153,17 @@ export type UpdateInfo = {
   download: UpdateDownload | null;
 };
 
+/** Antwort von POST /api/update/token: darf das Token das Repo lesen? */
+export type TokenProbe = {
+  ok: boolean;
+  kind: "ok" | "invalid" | "forbidden" | "throttled" | "missing" | "failed";
+  repo: string;
+  tokenUsed: boolean;
+  private: boolean | null;
+  latest: string | null;
+  message: string;
+};
+
 export type Snapshot = {
   at: number;
   followers: number;

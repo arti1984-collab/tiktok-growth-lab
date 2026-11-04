@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assetDownloadUrl, compareVersions, releaseHeaders } from "../server/lib/update.ts";
+import {
+  assetDownloadUrl,
+  classifyProbeStatus,
+  compareVersions,
+  releaseHeaders,
+} from "../server/lib/update.ts";
 
 test("Versionen werden als Zahlen verglichen", () => {
   assert.equal(compareVersions("2.11.0", "2.10.0"), 1);
@@ -19,6 +24,17 @@ test("ohne Token bleibt die Abfrage anonym", () => {
 test("mit Token kommt der Bearer-Kopf dazu", () => {
   const headers = releaseHeaders("  abc123  ");
   assert.equal(headers.authorization, "Bearer abc123");
+});
+
+test("Token-Pruefung ordnet die Statuscodes richtig ein", () => {
+  assert.equal(classifyProbeStatus(200, 4999), "ok");
+  assert.equal(classifyProbeStatus(401, 10), "invalid");
+  assert.equal(classifyProbeStatus(403, 0), "throttled");
+  assert.equal(classifyProbeStatus(403, 42), "forbidden");
+  assert.equal(classifyProbeStatus(403, null), "forbidden");
+  assert.equal(classifyProbeStatus(404, 42), "missing");
+  assert.equal(classifyProbeStatus(429, 0), "throttled");
+  assert.equal(classifyProbeStatus(500, 42), "failed");
 });
 
 test("privates Repo laedt ueber die Asset-API", () => {

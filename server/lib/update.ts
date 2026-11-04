@@ -63,6 +63,139 @@ export function assetDownloadUrl(
   return asset.browser_download_url ?? null;
 }
 
+export type ProbeKind = "ok" | "invalid" | "forbidden" | "throttled" | "missing" | "failed";
+
+/**
+ * Ordnet den HTTP-Status einer Token-Pruefung ein. 403 heisst nur dann
+ * "gedrosselt", wenn das Kontingent wirklich leer ist; sonst fehlen Rechte.
+ */
+export function classifyProbeStatus(status: number, rateRemaining?: number | null): ProbeKind {
+  if (status >= 200 && status < 300) return "ok";
+  if (status === 401) return "invalid";
+  if (status === 429) return "throttled";
+  if (status === 403) return rateRemaining === 0 ? "throttled" : "forbidden";
+  if (status === 404) return "missing";
+  return "failed";
+}
+
+export type TokenProbe = {
+  ok: boolean;
+  kind: ProbeKind;
+  repo: string;
+  tokenUsed: boolean;
+  private: boolean | null;
+  latest: string | null;
+  message: string;
+};
+
+function probeMessage(kind: ProbeKind, tokenUsed: boolean): string {
+  switch (kind) {
+    case "invalid":
+      return tr(
+        "GitHub hat das Token abgelehnt. Abgelaufen, geloescht oder falsch kopiert.",
+        "GitHub rejected the token. Expired, deleted or copied wrong.",
+      );
+    case "forbidden":
+      return tr(
+        "Das Token darf das Repo nicht lesen. Bei fein abgestuften Tokens fehlt Contents mit Read-only.",
+        "The token may not read the repo. Fine-grained tokens need Contents with Read-only.",
+      );
+    case "throttled":
+      return tr(
+        "GitHub drosselt gerade. In ein paar Minuten noch einmal.",
+        "GitHub is throttling right now. Try again in a few minutes.",
+      );
+    case "missing":
+      return tokenUsed
+        ? tr(
+            "Kein Zugriff auf das Repo. Pruefe, ob das Token fuer dieses Repo gilt und Contents lesen darf.",
+            "No access to the repo. Check that the token is valid for this repo and may read contents.",
+          )
+        : tr(
+            "Ohne Token bleibt ein privates Repo unsichtbar. Token eintragen oder GITHUB_TOKEN in der .env setzen.",
+            "Without a token a private repo stays invisible. Add a token or set GITHUB_TOKEN in the .env.",
+          );
+    default:
+      return tr(
+        "Die Pruefung ist nicht durchgekommen. Netz oder GitHub pruefen, dann noch einmal.",
+        "The check did not get through. Check the network or GitHub, then try again.",
+      );
+  }
+}
+
+/**
+ * Prueft, ob ein Token das Release-Repo lesen darf. Zwei Anfragen, weil ein
+ * 404 allein nicht sagt, ob der Zugriff fehlt oder nur kein Release existiert:
+ * erst das Repo selbst, dann die neueste Veroeffentlichung. Kein Cache, damit
+ * der Knopf in den Einstellungen wirklich den aktuellen Stand zeigt.
+ */
+export async function probeRepoAccess(token: string): Promise<TokenProbe> {
+  const clean = token.trim();
+  const base = {
+    ok: false,
+    kind: "failed" as ProbeKind,
+    repo: REPO,
+    tokenUsed: Boolean(clean),
+    private: null as boolean | null,
+    latest: null as string | null,
+  };
+
+  try {
+    const repoResponse = await fetch(`https://api.github.com/repos/${REPO}`, {
+      headers: releaseHeaders(clean),
+      signal: AbortSignal.timeout(8000),
+    });
+    const rawRemaining = repoResponse.headers.get("x-ratelimit-remaining");
+    const remaining = rawRemaining === null ? null : Number(rawRemaining);
+    const kind = classifyProbeStatus(repoResponse.status, Number.isFinite(remaining) ? remaining : null);
+    if (kind !== "ok") {
+      return { ...base, kind, message: probeMessage(kind, Boolean(clean)) };
+    }
+
+    const repoInfo = (await repoResponse.json()) as { private?: boolean };
+    const isPrivate = typeof repoInfo.private === "boolean" ? repoInfo.private : null;
+
+    const releaseResponse = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+      headers: releaseHeaders(clean),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (releaseResponse.status === 404) {
+      return {
+        ...base,
+        ok: true,
+        kind: "ok",
+        private: isPrivate,
+        message: tr("Zugriff ist da, es gibt nur noch kein Release.", "Access works, there is just no release yet."),
+      };
+    }
+    if (!releaseResponse.ok) {
+      return {
+        ...base,
+        ok: true,
+        kind: "ok",
+        private: isPrivate,
+        message: tr(
+          "Zugriff ist da, die Release-Abfrage hat aber nicht geklappt.",
+          "Access works, but the release request did not.",
+        ),
+      };
+    }
+
+    const release = (await releaseResponse.json()) as ReleaseResponse;
+    const latest = (release.tag_name ?? "").replace(/^v/i, "").trim() || null;
+    return {
+      ...base,
+      ok: true,
+      kind: "ok",
+      private: isPrivate,
+      latest,
+      message: tr("Zugriff auf das Repo ist da.", "Access to the repo works."),
+    };
+  } catch {
+    return { ...base, message: probeMessage("failed", Boolean(clean)) };
+  }
+}
+
 /** 1.8.0 gegen 1.10.0: Zahlen vergleichen, nicht Zeichenketten. */
 export function compareVersions(a: string, b: string): number {
   const split = (value: string) =>

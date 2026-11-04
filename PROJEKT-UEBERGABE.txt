@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.12.0, Branch main
+Stand: 04.11.2026, Version 2.13.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -18,10 +18,11 @@ Die Android-App wurde am 04.11.2026 aus dem Repo genommen. Sie liegt nur noch
 lokal im Ordner android/ und wird nicht mehr gebaut oder ausgeliefert.
 
 Alles ist lokal. Es gibt kein Benutzerkonto, keine Datenbank in der Cloud und
-keine Telemetrie. Nach aussen gehen nur zwei Dinge: Anfragen an tiktok.com und
-Anfragen an den KI-Anbieter, dessen Key der Nutzer selbst eintraegt.
+keine Telemetrie. Nach aussen gehen nur drei Dinge: Anfragen an tiktok.com,
+Anfragen an den KI-Anbieter, dessen Key der Nutzer selbst eintraegt, und die
+Update-Pruefung an api.github.com.
 
-Das Projekt ist oeffentlich auf GitHub: arti1984-collab/tiktok-growth-lab
+Das Projekt liegt privat auf GitHub: arti1984-collab/tiktok-growth-lab
 
 
 2. TECHNIK
@@ -103,6 +104,7 @@ Wichtige Routen (Details in server/index.ts):
   GET  /api/ai/models      verfuegbare Modelle des Anbieters
   POST /api/ai/scan-free   Modellliste nach kostenlosen Modellen filtern
   GET  /api/update         neueste Veroeffentlichung, laedt exe im Hintergrund
+  POST /api/update/token   prueft, ob das Token das Repo lesen darf
   POST /api/update/restart tauscht die exe beim Beenden, dann Neustart
   GET/POST /api/watchlist  Account verfolgen, messen, entfernen
   GET/POST /api/settings   Einstellungen lesen und schreiben
@@ -209,6 +211,20 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.13.0 Knopf "Token pruefen" in der Update-Karte:
+       - POST /api/update/token prueft mit dem eingetippten Token (sonst dem
+         gespeicherten), ob das Release-Repo lesbar ist. Erst das Repo
+         selbst, dann die neueste Veroeffentlichung, weil ein 404 allein
+         nicht sagt, ob der Zugriff oder nur das Release fehlt
+         (probeRepoAccess, classifyProbeStatus in server/lib/update.ts).
+       - Die Antwort trennt die Faelle: 401 Token abgelehnt, 403 keine
+         Leserechte (bei leerem Kontingent stattdessen Drosselung), 404 kein
+         Zugriff, sonst Netzfehler. Kein Zwischenspeicher, damit der Knopf
+         immer den aktuellen Stand zeigt.
+       - Die Karte zeigt danach "Token gueltig" oder "Token abgelehnt" mit
+         Repo, Sichtbarkeit und neuester Version. Aendert sich das Feld,
+         verschwindet das alte Ergebnis.
+       Version 2.13.0.
 2.12.0 Privates Repo und Update mit Token:
        - Das Repo ist privat. Die Update-Pruefung schickt ein Token mit,
          wenn eins hinterlegt ist (Einstellungen oder GITHUB_TOKEN in .env),
