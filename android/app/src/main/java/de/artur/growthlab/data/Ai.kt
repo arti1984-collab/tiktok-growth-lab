@@ -208,6 +208,59 @@ object Ai {
         content
     }
 
+    /**
+     * Ein Komma vor der schliessenden Klammer oder ein echter Zeilenumbruch im
+     * Text sind die haeufigsten Fehler einer Modellantwort. Beides wird
+     * repariert, statt die ganze Antwort zu verwerfen.
+     */
+    private fun repairJson(raw: String): String {
+        val out = StringBuilder(raw.length + 16)
+        var inString = false
+        var escaped = false
+        for (index in raw.indices) {
+            val char = raw[index]
+            if (escaped) {
+                out.append(char)
+                escaped = false
+                continue
+            }
+            if (char == '\\') {
+                out.append(char)
+                escaped = true
+                continue
+            }
+            if (char == '"') {
+                inString = !inString
+                out.append(char)
+                continue
+            }
+            if (inString) {
+                when (char) {
+                    '\n' -> out.append("\\n")
+                    '\r' -> Unit
+                    '\t' -> out.append("\\t")
+                    else -> out.append(char)
+                }
+                continue
+            }
+            if (char == ',') {
+                var next = index + 1
+                while (next < raw.length && raw[next].isWhitespace()) next += 1
+                if (next < raw.length && (raw[next] == '}' || raw[next] == ']')) {
+                    out.append(' ')
+                    continue
+                }
+            }
+            out.append(char)
+        }
+        return out.toString()
+    }
+
+    private fun parses(chunk: String): Boolean {
+        if (runCatching { org.json.JSONObject(chunk) }.isSuccess) return true
+        return runCatching { org.json.JSONArray(chunk) }.isSuccess
+    }
+
     /** Pulls the first JSON object out of an answer that may contain prose or code fences. */
     fun extractJson(text: String): Boolean {
         val cleaned = text.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
@@ -234,17 +287,8 @@ object Ai {
             if (char == close) {
                 depth--
                 if (depth == 0) {
-                    return try {
-                        org.json.JSONObject(cleaned.substring(start, index + 1))
-                        true
-                    } catch (error: Exception) {
-                        try {
-                            org.json.JSONArray(cleaned.substring(start, index + 1))
-                            true
-                        } catch (nested: Exception) {
-                            false
-                        }
-                    }
+                    val chunk = cleaned.substring(start, index + 1)
+                    return parses(chunk) || parses(repairJson(chunk))
                 }
             }
         }

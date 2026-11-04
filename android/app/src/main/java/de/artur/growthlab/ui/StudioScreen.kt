@@ -2,7 +2,6 @@ package de.artur.growthlab.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -172,8 +171,12 @@ fun StudioScreen(state: LabState) {
 
         answer?.let { text ->
             CardBox {
+                // Unlesbares JSON wird nicht als eine lange Monospace-Zeile gezeigt,
+                // sondern umbrochen, damit der Plan lesbar bleibt.
                 val display = if (parsed) {
-                    runCatching { JSONObject(text).toString(2) }.getOrDefault(text)
+                    runCatching { JSONObject(text).toString(2) }
+                        .recoverCatching { org.json.JSONArray(text).toString(2) }
+                        .getOrDefault(text)
                 } else {
                     text
                 }
@@ -211,9 +214,10 @@ fun StudioScreen(state: LabState) {
                 }
                 Text(
                     display,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    fontFamily = if (parsed) FontFamily.Monospace else FontFamily.Default,
+                    fontSize = if (parsed) 11.sp else 13.sp,
+                    lineHeight = if (parsed) 16.sp else 19.sp,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

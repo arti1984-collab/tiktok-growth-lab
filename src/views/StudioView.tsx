@@ -4,6 +4,7 @@ import { useLang, useT } from "../lang";
 import type { AiMode, AiResponse, ScanResult, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { JsonView } from "../components/JsonView";
+import { WeekPlan } from "../components/WeekPlan";
 import { buildTextExport, downloadTextFile, textFilename } from "../textExport";
 
 const MODES: { id: AiMode; de: [string, string]; en: [string, string] }[] = [
@@ -242,7 +243,11 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </>
           }
         >
-          <JsonView data={response.result} />
+          {response.mode === "calendar" && Array.isArray((response.result as { tage?: unknown })?.tage) ? (
+            <WeekPlan days={(response.result as { tage: unknown[] }).tage} />
+          ) : (
+            <JsonView data={response.result} />
+          )}
         </Section>
       )}
     </div>
