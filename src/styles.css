@@ -490,6 +490,30 @@ select:disabled {
   flex-shrink: 0;
 }
 
+/* Modell-Scanner: eine Zeile pro Modell, Trennung ueber Haarlinien. */
+.model-scan {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.model-scan-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.model-scan-row code {
+  overflow-wrap: anywhere;
+}
+
+.model-scan-row .muted {
+  flex: 1 1 220px;
+}
+
 /* Fortschritt als schmale Linie unter der Meldung, ohne eigenen Kasten. */
 .update-progress {
   flex-basis: 100%;

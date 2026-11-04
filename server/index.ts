@@ -15,6 +15,7 @@ import {
 } from "./lib/tiktok.ts";
 import { AI_MODES, generate, type AiMode, type AiPayload } from "./lib/prompts.ts";
 import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
+import { scanFreeModels } from "./lib/modelScan.ts";
 import {
   addPlan,
   addSnapshot,
@@ -332,6 +333,16 @@ app.post(
 );
 
 /** Curated free/paid provider presets shown in the settings view. */
+/** Welche Modelle kostenlos sind und wirklich antworten. */
+app.post(
+  "/api/ai/scan-free",
+  asyncHandler(async (req, res) => {
+    const baseUrl = req.body?.aiBaseUrl ? String(req.body.aiBaseUrl) : undefined;
+    const apiKey = req.body?.aiApiKey ? String(req.body.aiApiKey) : undefined;
+    res.json(await scanFreeModels({ baseUrl, apiKey }));
+  }),
+);
+
 app.get("/api/ai/providers", (_req, res) => {
   res.json({ providers: PROVIDERS });
 });

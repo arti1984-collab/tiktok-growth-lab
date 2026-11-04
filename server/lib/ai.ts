@@ -156,11 +156,16 @@ type ChatCompletion = {
   error?: { message?: string; type?: string };
 };
 
+export type ModelEntry = { id: string; pricing?: { prompt?: string; completion?: string } };
+
 /**
- * Lists the models a provider serves. Overrides let the UI ask with a key that
- * the user has just typed but not saved yet.
+ * Lists the models a provider serves, with pricing when the provider reports it
+ * (OpenRouter does). Overrides let the UI ask with a key that the user has just
+ * typed but not saved yet.
  */
-export async function listModels(overrides: { baseUrl?: string; apiKey?: string } = {}): Promise<string[]> {
+export async function listModelEntries(
+  overrides: { baseUrl?: string; apiKey?: string } = {},
+): Promise<ModelEntry[]> {
   const stored = aiConfig();
   const baseUrl = normalizeBaseUrl(overrides.baseUrl?.trim() || stored.baseUrl);
   const config: AiConfig = {
@@ -170,11 +175,15 @@ export async function listModels(overrides: { baseUrl?: string; apiKey?: string 
     keyless: isLocalBaseUrl(baseUrl),
   };
   const { status, data, text } = await request(() =>
-    getJson<{ data?: { id?: string }[] }>(`${config.baseUrl}/models`, authHeaders(config)),
+    getJson<{ data?: ModelEntry[] }>(`${config.baseUrl}/models`, authHeaders(config)),
   );
   if (status !== 200) throw mapHttpError(status, JSON.stringify(data ?? text));
-  const models = (data?.data ?? []).map((entry) => entry.id).filter((id): id is string => Boolean(id));
-  return models.sort((a, b) => a.localeCompare(b));
+  return (data?.data ?? []).filter((entry) => Boolean(entry?.id));
+}
+
+export async function listModels(overrides: { baseUrl?: string; apiKey?: string } = {}): Promise<string[]> {
+  const entries = await listModelEntries(overrides);
+  return entries.map((entry) => entry.id).sort((a, b) => a.localeCompare(b));
 }
 
 /** Model lists change rarely, so one lookup serves many answers. */

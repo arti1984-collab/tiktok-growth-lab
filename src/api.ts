@@ -3,6 +3,7 @@ import type {
   Account,
   AiMode,
   AiResponse,
+  FreeScan,
   PlanItem,
   PlanStatus,
   Provider,
@@ -77,6 +78,10 @@ export const api = {
     request<{ models: string[]; free: string[] }>("/api/ai/models", { method: "POST", body: JSON.stringify(payload) }),
 
   providers: () => request<{ providers: Provider[] }>("/api/ai/providers"),
+
+  /** Which models are free and answer, checked with a one-token request. */
+  scanFree: (payload: { aiBaseUrl?: string; aiApiKey?: string } = {}) =>
+    request<FreeScan>("/api/ai/scan-free", { method: "POST", body: JSON.stringify(payload) }),
 
   watchlist: () => request<{ accounts: Account[] }>("/api/watchlist"),
 
