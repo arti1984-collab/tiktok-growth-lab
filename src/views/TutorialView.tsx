@@ -50,6 +50,13 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
+        label: ["Wo es hakt", "Where it breaks down"],
+        text: [
+          "Direkt unter dem Profil steht nach dem Scan, was gerade bremst: Interaktion, Reichweite, Rhythmus, Ton oder eine dünne Datenbasis. Jeder Punkt nennt die Zahl dahinter, das Problem und unter „Besser machen“, was du konkret änderst. Passt alles, sagt die Karte das ausdrücklich.",
+          "Right under the profile after a scan you see what currently holds the account back: interaction, reach, cadence, sound or a thin data base. Each point names the number behind it, the problem and, under “Do this instead”, what to change. When nothing fails, the card says so.",
+        ],
+      },
+      {
         label: ["Beste Zeitfenster", "Best time windows"],
         text: [
           "Wochentag und Stunde, an denen deine bisherigen Videos die meisten Views holen, gerechnet in deiner Zeitzone.",

@@ -54,6 +54,15 @@ export type VideoSummary = {
 
 export type Insight = { kind: "good" | "warn" | "info"; title: string; text: string };
 
+/** Ein Punkt, der gerade bremst, mit dem konkreten naechsten Schritt. */
+export type Weakness = {
+  key: string;
+  severity: "high" | "medium";
+  title: string;
+  problem: string;
+  action: string;
+};
+
 export type Metrics = {
   hasData: boolean;
   sampleSize: number;
@@ -91,6 +100,8 @@ export type Metrics = {
     originalSoundShare: number;
   };
   insights: Insight[];
+  /** Was gerade bremst, dringend zuerst. Leer heisst: keine klare Schwaeche. */
+  weaknesses: Weakness[];
 };
 
 export type ScanResult = {

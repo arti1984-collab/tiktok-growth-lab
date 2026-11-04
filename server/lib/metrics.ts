@@ -19,6 +19,15 @@ export type VideoSummary = {
 
 export type Insight = { kind: "good" | "warn" | "info"; title: string; text: string };
 
+/** Ein Punkt, der gerade bremst, mit dem konkreten naechsten Schritt. */
+export type Weakness = {
+  key: string;
+  severity: "high" | "medium";
+  title: string;
+  problem: string;
+  action: string;
+};
+
 export type Metrics = {
   hasData: boolean;
   sampleSize: number;
@@ -56,6 +65,8 @@ export type Metrics = {
     originalSoundShare: number;
   };
   insights: Insight[];
+  /** Was gerade bremst, dringend zuerst. Leer heisst: keine klare Schwaeche. */
+  weaknesses: Weakness[];
 };
 
 const WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
@@ -212,6 +223,7 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
       flopVideos: [],
       outliers: { count: 0, bestMultiple: 0 },
       hookSignals: { avgDescLength: 0, questionShare: 0, emojiShare: 0, avgHashtags: 0, originalSoundShare: 0 },
+      weaknesses: [],
       insights: [
         {
           kind: "info",
@@ -449,6 +461,130 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
     ),
   });
 
+  // Die eigentliche Antwort auf "wo hakt es": jede Zeile nennt die Zahl, den
+  // Grund und den naechsten Schritt. Nur was aus den Daten wirklich folgt.
+  const weaknesses: Weakness[] = [];
+  const bestSlot = slots[0];
+
+  if (engagementRate < 4.5) {
+    const signals: { name: string; value: number; advice: [string, string] }[] = [
+      {
+        name: tr("Kommentare", "comments"),
+        value: commentRate,
+        advice: [
+          "Stelle in den ersten zwei Sekunden eine Frage und antworte in der ersten halben Stunde auf jeden Kommentar.",
+          "Ask a question in the first two seconds and answer every comment within the first half hour.",
+        ],
+      },
+      {
+        name: tr("Saves", "saves"),
+        value: saveRate,
+        advice: [
+          "Gib einen Grund zum Speichern: eine Checkliste, drei Schritte oder ein Vorher-Nachher, das man wiederfinden will.",
+          "Give a reason to save: a checklist, three steps or a before-and-after worth finding again.",
+        ],
+      },
+      {
+        name: tr("Shares", "shares"),
+        value: shareRate,
+        advice: [
+          "Baue einen Satz ein, den man weiterleitet: eine überraschende Zahl oder eine klare Meinung.",
+          "Add a line worth forwarding: a surprising number or a clear opinion.",
+        ],
+      },
+    ];
+    const weakest = [...signals].sort((a, b) => a.value - b.value)[0];
+    weaknesses.push({
+      key: "engagement",
+      severity: engagementRate < 2 ? "high" : "medium",
+      title: tr("Zu wenig Interaktion pro View", "Too little interaction per view"),
+      problem: tr(
+        `Die Engagement-Rate liegt bei ${percent(engagementRate)}, der Vergleichswert bei 4,5 %. Am schwächsten sind ${weakest.name} mit ${percent(weakest.value)}.`,
+        `The engagement rate is ${percent(engagementRate)} against a benchmark of 4.5%. Weakest are ${weakest.name} at ${percent(weakest.value)}.`,
+      ),
+      action: locale() === "en-US" ? weakest.advice[1] : weakest.advice[0],
+    });
+  }
+
+  if (viewsPerFollower < 1) {
+    weaknesses.push({
+      key: "reach",
+      severity: "high",
+      title: tr("Reichweite bleibt im Follower-Kreis", "Reach stays inside your followers"),
+      problem: tr(
+        `Ø ${compact().format(avgViews)} Views bei ${compact().format(profile.followers)} Followern, das sind ${decimal(
+          viewsPerFollower,
+        )} Views pro Follower. Ab etwa 1,0 zeigt TikTok das Video auch Leuten, die dir nicht folgen.`,
+        `Ø ${compact().format(avgViews)} views with ${compact().format(profile.followers)} followers, that is ${decimal(
+          viewsPerFollower,
+        )} views per follower. From about 1.0 TikTok shows the video to people who do not follow you.`,
+      ),
+      action: bestSlot
+        ? tr(
+            `Nutze zuerst ${weekdayName(bestSlot.weekday)} um ${bestSlot.hour}:00, dein stärkstes Fenster, und teste dort drei verschiedene Hooks.`,
+            `Use ${weekdayName(bestSlot.weekday)} at ${bestSlot.hour}:00 first, your strongest window, and test three different hooks there.`,
+          )
+        : tr(
+            "Poste zu deinen stärksten Zeiten und teste drei verschiedene Hooks pro Woche.",
+            "Post at your strongest times and test three different hooks per week.",
+          ),
+    });
+  }
+
+  if (postsPerWeek !== null && (postsPerWeek < 2 || (daysSinceLastPost ?? 0) > 14)) {
+    weaknesses.push({
+      key: "cadence",
+      severity: (daysSinceLastPost ?? 0) > 14 ? "high" : "medium",
+      title: tr("Unregelmäßiger Rhythmus", "Irregular cadence"),
+      problem: tr(
+        `Ø ${decimal(postsPerWeek, 1)} Posts pro Woche, ein Post alle ${decimal(avgDaysBetweenPosts ?? 0, 1)} Tage${
+          daysSinceLastPost !== null ? `, der letzte vor ${Math.round(daysSinceLastPost)} Tagen` : ""
+        }. TikTok verteilt Reichweite an Konten, die verlässlich liefern.`,
+        `Ø ${decimal(postsPerWeek, 1)} posts per week, one every ${decimal(avgDaysBetweenPosts ?? 0, 1)} days${
+          daysSinceLastPost !== null ? `, the last one ${Math.round(daysSinceLastPost)} days ago` : ""
+        }. TikTok hands reach to accounts that show up reliably.`,
+      ),
+      action: tr(
+        "Plane drei Posts pro Woche fest ein, jeden in einem deiner stärksten Zeitfenster.",
+        "Block three posts per week, each in one of your strongest windows.",
+      ),
+    });
+  }
+
+  if (hookSignals.originalSoundShare < 50) {
+    weaknesses.push({
+      key: "sound",
+      severity: "medium",
+      title: tr("Wenig Originalton", "Little original sound"),
+      problem: tr(
+        `Nur ${Math.round(hookSignals.originalSoundShare)} % deiner Videos laufen mit Originalton. Trend-Sounds erreichen kurzfristig mehr Leute.`,
+        `Only ${Math.round(hookSignals.originalSoundShare)}% of your videos use original sound. Trend sounds reach more people for a short time.`,
+      ),
+      action: tr(
+        "Nimm pro Woche ein Video mit einem aktuellen Sound auf und behalte deinen eigenen Ton für die übrigen.",
+        "Record one video a week with a current sound and keep your own audio for the rest.",
+      ),
+    });
+  }
+
+  if (sampleSize < 8) {
+    weaknesses.push({
+      key: "sample",
+      severity: "medium",
+      title: tr("Dünne Datenbasis", "Thin data base"),
+      problem: tr(
+        `Nur ${sampleSize} Videos mit Views. Aus so wenigen Posts lassen sich Zeiten und Formate nicht sicher ableiten.`,
+        `Only ${sampleSize} videos with views. Times and formats cannot be derived reliably from that few posts.`,
+      ),
+      action: tr(
+        "Füge oben im Scan weitere Video-Links ein, dann rechnet der nächste Scan mit mehr Posts.",
+        "Add more video links in the scan above, then the next scan works with more posts.",
+      ),
+    });
+  }
+
+  weaknesses.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "high" ? -1 : 1));
+
   return {
     hasData: true,
     sampleSize,
@@ -479,6 +615,7 @@ export function computeMetrics(profile: Profile, videos: Video[], timezone: stri
     flopVideos,
     outliers: { count: outlierVideos.length, bestMultiple },
     hookSignals,
+    weaknesses,
     insights,
   };
 }

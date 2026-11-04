@@ -89,3 +89,32 @@ test("unbekannte Zeitzone kippt nicht", () => {
   assert.equal(metrics.hasData, true);
   assert.ok(metrics.bestSlots.length >= 0);
 });
+
+test("schwache Daten nennen Schwaechen mit naechstem Schritt", () => {
+  const metrics = computeMetrics(profile, [video(1, 5)], "Europe/Berlin");
+  assert.ok(metrics.weaknesses.length > 0);
+  assert.ok(
+    metrics.weaknesses.some((entry) => entry.severity === "high"),
+    "mindestens eine dringende Schwaeche erwartet",
+  );
+  for (const entry of metrics.weaknesses) {
+    assert.ok(entry.title.length > 0 && entry.problem.length > 0 && entry.action.length > 0);
+  }
+  assert.equal(metrics.weaknesses[0].severity, "high", "dringende Punkte stehen oben");
+});
+
+test("starke Daten ohne dringende Schwaeche", () => {
+  const videos = Array.from({ length: 10 }, (_, index) => video(index + 1, 40_000 - index * 1_000));
+  const metrics = computeMetrics(profile, videos, "Europe/Berlin");
+  assert.equal(metrics.hasData, true);
+  assert.equal(
+    metrics.weaknesses.some((entry) => entry.severity === "high"),
+    false,
+    `unerwartet dringend: ${metrics.weaknesses.map((entry) => entry.key).join(", ")}`,
+  );
+});
+
+test("ohne Videos gibt es keine Schwaechenliste", () => {
+  const metrics = computeMetrics(profile, [], "Europe/Berlin");
+  assert.deepEqual(metrics.weaknesses, []);
+});

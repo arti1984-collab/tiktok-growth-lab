@@ -70,14 +70,14 @@ export function ScanView({
       <Section
         title={t("Account scannen", "Scan an account")}
         subtitle={t(
-          "Liest Profil und Post-Performance direkt von tiktok.com – ohne Login.",
-          "Reads the profile and post performance straight from tiktok.com, no login needed.",
+          "Trag den Link oder den Namen deines Profils ein. Danach steht unter dem Profil, wo es hakt und was du besser machst.",
+          "Enter your profile link or name. Below the profile you then see where it breaks down and what to do better.",
         )}
       >
         <form className="scan-form" onSubmit={submit}>
           <div className="grid-two">
             <label className="field">
-              <span>{t("TikTok-Name oder Profil-URL", "TikTok name or profile URL")}</span>
+              <span>{t("Link oder Name des Profils", "Profile link or name")}</span>
               <input
                 value={handle}
                 onChange={(event) => setHandle(event.target.value)}
@@ -110,7 +110,7 @@ export function ScanView({
               <span>{t("In Wachstums-Tracking aufnehmen", "Add to growth tracking")}</span>
             </label>
             <button className="btn btn-primary" type="submit" disabled={loading || !handle.trim()}>
-              {loading ? <Spinner label={`${t("Scanne…", "Scanning…")} ${elapsed}s`} /> : t("Jetzt analysieren", "Analyse now")}
+              {loading ? <Spinner label={`${t("Scanne…", "Scanning…")} ${elapsed}s`} /> : t("Schwächen prüfen", "Check weaknesses")}
             </button>
           </div>
 
@@ -196,6 +196,37 @@ export function ScanView({
                 </div>
               </div>
             </div>
+          </Section>
+
+          <Section
+            title={t("Wo es hakt", "Where it breaks down")}
+            subtitle={t("Aus deinen Zahlen, ohne KI. Dringendes zuerst.", "From your numbers, no AI involved. Most urgent first.")}
+          >
+            {metrics.weaknesses.length === 0 ? (
+              <Alert kind="success">
+                {t(
+                  "In diesen Zahlen steckt keine klare Schwäche. Halte den Rhythmus und teste weiter neue Hooks.",
+                  "These numbers show no clear weakness. Keep the cadence and keep testing new hooks.",
+                )}
+              </Alert>
+            ) : (
+              <ul className="weakness-list">
+                {metrics.weaknesses.map((weakness) => (
+                  <li className={`weakness weakness-${weakness.severity}`} key={weakness.key}>
+                    <div className="weakness-head">
+                      <strong>{weakness.title}</strong>
+                      <Badge tone={weakness.severity === "high" ? "warn" : "info"}>
+                        {weakness.severity === "high" ? t("dringend", "urgent") : t("ausbaufähig", "worth fixing")}
+                      </Badge>
+                    </div>
+                    <p>{weakness.problem}</p>
+                    <p className="weakness-action">
+                      <strong>{t("Besser machen", "Do this instead")}:</strong> {weakness.action}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
 
           {scan.warnings.length > 0 && (
