@@ -17,7 +17,7 @@ export type UpdateInfo = {
   updateAvailable: boolean;
   url: string | null;
   exe: string | null;
-  apk: string | null;
+  exeSize: number | null;
   notes: string;
   publishedAt: string | null;
   checkedAt: number;
@@ -29,7 +29,7 @@ type ReleaseResponse = {
   html_url?: string;
   body?: string;
   published_at?: string;
-  assets?: { name?: string; browser_download_url?: string }[];
+  assets?: { name?: string; browser_download_url?: string; size?: number }[];
 };
 
 let cache: { at: number; value: UpdateInfo } | null = null;
@@ -66,7 +66,7 @@ export async function checkForUpdate(force = false): Promise<UpdateInfo> {
     updateAvailable: false,
     url: null,
     exe: null,
-    apk: null,
+    exeSize: null,
     notes: "",
     publishedAt: null,
     checkedAt: Date.now(),
@@ -87,15 +87,15 @@ export async function checkForUpdate(force = false): Promise<UpdateInfo> {
     const data = (await response.json()) as ReleaseResponse;
     const latest = (data.tag_name ?? "").replace(/^v/i, "").trim() || null;
     const assets = data.assets ?? [];
-    const findAsset = (extension: string) =>
-      assets.find((asset) => (asset.name ?? "").toLowerCase().endsWith(extension))?.browser_download_url ?? null;
+    const exeAsset =
+      assets.find((asset) => (asset.name ?? "").toLowerCase().endsWith(".exe")) ?? null;
 
     const value: UpdateInfo = {
       ...base,
       latest,
       url: data.html_url ?? null,
-      exe: findAsset(".exe"),
-      apk: findAsset(".apk"),
+      exe: exeAsset?.browser_download_url ?? null,
+      exeSize: typeof exeAsset?.size === "number" ? exeAsset.size : null,
       notes: (data.body ?? "").slice(0, 1500),
       publishedAt: data.published_at ?? null,
       updateAvailable: Boolean(latest && compareVersions(latest, APP_VERSION) > 0),

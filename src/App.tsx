@@ -25,6 +25,7 @@ export default function App() {
   const [scan, setScan] = useState<ScanResult | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
+  const [restarting, setRestarting] = useState(false);
   const [studioMode, setStudioMode] = useState<AiMode>("strategy");
 
   const refreshStatus = useCallback(() => {
@@ -39,7 +40,9 @@ export default function App() {
   }, [refreshStatus]);
 
   // No token, no setup: the check runs on start and every five minutes, so a
-  // fresh release shows up while the app stays open.
+  // fresh release shows up while the app stays open. While the new file is
+  // downloading, the page asks more often to show the progress.
+  const updateAvailable = update?.updateAvailable ?? false;
   useEffect(() => {
     let active = true;
     const load = () => {
@@ -51,12 +54,22 @@ export default function App() {
         .catch(() => undefined);
     };
     load();
-    const timer = window.setInterval(load, 5 * 60_000);
+    const timer = window.setInterval(load, updateAvailable ? 2_000 : 5 * 60_000);
     return () => {
       active = false;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [updateAvailable]);
+
+  /** Quits the window; the downloaded file replaces the old one on the way out. */
+  async function restart() {
+    setRestarting(true);
+    try {
+      await api.restartUpdate();
+    } catch {
+      setRestarting(false);
+    }
+  }
 
   // A reload starts with an empty scan state, but the server still holds the last scan.
   useEffect(() => {
@@ -66,6 +79,7 @@ export default function App() {
       .catch(() => undefined);
   }, []);
 
+  const download = update?.download ?? null;
   const lang: Lang = status?.language === "en" ? "en" : "de";
   // Number formats and file exports read the language outside of React.
   setActiveLang(lang);
@@ -112,20 +126,43 @@ export default function App() {
         {update?.updateAvailable && update.latest !== dismissedVersion && (
           <div className="update-bar">
             <span>
-              {t(
-                `Version ${update.latest} ist verfügbar, du nutzt ${update.current}.`,
-                `Version ${update.latest} is available, you are on ${update.current}.`,
-              )}
+              {download?.state === "downloading"
+                ? t(
+                    `Version ${update.latest} wird im Hintergrund geladen, ${download.percent} %.`,
+                    `Version ${update.latest} is downloading in the background, ${download.percent} %.`,
+                  )
+                : download?.state === "ready"
+                  ? t(
+                      `Version ${update.latest} liegt bereit. Ein Neustart genügt.`,
+                      `Version ${update.latest} is ready. A restart is enough.`,
+                    )
+                  : download?.state === "failed"
+                    ? t(
+                        `Version ${update.latest} ist da, der Download ist fehlgeschlagen.`,
+                        `Version ${update.latest} is out, the download failed.`,
+                      )
+                    : t(
+                        `Version ${update.latest} ist verfügbar, du nutzt ${update.current}.`,
+                        `Version ${update.latest} is available, you are on ${update.current}.`,
+                      )}
             </span>
             <span className="row gap-sm">
-              <a
-                className="btn btn-sm btn-primary"
-                href={update.exe ?? update.url ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t("Herunterladen", "Download")}
-              </a>
+              {download?.state === "ready" ? (
+                <button className="btn btn-sm btn-primary" onClick={() => void restart()} disabled={restarting}>
+                  {restarting ? t("Startet neu…", "Restarting…") : t("Jetzt neu starten", "Restart now")}
+                </button>
+              ) : (
+                download?.state !== "downloading" && (
+                  <a
+                    className="btn btn-sm btn-primary"
+                    href={update.exe ?? update.url ?? "#"}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t("Herunterladen", "Download")}
+                  </a>
+                )
+              )}
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => setDismissedVersion(update.latest)}
@@ -134,6 +171,11 @@ export default function App() {
                 ✕
               </button>
             </span>
+            {download?.state === "downloading" && (
+              <span className="update-progress" aria-hidden>
+                <span style={{ width: `${download.percent}%` }} />
+              </span>
+            )}
           </div>
         )}
 

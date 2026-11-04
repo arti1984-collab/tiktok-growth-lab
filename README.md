@@ -54,8 +54,9 @@ Druckbare Ansicht mit den wichtigsten Zahlen, den besten Videos und den Empfehlu
 PDF.
 
 ### Sprache, Updates, Erinnerung
-Deutsch und Englisch für Oberfläche, Anleitung, Zahlenformate und KI-Texte. Ein Hinweis oben meldet neue Versionen
-(Prüfung gegen die GitHub-Releases, ohne Einrichtung, beim Start und alle fünf Minuten). Geplante Posts erscheinen als Leiste und
+Deutsch und Englisch für Oberfläche, Anleitung, Zahlenformate und KI-Texte. Neue Versionen lädt die Windows-App im
+Hintergrund selbst herunter (gegen die GitHub-Releases, ohne Einrichtung), die alte Datei wird beim Beenden ersetzt:
+danach genügt ein Neustart. Geplante Posts erscheinen als Leiste und
 als Systemmeldung, sobald sie in den nächsten zwei Stunden fällig sind.
 
 ![Einstellungen mit Sprache, Updates und KI-Anbieter](docs/screenshots/einstellungen.png)
@@ -78,7 +79,8 @@ npm run dist     # release/TikTok-Growth-Lab.exe
 
 Das Programm liest öffentliche TikTok-Seiten, keine API. Private Konten liefern keine Videos, und TikTok drosselt
 häufige Anfragen, deshalb pausiert der Scan zwischen den Aufrufen. Follower-Verläufe entstehen nur aus eigenen
-Messungen. Kein stilles Selbst-Update: der Hinweis führt zur Datei.
+Messungen. Eine laufende Datei lässt sich unter Windows nicht überschreiben, deshalb tauscht die App sie beim
+Beenden gegen die heruntergeladene Version.
 
 ---
 
@@ -130,9 +132,9 @@ out no follower history: the curve comes from your own measurements.
 A printable view with the key numbers, the best videos and the recommendations. The browser turns it into a PDF.
 
 ### Language, updates, reminders
-German and English for the interface, the guide, number formats and the AI texts. A bar on top announces new
-versions (checked against the GitHub releases, no setup needed, on start and every five minutes). Planned posts show up as a bar
-and as a system message once they are due within the next two hours.
+German and English for the interface, the guide, number formats and the AI texts. The Windows app downloads new
+versions in the background (against the GitHub releases, no setup needed) and swaps the file on quit, so a restart is
+enough. Planned posts show up as a bar and as a system message once they are due within the next two hours.
 
 ![Settings with language, updates and AI providers](docs/screenshots/einstellungen-en.png)
 
@@ -153,8 +155,8 @@ npm run dist     # release/TikTok-Growth-Lab.exe
 ## Limits
 
 The tool reads public TikTok pages, not an API. Private accounts return no videos, and TikTok throttles frequent
-requests, which is why the scan pauses between calls. Follower histories only come from your own measurements. There
-is no silent self-update: the notice leads to the file.
+requests, which is why the scan pauses between calls. Follower histories only come from your own measurements. A
+running file cannot be overwritten on Windows, so the app swaps it for the downloaded one on quit.
 
 ---
 

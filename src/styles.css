@@ -490,6 +490,21 @@ select:disabled {
   flex-shrink: 0;
 }
 
+/* Fortschritt als schmale Linie unter der Meldung, ohne eigenen Kasten. */
+.update-progress {
+  flex-basis: 100%;
+  height: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.update-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s linear;
+}
+
 .footer {
   margin-top: auto;
   padding: 20px clamp(18px, 4vw, 44px) 34px;
