@@ -3,6 +3,7 @@ import { checkSchema } from "./schema.ts";
 import { recordAiCall } from "./stats.ts";
 import { WEEKDAYS, type Metrics } from "./metrics.ts";
 import { getLang, tr } from "./lang.ts";
+import { gateInstruction, type QualityGate } from "./quality.ts";
 
 const WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const weekdayLabel = (weekday: number): string =>
@@ -213,7 +214,12 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
   }
 }
 
-export async function generate(mode: AiMode, payload: AiPayload, context: ScanContext | undefined) {
+export async function generate(
+  mode: AiMode,
+  payload: AiPayload,
+  context: ScanContext | undefined,
+  gate?: QualityGate | null,
+) {
   const userPrompt = [
     modeInstruction(mode, payload),
     "",
@@ -227,9 +233,11 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
     SCHEMAS[mode],
   ].join("\n");
 
+  const guard = gate ? gateInstruction(gate) : "";
+
   const { text, model, usage, note } = await chat(
     [
-      { role: "system", content: systemPrompt() },
+      { role: "system", content: guard ? `${systemPrompt()}\n\n${guard}` : systemPrompt() },
       { role: "user", content: userPrompt },
     ],
     { json: true, temperature: mode === "hooks" || mode === "ideas" ? 0.85 : 0.7 },
@@ -244,6 +252,7 @@ export async function generate(mode: AiMode, payload: AiPayload, context: ScanCo
     usage,
     note,
     issues,
+    guard: gate && gate.level !== "ok" ? { level: gate.level, warning: gate.warning } : undefined,
     parsed: parsed !== null,
     result: parsed ?? { rohtext: text },
   };

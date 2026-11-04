@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.8.0, Branch main
+Stand: 04.11.2026, Version 2.9.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -56,10 +56,11 @@ server/
   lib/fsAtomic.ts   Schreiben ohne halbe Dateien
   lib/schema.ts     Erwartete Felder je KI-Modus, checkSchema
   lib/scanInput.ts  Handle und Video-Links normalisieren, MAX_BATCH 40
-  lib/quality.ts    Datenlage bewerten (score, missing, confidence)
+  lib/quality.ts    Datenlage bewerten, qualityGate und gateInstruction
   lib/stats.ts      Zaehler fuer Scans, Rate-Limits, KI-Antworten
 
 test/               node:test gegen die reinen Server-Module
+  fixtures/         gespeicherte Profilseite und Videoliste fuer den Parser
 .github/workflows/ci.yml  npm ci, typecheck, test, build bei jedem Push
 
 src/
@@ -208,6 +209,18 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.9.0  Guardrails und gruendlichere Parser:
+       - Datenlage steuert die KI: unter 70 Prozent sagt der Systemprompt,
+         Empfehlungen als UNSICHER zu markieren, unter 40 Prozent antwortet
+         /api/ai fuer Hooks und Hashtags mit 422 und einem Hinweis
+         (qualityGate und gateInstruction in server/lib/quality.ts).
+       - Confidence abgestuft: echte Zahl 1, Zahl als String 0.6, fehlendes
+         Feld 0. Profil und Videos tragen confidence je Feld, die Datenlage
+         rechnet damit statt nur vorhanden/fehlt (server/lib/tiktok.ts).
+       - Parser und Fixtures: parseProfileHtml und mapVideoItem arbeiten ohne
+         Netz, test/fixtures/ haelt eine Profilseite und eine Videoliste.
+         Aendert TikTok das Format, faellt es im Test auf.
+       Version 2.9.0.
 2.8.0  Roadmap-Punkte 1 bis 9:
        - Schema-Wache: checkSchema vergleicht KI-Antworten mit den
          erwarteten Feldern je Modus, Abweichungen stehen als issues unter

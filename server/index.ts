@@ -17,8 +17,8 @@ import { AI_MODES, generate, type AiMode, type AiPayload } from "./lib/prompts.t
 import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
 import { scanFreeModels } from "./lib/modelScan.ts";
 import { normalizeScanInput } from "./lib/scanInput.ts";
-import { assessQuality } from "./lib/quality.ts";
-import { diagnostics, recordScan, recordScanStart } from "./lib/stats.ts";
+import { assessQuality, qualityGate } from "./lib/quality.ts";
+import { diagnostics, recordFailure, recordScan, recordScanStart } from "./lib/stats.ts";
 import {
   addPlan,
   addSnapshot,
@@ -323,7 +323,22 @@ app.post(
         context = undefined;
       }
     }
-    res.json(await generate(mode, payload, context));
+
+    // Datenlage vor dem KI-Aufruf pruefen: bei sehr duennen Daten keine
+    // Empfehlungen, die wie Messungen aussehen.
+    const gate = context ? qualityGate(assessQuality({ profile: context.profile, videos: context.videos })) : null;
+    if (gate && gate.blocked.includes(mode)) {
+      recordFailure("ai guard");
+      res.status(422).json({
+        error: gate.warning,
+        hint: tr(
+          "Starte einen Scan mit Video-Links, damit Views, Likes und Laenge bekannt sind. Danach antwortet die KI wieder mit Hooks und Hashtags.",
+          "Run a scan with video links so views, likes and length are known. After that hooks and hashtags work again.",
+        ),
+      });
+      return;
+    }
+    res.json(await generate(mode, payload, context, gate));
   }),
 );
 

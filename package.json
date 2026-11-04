@@ -1,6 +1,6 @@
 {
   "name": "tiktok-growth-lab",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "private": true,
   "type": "module",
   "description": "TikTok Growth Lab – Scraping-Dashboard mit KI-Coach für mehr Follower und Reichweite",
@@ -15,7 +15,7 @@
     "sign": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-exe.ps1",
     "start": "tsx server/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test test/schema.test.ts test/extract.test.ts test/scanInput.test.ts test/metrics.test.ts"
+    "test": "node --import tsx --test test/schema.test.ts test/extract.test.ts test/scanInput.test.ts test/metrics.test.ts test/scrape.test.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.0",

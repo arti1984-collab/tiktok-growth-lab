@@ -32,6 +32,8 @@ export type Profile = {
   videos: number;
   url: string;
   scrapedAt: number;
+  /** Wie sicher die Zahlen gelesen wurden, 0 bis 1 je Feld. */
+  confidence?: Record<string, number>;
 };
 
 export type Video = {
@@ -52,6 +54,8 @@ export type Video = {
   hashtags: string[];
   thumbnail: string;
   isAd: boolean;
+  /** Wie sicher die Zahlen gelesen wurden, 0 bis 1 je Feld. */
+  confidence?: Record<string, number>;
 };
 
 type Json = Record<string, unknown>;
@@ -66,6 +70,22 @@ const toNumber = (value: unknown): number => {
 };
 
 const toString = (value: unknown): string => (typeof value === "string" ? value : "");
+
+/** Zahl mit Sicherheit: echte Zahl 1, Zahl als String 0.6, alles andere 0. */
+const numeric = (value: unknown): { value: number; confidence: number } => {
+  if (typeof value === "number" && Number.isFinite(value)) return { value, confidence: 1 };
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return { value: parsed, confidence: 0.6 };
+  }
+  return { value: 0, confidence: 0 };
+};
+
+/** Text mit Sicherheit: gefuellter String 1, leer oder falscher Typ 0. */
+const textValue = (value: unknown): { value: string; confidence: number } => {
+  const parsed = toString(value).trim();
+  return { value: parsed, confidence: parsed ? 1 : 0 };
+};
 
 function extractScope(html: string): Json | null {
   const match = html.match(
@@ -204,38 +224,73 @@ export async function getProfile(rawHandle: string): Promise<Profile> {
   } catch (error) {
     wrapHttpError(error, `@${handle}`);
   }
-  const scope = extractScope(html!);
-  const detail = scope?.["webapp.user-detail"] as Json | undefined;
-  if (!detail) failFromResponse(html!, `@${handle}`);
-
-  const statusCode = toNumber(detail!.statusCode);
-  if (statusCode !== 0) {
+  const parsed = parseProfileHtml(html!, handle);
+  if (!parsed.profile) failFromResponse(html!, `@${handle}`);
+  if (parsed.statusCode !== 0) {
     throw new TikTokError(
       "NOT_FOUND",
       tr(`@${handle} existiert nicht oder ist gesperrt.`, `@${handle} does not exist or is blocked.`),
     );
   }
+  return parsed.profile;
+}
 
-  const info = (detail!.userInfo ?? {}) as Json;
+export type ParsedProfile = { profile: Profile | null; statusCode: number };
+
+/**
+ * Profilseite auswerten, ohne Netz. So laesst sich der Parser mit gespeicherten
+ * HTML-Seiten pruefen, statt fuer jeden Test TikTok zu fragen.
+ */
+export function parseProfileHtml(html: string, fallbackHandle: string): ParsedProfile {
+  const scope = extractScope(html);
+  const detail = scope?.["webapp.user-detail"] as Json | undefined;
+  if (!detail) return { profile: null, statusCode: 0 };
+
+  const statusCode = toNumber(detail.statusCode);
+  const info = (detail.userInfo ?? {}) as Json;
   const user = (info.user ?? {}) as Json;
   const stats = (info.stats ?? {}) as Json;
 
+  const nickname = textValue(user.nickname);
+  const avatar = textValue(user.avatarLarger || user.avatarMedium || user.avatarThumb);
+  const bio = textValue(user.signature);
+  const region = textValue(user.region);
+  const secUid = textValue(user.secUid);
+  const followers = numeric(stats.followerCount);
+  const following = numeric(stats.followingCount);
+  const hearts = numeric(stats.heartCount ?? stats.heart);
+  const videos = numeric(stats.videoCount);
+
   return {
-    id: toString(user.id),
-    handle: toString(user.uniqueId) || handle,
-    nickname: toString(user.nickname) || handle,
-    bio: toString(user.signature),
-    avatar: toString(user.avatarLarger) || toString(user.avatarMedium) || toString(user.avatarThumb),
-    verified: Boolean(user.verified),
-    privateAccount: Boolean(user.privateAccount),
-    region: toString(user.region),
-    secUid: toString(user.secUid),
-    followers: toNumber(stats.followerCount),
-    following: toNumber(stats.followingCount),
-    hearts: toNumber(stats.heartCount ?? stats.heart),
-    videos: toNumber(stats.videoCount),
-    url: `${WEB}/@${toString(user.uniqueId) || handle}`,
-    scrapedAt: Date.now(),
+    statusCode,
+    profile: {
+      id: toString(user.id),
+      handle: toString(user.uniqueId) || fallbackHandle,
+      nickname: nickname.value || fallbackHandle,
+      bio: bio.value,
+      avatar: avatar.value,
+      verified: Boolean(user.verified),
+      privateAccount: Boolean(user.privateAccount),
+      region: region.value,
+      secUid: secUid.value,
+      followers: followers.value,
+      following: following.value,
+      hearts: hearts.value,
+      videos: videos.value,
+      url: `${WEB}/@${toString(user.uniqueId) || fallbackHandle}`,
+      scrapedAt: Date.now(),
+      confidence: {
+        followers: followers.confidence,
+        following: following.confidence,
+        hearts: hearts.confidence,
+        videos: videos.confidence,
+        nickname: nickname.confidence,
+        avatar: avatar.confidence,
+        bio: bio.confidence,
+        region: region.confidence,
+        secUid: secUid.confidence,
+      },
+    },
   };
 }
 
@@ -290,7 +345,7 @@ export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT
     try {
       const payload = await fetchJson<{ itemList?: Json[]; statusCode?: number }>(url, profile.url);
       const items = Array.isArray(payload.itemList) ? payload.itemList : [];
-      const videos = items.map((item) => mapVideo(item, profile.handle)).filter((video) => video.id);
+      const videos = items.map((item) => mapVideoItem(item, profile.handle)).filter((video) => video.id);
       if (videos.length > 0) return videos;
       lastError = new TikTokError(
         "PARSE",
@@ -325,7 +380,8 @@ export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT
   );
 }
 
-function mapVideo(item: Json, fallbackHandle: string): Video {
+/** Ein Eintrag aus der Videoliste, getrennt vom Netz und damit testbar. */
+export function mapVideoItem(item: Json, fallbackHandle: string): Video {
   const stats = (item.stats ?? {}) as Json;
   const video = (item.video ?? {}) as Json;
   const music = (item.music ?? {}) as Json;
@@ -336,24 +392,46 @@ function mapVideo(item: Json, fallbackHandle: string): Video {
   const challenges = Array.isArray(item.challenges) ? (item.challenges as Json[]) : [];
   const hashtags = challenges.map((challenge) => toString(challenge.title)).filter(Boolean);
 
+  const views = numeric(stats.playCount);
+  const likes = numeric(stats.diggCount);
+  const comments = numeric(stats.commentCount);
+  const shares = numeric(stats.shareCount);
+  const saves = numeric(stats.collectCount);
+  const createdAt = numeric(item.createTime);
+  const duration = numeric(video.duration);
+  const musicTitle = textValue(music.title);
+  const desc = textValue(item.desc);
+
   return {
     id,
     url: `${WEB}/@${handle}/video/${id}`,
-    desc: toString(item.desc),
-    createdAt: toNumber(item.createTime),
-    durationSec: toNumber(video.duration),
-    views: toNumber(stats.playCount),
-    likes: toNumber(stats.diggCount),
-    comments: toNumber(stats.commentCount),
-    shares: toNumber(stats.shareCount),
-    saves: toNumber(stats.collectCount),
+    desc: desc.value,
+    createdAt: createdAt.value,
+    durationSec: duration.value,
+    views: views.value,
+    likes: likes.value,
+    comments: comments.value,
+    shares: shares.value,
+    saves: saves.value,
     author: handle,
-    authorFollowers: toNumber(authorStats.followerCount),
-    music: toString(music.title),
-    originalSound: Boolean(music.original) || /original sound/i.test(toString(music.title)),
+    authorFollowers: numeric(authorStats.followerCount).value,
+    music: musicTitle.value,
+    originalSound: Boolean(music.original) || /original sound/i.test(musicTitle.value),
     hashtags,
     thumbnail: toString(video.cover) || toString(video.dynamicCover) || toString(video.originCover),
     isAd: Boolean(item.isAd),
+    confidence: {
+      views: views.confidence,
+      likes: likes.confidence,
+      comments: comments.confidence,
+      shares: shares.confidence,
+      saves: saves.confidence,
+      createdAt: createdAt.confidence,
+      duration: duration.confidence,
+      hashtags: hashtags.length > 0 ? 1 : 0,
+      sound: musicTitle.confidence,
+      desc: desc.confidence,
+    },
   };
 }
 
@@ -402,7 +480,7 @@ export async function getVideo(handle: string, id: string): Promise<Video> {
       tr("Ist das Video noch online?", "Is the video still online?"),
     );
   }
-  return mapVideo(item, handle);
+  return mapVideoItem(item, handle);
 }
 
 /** Accepts any TikTok video URL (also short links) and returns the video data. */
