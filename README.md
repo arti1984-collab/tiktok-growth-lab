@@ -195,3 +195,13 @@ tiktok.com und, wenn du einen Key hinterlegst, an deinen KI-Anbieter.
 
 No account, no telemetry. Profiles, measurements, the plan and the settings live in `data/store.json` or in the
 device's SharedPreferences. The only outbound requests go to tiktok.com and, if you add a key, to your AI provider.
+
+## Lizenz / License
+
+Der Quelltext ist öffentlich lesbar, aber nicht frei: Ändern und Weitergeben sind nicht erlaubt, die offiziellen
+Dateien aus den Releases darf jede und jeder für sich nutzen. Einzelheiten stehen in [LICENSE](LICENSE). Am Code
+ändert allein der Rechteinhaber etwas, fremde Beiträge werden nicht angenommen.
+
+The source is public to read, but not free to reuse: changing and redistributing it are not allowed, while anyone may
+use the official files from the releases. Details are in [LICENSE](LICENSE). Only the copyright holder changes the
+code, outside contributions are not accepted.
