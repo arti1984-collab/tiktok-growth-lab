@@ -218,6 +218,8 @@ export type AiResponse = {
   note?: string;
   /** Abweichungen vom erwarteten Schema, leer heisst: passt. */
   issues?: string[];
+  /** Datenlage, auf der die Antwort beruht. */
+  guard?: { level: "thin" | "poor"; warning: string };
 };
 
 export type FreeModel = {

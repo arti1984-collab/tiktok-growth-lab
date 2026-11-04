@@ -243,6 +243,7 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
             </>
           }
         >
+          {response.guard && <p className="muted small">{response.guard.warning}</p>}
           {response.note && <p className="muted small">{response.note}</p>}
           {response.issues && response.issues.length > 0 && (
             <p className="muted small">
