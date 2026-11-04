@@ -313,8 +313,52 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Nach außen", "Outward"],
         text: [
-          "Nur zwei Ziele: tiktok.com beim Scannen und dein KI-Anbieter beim Generieren. Keine Konten, keine Telemetrie.",
-          "Only two destinations: tiktok.com while scanning and your AI provider while generating. No accounts, no telemetry.",
+          "Nur drei Ziele: tiktok.com beim Scannen, dein KI-Anbieter beim Generieren und die Update-Prüfung an api.github.com. Keine Konten, keine Telemetrie.",
+          "Only three destinations: tiktok.com while scanning, your AI provider while generating and the update check on api.github.com. No accounts, no telemetry.",
+        ],
+      },
+    ],
+  },
+  {
+    title: ["Compliance", "Compliance"],
+    intro: [
+      "Kurz und direkt: alles läuft auf deinem Rechner, gelesen werden nur öffentliche Seiten, die Nutzung liegt bei dir.",
+      "Short and direct: everything runs on your machine, only public pages are read, and use is up to you.",
+    ],
+    points: [
+      {
+        label: ["Nur lokal", "Local only"],
+        text: [
+          "Alle Berechnungen laufen lokal. Kein Proxy. Kein eigenes Backend.",
+          "All computation runs locally. No proxy. No backend of our own.",
+        ],
+      },
+      {
+        label: ["Nur öffentliche Seiten", "Public pages only"],
+        text: [
+          "Das Tool liest ausschließlich öffentliche TikTok-Webseiten (kein Login erforderlich). Ein Cookie ist optional, bleibt lokal und ändert daran nichts.",
+          "The tool reads public TikTok web pages only (no login required). A cookie is optional, stays local and changes none of this.",
+        ],
+      },
+      {
+        label: ["Rate limiting", "Rate limiting"],
+        text: [
+          "Der Scan pausiert zwischen Requests, um Drosselung und Blocks zu vermeiden. Die Pause stellst du unter Einstellungen ein, Standard sind 1200 ms.",
+          "The scan pauses between requests to avoid throttling and blocks. You set the pause in the settings, the default is 1200 ms.",
+        ],
+      },
+      {
+        label: ["Kein Bulk Export", "No bulk export"],
+        text: [
+          "Keine Massen-Datensammlung, kein Dump ganzer Profile. Exportiert wird nur die Auswertung, die du selbst angefordert hast.",
+          "No mass data collection, no dump of whole profiles. Only the analysis you asked for is exported.",
+        ],
+      },
+      {
+        label: ["Nutzerverantwortung", "Your responsibility"],
+        text: [
+          "Du musst die TikTok-Nutzungsbedingungen einhalten.",
+          "You must follow TikTok's Terms of Service.",
         ],
       },
     ],
