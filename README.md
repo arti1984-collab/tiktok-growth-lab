@@ -82,6 +82,24 @@ häufige Anfragen, deshalb pausiert der Scan zwischen den Aufrufen. Follower-Ver
 Messungen. Eine laufende Datei lässt sich unter Windows nicht überschreiben, deshalb tauscht die App sie beim
 Beenden gegen die heruntergeladene Version.
 
+## Compliance
+
+Kurz und direkt:
+
+Dieses Werkzeug läuft vollständig auf deinem Rechner. Es lädt nur öffentlich zugängliche TikTok-Webseiten (keine
+TikTok-API, kein Zugriff auf private Konten). Anfragen werden mit Pausen gedrosselt, damit Drosselung und Sperren
+unwahrscheinlich bleiben. Es gehen keine Telemetriedaten an Dritte. Die Nutzung liegt bei dir und muss den
+TikTok-Nutzungsbedingungen entsprechen.
+
+- **Nur lokal:** Alle Berechnungen laufen lokal. Kein Proxy. Kein eigenes Backend.
+- **Nur öffentliche Seiten:** Das Tool liest ausschließlich öffentliche TikTok-Webseiten (kein Login erforderlich).
+  Ein Cookie ist optional, bleibt lokal und ändert daran nichts.
+- **Rate limiting:** Der Scan pausiert zwischen Requests (Standard 1200 ms, in den Einstellungen änderbar), um
+  Drosselung und Blocks zu vermeiden.
+- **Kein Bulk Export:** Keine Massen-Datensammlung, kein Dump ganzer Profile. Exportiert wird nur die Auswertung,
+  die du selbst angefordert hast.
+- **Nutzerverantwortung:** Du musst die TikTok-Nutzungsbedingungen einhalten.
+
 ---
 
 # English
@@ -158,6 +176,23 @@ The tool reads public TikTok pages, not an API. Private accounts return no video
 requests, which is why the scan pauses between calls. Follower histories only come from your own measurements. A
 running file cannot be overwritten on Windows, so the app swaps it for the downloaded one on quit.
 
+## Compliance
+
+Short and direct:
+
+This tool runs entirely on your machine. It fetches only publicly accessible TikTok web pages (no TikTok API, no
+private account access). Requests are throttled with delays to reduce the chance of blocks. No telemetry is sent to
+third parties. Use is at your own responsibility and must comply with TikTok's Terms of Service.
+
+- **Local only:** all computation runs locally. No proxy. No backend of our own.
+- **Public pages only:** the tool reads public TikTok web pages only (no login required). A cookie is optional, stays
+  local and changes none of this.
+- **Rate limiting:** the scan pauses between requests (1200 ms by default, adjustable in the settings) to avoid
+  throttling and blocks.
+- **No bulk export:** no mass data collection, no dump of whole profiles. Only the analysis you asked for is
+  exported.
+- **Your responsibility:** you must follow TikTok's Terms of Service.
+
 ---
 
 ## Projektstruktur / Project layout
@@ -172,11 +207,15 @@ release/        gebaute exe
 
 ## Daten und Datenschutz / Data and privacy
 
-Es gibt keinen Account und keine Telemetrie. Gespeichert werden Profile, Messpunkte, Plan und Einstellungen in
-`data/store.json`. Nach außen gehen nur die Anfragen an
-tiktok.com und, wenn du einen Key hinterlegst, an deinen KI-Anbieter.
+Es gibt keinen Account und keine Telemetrie. Alle Berechnungen laufen lokal, ohne Proxy und ohne eigenes Backend.
+Gelesen werden ausschließlich öffentliche TikTok-Webseiten, ein Login ist nicht nötig. Gespeichert werden Profile,
+Messpunkte, Plan und Einstellungen in `data/store.json`. Nach außen gehen nur die Anfragen an tiktok.com, an deinen
+KI-Anbieter (nur mit hinterlegtem Key) und die Update-Prüfung an api.github.com (mit Token, sonst anonym).
 
-No account, no telemetry. Profiles, measurements, the plan and the settings live in `data/store.json`. The only outbound requests go to tiktok.com and, if you add a key, to your AI provider.
+No account, no telemetry. All computation runs locally, with no proxy and no backend of our own. Only public TikTok
+web pages are read, no login is required. Profiles, measurements, the plan and the settings live in
+`data/store.json`. The only outbound requests go to tiktok.com, to your AI provider (only with a key) and to the
+update check on api.github.com (with a token, otherwise anonymous).
 
 ## Lizenz / License
 
