@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.11.0, Branch main
+Stand: 04.11.2026, Version 2.12.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -209,6 +209,19 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.12.0 Privates Repo und Update mit Token:
+       - Das Repo ist privat. Die Update-Pruefung schickt ein Token mit,
+         wenn eins hinterlegt ist (Einstellungen oder GITHUB_TOKEN in .env),
+         und laedt die exe dann ueber die Asset-API statt ueber die
+         browser_download_url (server/lib/update.ts, updater.ts).
+       - publicSettings liefert hasGithubToken und githubTokenSource, aber
+         nie das Token selbst. Das Feld heisst githubToken in der Datendatei.
+       - Ohne Token meldet eine 404-Antwort jetzt, dass das Repo privat sein
+         kann, statt "noch keine Version" zu behaupten.
+       - Wichtig: jede Installation braucht ein eigenes Token. Vorherige
+         Versionen konnten sich aus einem privaten Repo nicht selbst
+         aktualisieren, 2.12.0 muss einmal von Hand installiert werden.
+       Version 2.12.0.
 2.11.0 Echter 30-Tage-Plan:
        - Der Modus strategy verlangt 28 Eintraege im postingPlan, vier
          Wochen zu je sieben Tagen, Feld woche 1 bis 4, Themen bauen

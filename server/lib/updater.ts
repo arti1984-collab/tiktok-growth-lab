@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DATA_DIR } from "../config.ts";
 import { tr } from "./lang.ts";
+import { effectiveSettings } from "./store.ts";
 
 /**
  * Laedt die neue Windows-Datei im Hintergrund in den Datenordner. Getauscht
@@ -73,8 +74,16 @@ export function startDownload(version: string, url: string, size: number): void 
         if (entry.endsWith(".part")) fs.rmSync(path.join(UPDATES_DIR, entry), { force: true });
       }
 
+      // Private Repos liefern das Asset nur mit Token und diesem Accept-Kopf.
+      const token = effectiveSettings().githubToken.trim();
+      const headers: Record<string, string> = { "user-agent": "TikTok-Growth-Lab" };
+      if (token && url.startsWith("https://api.github.com/")) {
+        headers.authorization = `Bearer ${token}`;
+        headers.accept = "application/octet-stream";
+      }
+
       const response = await fetch(url, {
-        headers: { "user-agent": "TikTok-Growth-Lab" },
+        headers,
         signal: AbortSignal.timeout(30 * 60_000),
       });
       if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
