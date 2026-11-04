@@ -2076,6 +2076,60 @@ details summary:hover {
   }
 }
 
+/* ------------------------------------------------------------ weaknesses */
+
+.weakness-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.weakness {
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.weakness:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.weakness:last-child {
+  padding-bottom: 0;
+}
+
+.weakness-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.weakness-head strong {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.weakness p {
+  margin-top: 6px;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+
+/* Der Goldstrich sitzt nur an der Handlungszeile, nicht an jeder Karte. */
+.weakness-action {
+  border-left: 2px solid var(--gold);
+  padding-left: 10px;
+}
+
+.weakness-action strong {
+  color: var(--gold);
+}
+
 @media (max-width: 560px) {
   /* Tap-Ziele: alles, was man mit dem Finger trifft, bekommt 44 px Hoehe. */
   .btn,

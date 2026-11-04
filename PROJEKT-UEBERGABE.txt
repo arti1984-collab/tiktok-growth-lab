@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.14.0, Branch main
+Stand: 04.11.2026, Version 2.15.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -211,6 +211,19 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.15.0 Profil-Check nach dem Scan:
+       - Das Eingabefeld heisst jetzt "Link oder Name des Profils", der Knopf
+         "Schwaechen pruefen". Damit ist die Abfrage eine einzige Zeile.
+       - Direkt unter dem Profil steht die Karte "Wo es hakt": Interaktion,
+         Reichweite, Rhythmus, Ton und duenne Datenbasis, dringende Punkte
+         zuerst. Jeder Punkt nennt die Zahl, das Problem und unter "Besser
+         machen" den naechsten Schritt. Passt alles, sagt die Karte das.
+       - Berechnet in server/lib/metrics.ts (Typ Weakness, Feld
+         metrics.weaknesses), ohne KI, nur aus den gescrapten Zahlen.
+       - Neue Tests in test/metrics.test.ts: schwache Daten ergeben
+         dringende Punkte, starke Daten keinen dringenden Punkt, ohne
+         Videos bleibt die Liste leer.
+       Version 2.15.0.
 2.14.0 Compliance in der Anleitung:
        - Neuer Abschnitt "Compliance" am Ende der Anleitung, Deutsch und
          Englisch: alles laeuft lokal (kein Proxy, kein eigenes Backend),
