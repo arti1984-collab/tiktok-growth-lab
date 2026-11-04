@@ -11,11 +11,6 @@ probe*.mjs
 .electron-*.log
 *.tmp
 
-# Android
-android/.gradle/
-android/build/
-android/app/build/
-android/local.properties
-android/keystore.jks
-android/keystore.properties
+# Die Android-App liegt nur lokal, sie gehoert nicht ins Repo.
+android/
 .tools/
