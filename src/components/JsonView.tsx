@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-const LABELS: Record<string, string> = {
+export const LABELS: Record<string, string> = {
   diagnose: "Diagnose",
   positionierung: "Positionierung",
   nische: "Nische",

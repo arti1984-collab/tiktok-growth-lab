@@ -1,5 +1,7 @@
 package de.artur.growthlab.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,8 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import de.artur.growthlab.LabState
 import de.artur.growthlab.data.Ai
 import de.artur.growthlab.data.Prompts
+import de.artur.growthlab.data.TextExport
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -43,6 +48,17 @@ fun StudioScreen(state: LabState) {
     var parsed by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var copied by remember { mutableStateOf(false) }
+    var pendingText by remember { mutableStateOf<String?>(null) }
+    var saved by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val fileSaver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        val payload = pendingText
+        if (uri != null && payload != null) {
+            runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(payload.toByteArray()) } }
+            saved = true
+        }
+        pendingText = null
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -107,6 +123,8 @@ fun StudioScreen(state: LabState) {
                     error = null
                     answer = null
                     copied = false
+                    saved = false
+                    pendingText = null
                     try {
                         val (system, user) = Prompts.build(mode, topic, state.scan)
                         val text = Ai.chat(state.settings, system, user)
@@ -162,6 +180,22 @@ fun StudioScreen(state: LabState) {
                     }
                 }
                 if (parsed) HashtagSection(raw = text)
+                androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = {
+                        val title = Prompts.MODES.firstOrNull { it.first == mode }?.second ?: "KI-Antwort"
+                        pendingText = TextExport.build(
+                            title = title,
+                            model = state.settings.model,
+                            handle = state.scan?.profile?.handle,
+                            raw = text,
+                        )
+                        saved = false
+                        fileSaver.launch(TextExport.fileName(title))
+                    }) {
+                        Text("Als Textdatei speichern", fontSize = 12.sp)
+                    }
+                    if (saved) Text("Gespeichert", fontSize = 11.sp, color = GoodColor)
+                }
                 Text(
                     display,
                     fontFamily = FontFamily.Monospace,
