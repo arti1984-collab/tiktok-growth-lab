@@ -26,6 +26,7 @@ object Store {
                 githubToken = json.optString("githubToken", ""),
                 goalFollowers = json.optInt("goalFollowers", 0),
                 goalDate = json.optString("goalDate", ""),
+                cookie = json.optString("cookie", ""),
             )
         } catch (error: Exception) {
             AiSettings()
@@ -41,6 +42,7 @@ object Store {
             .put("githubToken", settings.githubToken)
             .put("goalFollowers", settings.goalFollowers)
             .put("goalDate", settings.goalDate)
+            .put("cookie", settings.cookie)
         prefs(context).edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
 

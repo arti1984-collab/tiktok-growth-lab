@@ -254,6 +254,13 @@ private fun chapters(): List<Chapter> = listOf(
                 ),
             ),
             Point(
+                tr("Session-Cookie", "Session cookie"),
+                tr(
+                    "Optional: ein Cookie aus dem Browser hebt die Grenze von 15 Videos auf und hilft, wenn TikTok eine Bestätigung verlangt. Er bleibt auf dem Handy und geht nur an tiktok.com.",
+                    "Optional: a cookie from a browser lifts the 15-video limit and helps when TikTok asks for a confirmation. It stays on the phone and only goes to tiktok.com.",
+                ),
+            ),
+            Point(
                 tr("Woher die Daten kommen", "Where the data comes from"),
                 tr(
                     "Profil und Videos von tiktok.com, die Auswertung lokal. Keine Konten, keine Telemetrie.",

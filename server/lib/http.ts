@@ -1,4 +1,4 @@
-import { effectiveSettings } from "./store.ts";
+import { effectiveSettings, updateSettings } from "./store.ts";
 import { tr } from "./lang.ts";
 
 export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -140,10 +140,59 @@ export function cacheSize() {
   return cache.size;
 }
 
+/**
+ * The desktop app registers a real Chromium window here. It is the last resort
+ * when TikTok answers with 403 or a captcha: the window loads the page like a
+ * visitor, the user solves the captcha once, and the cookies it collected are
+ * stored so the plain requests work again.
+ */
+type BrowserBridge = {
+  fetchPage: (url: string) => Promise<{ html: string; cookie: string }>;
+};
+
+function browserBridge(): BrowserBridge | undefined {
+  return (globalThis as { __tiktokBrowser?: BrowserBridge }).__tiktokBrowser;
+}
+
+export function browserFallbackAvailable(): boolean {
+  return Boolean(browserBridge());
+}
+
+const BLOCK_PATTERN = /captcha|verify you are human|unusual traffic|access denied|ratelimit triggered/i;
+
+function wantsBrowser(error: unknown): boolean {
+  if (error instanceof HttpError && (error.status === 403 || error.status === 429)) return true;
+  return error instanceof Error && BLOCK_PATTERN.test(error.message);
+}
+
+/** Loads a page through the Electron window, mostly for the diagnostics route. */
+export async function browserProbe(url: string): Promise<{ htmlLength: number; cookieNames: string[] } | null> {
+  const bridge = browserBridge();
+  if (!bridge) return null;
+  const page = await bridge.fetchPage(url);
+  return {
+    htmlLength: page.html.length,
+    cookieNames: page.cookie
+      .split(";")
+      .map((part) => part.split("=")[0].trim())
+      .filter(Boolean)
+      .slice(0, 15),
+  };
+}
+
 /** Fetches a TikTok page politely (throttled + retried + cached). */
 export async function fetchHtml(url: string, referer?: string): Promise<string> {
   const ttl = effectiveSettings().cacheTtlMs;
-  return cached(`html:${url}`, ttl, () => limiter.run(() => fetchWithRetries(url, referer, HTML_ACCEPT)));
+  try {
+    return await cached(`html:${url}`, ttl, () => limiter.run(() => fetchWithRetries(url, referer, HTML_ACCEPT)));
+  } catch (error) {
+    const bridge = browserBridge();
+    if (!bridge || !wantsBrowser(error)) throw error;
+    const page = await bridge.fetchPage(url);
+    if (page.cookie) updateSettings({ cookie: page.cookie });
+    cache.set(`html:${url}`, { expires: Date.now() + ttl, value: page.html });
+    return page.html;
+  }
 }
 
 /**

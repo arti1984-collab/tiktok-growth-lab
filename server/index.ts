@@ -31,7 +31,7 @@ import {
   type Snapshot,
   type TrackedAccount,
 } from "./lib/store.ts";
-import { cacheSize, clearCache } from "./lib/http.ts";
+import { browserFallbackAvailable, browserProbe, cacheSize, clearCache } from "./lib/http.ts";
 import { PROVIDERS } from "./lib/providers.ts";
 import { setLang, tr } from "./lib/lang.ts";
 import { checkForUpdate, currentVersion } from "./lib/update.ts";
@@ -140,6 +140,7 @@ app.get("/api/status", (_req, res) => {
       minDelayMs: settings.minDelayMs,
       cookieSet: Boolean(settings.cookie),
       cacheEntries: cacheSize(),
+      browserFallback: browserFallbackAvailable(),
     },
   });
 });
@@ -402,6 +403,28 @@ app.post("/api/cache/clear", (_req, res) => {
   clearCache();
   res.json({ ok: true, cacheEntries: 0 });
 });
+
+/**
+ * Desktop only: proves the Chromium fallback window works and shows which
+ * cookies it collects. The web build answers 501, there is no window there.
+ */
+app.post(
+  "/api/browser-check",
+  asyncHandler(async (_req, res) => {
+    const probe = await browserProbe("https://www.tiktok.com/@tiktok?lang=de");
+    if (!probe) {
+      res.status(501).json({
+        error: tr(
+          "Der Browser-Notausgang gehört zur Desktop-App, im Browser gibt es ihn nicht.",
+          "The browser fallback belongs to the desktop app, the browser build has none.",
+        ),
+        code: "NO_BROWSER",
+      });
+      return;
+    }
+    res.json({ ok: probe.htmlLength > 0, ...probe });
+  }),
+);
 
 /* ------------------------------------------------------------ frontend/SPA */
 

@@ -16,6 +16,77 @@ const DATA_DIR = app.isPackaged
 const ICON = path.join(ROOT, "build", "icon.ico");
 
 let mainWindow = null;
+let fallbackWindow = null;
+
+/**
+ * The server falls back to this when TikTok answers with 403 or a captcha.
+ * A real Chromium window loads the page like a visitor: hidden while it works,
+ * shown when a captcha has to be solved by hand. Its cookies are handed back so
+ * the normal requests work again afterwards.
+ */
+const BLOCK_PATTERN = /captcha|verify you are human|unusual traffic|access denied|ratelimit triggered/i;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function getFallbackWindow() {
+  if (fallbackWindow && !fallbackWindow.isDestroyed()) return fallbackWindow;
+  fallbackWindow = new BrowserWindow({
+    width: 1100,
+    height: 860,
+    show: false,
+    title: "TikTok Growth Lab – TikTok öffnen",
+    backgroundColor: "#141210",
+    webPreferences: {
+      partition: "persist:tiktok-fallback",
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  fallbackWindow.setMenuBarVisibility(false);
+  fallbackWindow.on("closed", () => {
+    fallbackWindow = null;
+  });
+  return fallbackWindow;
+}
+
+async function collectCookie(win) {
+  const cookies = await win.webContents.session.cookies.get({ domain: ".tiktok.com" });
+  return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ");
+}
+
+async function browserFetchPage(url) {
+  const win = getFallbackWindow();
+  log(`browser fallback: ${url}`);
+  try {
+    await win.loadURL(url);
+  } catch (error) {
+    log(`browser fallback load error: ${error?.message || error}`);
+  }
+
+  let shown = false;
+  for (let attempt = 0; attempt < 90; attempt += 1) {
+    const html = await win.webContents.executeJavaScript(
+      "document.documentElement ? document.documentElement.outerHTML : ''",
+    );
+    if (html && !BLOCK_PATTERN.test(html)) {
+      if (shown) win.hide();
+      return { html, cookie: await collectCookie(win) };
+    }
+    if (!shown) {
+      // A captcha cannot be solved unseen, so the window comes to the front once.
+      win.show();
+      win.focus();
+      shown = true;
+      log("browser fallback: captcha window shown");
+    }
+    await sleep(2000);
+  }
+  const html = await win.webContents.executeJavaScript(
+    "document.documentElement ? document.documentElement.outerHTML : ''",
+  );
+  return { html, cookie: await collectCookie(win) };
+}
 
 /** Tiny log next to the data file – helps when the app window stays empty. */
 function log(message) {
@@ -105,6 +176,9 @@ async function boot() {
   const port = await findFreePort();
   const url = `http://127.0.0.1:${port}`;
 
+  // The bundled server checks for this bridge before its own requests give up.
+  globalThis.__tiktokBrowser = { fetchPage: browserFetchPage };
+
   process.env.APP_ENV = "production";
   process.env.APP_ROOT = ROOT;
   process.env.APP_DATA_DIR = DATA_DIR;
@@ -150,4 +224,7 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("window-all-closed", () => app.quit());
+  app.on("before-quit", () => {
+    if (fallbackWindow && !fallbackWindow.isDestroyed()) fallbackWindow.destroy();
+  });
 }

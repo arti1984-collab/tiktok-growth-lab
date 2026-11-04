@@ -48,6 +48,7 @@ fun SettingsScreen(state: LabState) {
     var loadingModels by remember { mutableStateOf(false) }
     var checkingUpdate by remember { mutableStateOf(false) }
     var githubToken by remember { mutableStateOf(state.settings.githubToken) }
+    var cookie by remember { mutableStateOf(state.settings.cookie) }
     val context = LocalContext.current
 
     Column(
@@ -236,8 +237,10 @@ fun SettingsScreen(state: LabState) {
             }
             Button(
                 onClick = {
-                    // The language is kept, the rest comes from the fields.
-                    state.saveSettings(AiSettings(baseUrl.trim(), model.trim(), apiKey.trim(), state.settings.language))
+                    // Only the three fields change; token, cookie and goal stay as they are.
+                    state.saveSettings(
+                        state.settings.copy(baseUrl = baseUrl.trim(), model = model.trim(), apiKey = apiKey.trim()),
+                    )
                     message = tr(
                         "Gespeichert. Key liegt nur auf diesem Handy.",
                         "Saved. The key stays on this phone only.",
@@ -268,6 +271,53 @@ fun SettingsScreen(state: LabState) {
             CardBox {
                 Text(it, fontSize = 12.sp, color = MutedColor)
             }
+        }
+
+        CardBox {
+            Text(tr("Session-Cookie", "Session cookie"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                tr(
+                    "Optional. Aus dem Browser kopiert hebt der Cookie die Grenze von 15 Videos auf und hilft, wenn TikTok eine Bestätigung verlangt. Ohne Cookie läuft alles wie gewohnt, nur ohne Login.",
+                    "Optional. Copied from a browser it lifts the 15-video limit and helps when TikTok asks for a confirmation. Without it everything runs as usual, just without a login.",
+                ),
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+            OutlinedTextField(
+                value = cookie,
+                onValueChange = { cookie = it },
+                label = { Text(tr("Cookie-Wert", "Cookie value"), fontSize = 11.sp) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        state.saveSettings(state.settings.copy(cookie = cookie.trim()))
+                        message = tr("Cookie gespeichert.", "Cookie saved.")
+                    },
+                ) {
+                    Text(tr("Cookie speichern", "Save cookie"), fontSize = 12.sp)
+                }
+                if (state.settings.cookie.isNotBlank()) {
+                    TextButton(
+                        onClick = {
+                            cookie = ""
+                            state.saveSettings(state.settings.copy(cookie = ""))
+                            message = tr("Cookie entfernt.", "Cookie removed.")
+                        },
+                    ) {
+                        Text(tr("Entfernen", "Remove"), fontSize = 12.sp)
+                    }
+                }
+            }
+            Text(
+                tr(
+                    "Der Cookie bleibt auf diesem Handy und geht nur an tiktok.com.",
+                    "The cookie stays on this phone and only goes to tiktok.com.",
+                ),
+                fontSize = 10.sp,
+                color = MutedColor,
+            )
         }
 
         CardBox {

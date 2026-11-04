@@ -243,8 +243,29 @@ export async function getProfile(rawHandle: string): Promise<Profile> {
  * The public creator list answers without a signature and returns up to 15 of
  * the newest videos with full stats. The list the web app itself calls
  * (post/item_list) is signed with X-Gnarly and answers with an empty body here.
+ * Two app ids answer this endpoint, so a blocked or empty answer on the first
+ * one is retried on the second. count=30 is rejected with HTTP 400, 15 is the
+ * ceiling of this route.
  */
 const CREATOR_LIST_LIMIT = 15;
+const CREATOR_LIST_AIDS = [1988, 1180];
+
+/** oEmbed answers without signature and tells us whether a video still exists. */
+async function getOembed(url: string): Promise<{ title: string; author: string; thumbnail: string } | null> {
+  try {
+    const data = await fetchJson<{ title?: string; author_name?: string; thumbnail_url?: string }>(
+      `${WEB}/oembed?url=${encodeURIComponent(url)}`,
+      WEB,
+    );
+    return {
+      title: toString(data.title),
+      author: toString(data.author_name),
+      thumbnail: toString(data.thumbnail_url),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT): Promise<Video[]> {
   if (!profile.secUid) {
@@ -259,32 +280,49 @@ export async function getUserVideos(profile: Profile, limit = CREATOR_LIST_LIMIT
   }
 
   const count = Math.max(1, Math.min(CREATOR_LIST_LIMIT, Math.round(limit)));
-  const url =
-    `${WEB}/api/creator/item_list/?aid=1988` +
-    `&secUid=${encodeURIComponent(profile.secUid)}&type=1&count=${count}&cursor=0`;
+  const subject = tr(`die Videoliste von @${profile.handle}`, `the video list of @${profile.handle}`);
+  let lastError: unknown = null;
 
-  let payload: { itemList?: Json[]; statusCode?: number };
-  try {
-    payload = await fetchJson<{ itemList?: Json[]; statusCode?: number }>(url, profile.url);
-  } catch (error) {
-    wrapHttpError(error, tr(`die Videoliste von @${profile.handle}`, `the video list of @${profile.handle}`));
+  for (const [index, aid] of CREATOR_LIST_AIDS.entries()) {
+    const url =
+      `${WEB}/api/creator/item_list/?aid=${aid}` +
+      `&secUid=${encodeURIComponent(profile.secUid)}&type=1&count=${count}&cursor=0`;
+    try {
+      const payload = await fetchJson<{ itemList?: Json[]; statusCode?: number }>(url, profile.url);
+      const items = Array.isArray(payload.itemList) ? payload.itemList : [];
+      const videos = items.map((item) => mapVideo(item, profile.handle)).filter((video) => video.id);
+      if (videos.length > 0) return videos;
+      lastError = new TikTokError(
+        "PARSE",
+        tr(`TikTok liefert für @${profile.handle} gerade keine Videoliste.`, `TikTok is returning no video list for @${profile.handle} right now.`),
+      );
+    } catch (error) {
+      // A missing or blocked account will not get better on the second id.
+      if (error instanceof HttpError && (error.status === 404 || error.status === 403)) {
+        wrapHttpError(error, subject);
+      }
+      if (error instanceof TikTokError && error.code === "NOT_FOUND") throw error;
+      lastError = error;
+    }
+    if (index < CREATOR_LIST_AIDS.length - 1) await sleep(2500);
   }
 
-  const items = Array.isArray(payload!.itemList) ? payload!.itemList! : [];
-  if (items.length === 0) {
+  if (lastError instanceof HttpError && lastError.status === 429) {
     throw new TikTokError(
-      "PARSE",
-      tr(
-        `TikTok liefert für @${profile.handle} gerade keine Videoliste.`,
-        `TikTok is returning no video list for @${profile.handle} right now.`,
-      ),
-      tr(
-        "Private Konten liefern keine Videos. Sonst später erneut scannen oder Links einfügen.",
-        "Private accounts return no videos. Otherwise scan again later or add links.",
-      ),
+      "RATE_LIMIT",
+      tr("TikTok drosselt die Videoliste.", "TikTok is throttling the video list."),
+      tr("Warte ein bis zwei Minuten und starte den Scan erneut.", "Wait a minute or two and run the scan again."),
     );
   }
-  return items.map((item) => mapVideo(item, profile.handle)).filter((video) => video.id);
+  if (lastError instanceof Error) throw lastError;
+  throw new TikTokError(
+    "PARSE",
+    tr(`TikTok liefert für @${profile.handle} gerade keine Videoliste.`, `TikTok is returning no video list for @${profile.handle} right now.`),
+    tr(
+      "Private Konten liefern keine Videos. Sonst später erneut scannen oder Links einfügen.",
+      "Private accounts return no videos. Otherwise scan again later or add links.",
+    ),
+  );
 }
 
 function mapVideo(item: Json, fallbackHandle: string): Video {
@@ -320,16 +358,41 @@ function mapVideo(item: Json, fallbackHandle: string): Video {
 }
 
 export async function getVideo(handle: string, id: string): Promise<Video> {
-  const url = `${WEB}/@${encodeURIComponent(handle)}/video/${id}?lang=${tr("de", "en")}`;
+  const subject = tr(`das Video ${id}`, `video ${id}`);
+  const first = `${WEB}/@${encodeURIComponent(handle)}/video/${id}?lang=${tr("de", "en")}`;
   let html: string;
   try {
-    html = await fetchHtml(url, `${WEB}/@${handle}`);
+    html = await fetchHtml(first, `${WEB}/@${handle}`);
   } catch (error) {
-    wrapHttpError(error, tr(`das Video ${id}`, `video ${id}`));
+    if (error instanceof HttpError && error.status === 404) wrapHttpError(error, subject);
+    // The same page in the other language often reaches a different cache node.
+    const second = `${WEB}/@${encodeURIComponent(handle)}/video/${id}?lang=${tr("en", "de")}`;
+    try {
+      html = await fetchHtml(second, `${WEB}/@${handle}`);
+    } catch {
+      wrapHttpError(error, subject);
+    }
   }
   const scope = extractScope(html!);
   const detail = scope?.["webapp.video-detail"] as Json | undefined;
-  if (!detail) failFromResponse(html!, tr(`das Video ${id}`, `video ${id}`));
+  if (!detail) {
+    // oEmbed has no numbers, but it tells a dead video from a blocked one.
+    const meta = await getOembed(`${WEB}/@${handle}/video/${id}`);
+    if (meta) {
+      throw new TikTokError(
+        "PARSE",
+        tr(
+          `Das Video von @${handle} existiert, TikTok gibt die Zahlen gerade nicht heraus.`,
+          `The video by @${handle} exists, TikTok just does not hand out the numbers right now.`,
+        ),
+        tr(
+          `Titel laut TikTok: ${meta.title.slice(0, 80) || "ohne Titel"}. Später erneut prüfen, oder den Scan wiederholen.`,
+          `Title according to TikTok: ${meta.title.slice(0, 80) || "no title"}. Try again later or repeat the scan.`,
+        ),
+      );
+    }
+    failFromResponse(html!, subject);
+  }
 
   const item = ((detail!.itemInfo ?? {}) as Json).itemStruct as Json | undefined;
   if (!item) {
