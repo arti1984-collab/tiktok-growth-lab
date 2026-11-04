@@ -114,8 +114,6 @@ data class AiSettings(
     val apiKey: String = "",
     /** "de" oder "en" – steuert Oberfläche und Sprache der KI-Antworten. */
     val language: String = "de",
-    /** Nur Lesezugriff, nur für die Update-Abfrage. Bleibt lokal. */
-    val githubToken: String = "",
     /** Ziel-Rechner: Follower-Ziel und Datum, 0 heißt kein Ziel. */
     val goalFollowers: Int = 0,
     val goalDate: String = "",

@@ -24,7 +24,7 @@ export default function App() {
   const [status, setStatus] = useState<Status | null>(null);
   const [scan, setScan] = useState<ScanResult | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
-  const [updateHidden, setUpdateHidden] = useState(false);
+  const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
   const [studioMode, setStudioMode] = useState<AiMode>("strategy");
 
   const refreshStatus = useCallback(() => {
@@ -38,12 +38,24 @@ export default function App() {
     refreshStatus();
   }, [refreshStatus]);
 
-  // One check per start; the server caches the answer for a quarter of an hour.
+  // No token, no setup: the check runs on start and every five minutes, so a
+  // fresh release shows up while the app stays open.
   useEffect(() => {
-    api
-      .update()
-      .then(setUpdate)
-      .catch(() => undefined);
+    let active = true;
+    const load = () => {
+      api
+        .update()
+        .then((info) => {
+          if (active) setUpdate(info);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    const timer = window.setInterval(load, 5 * 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   // A reload starts with an empty scan state, but the server still holds the last scan.
@@ -97,7 +109,7 @@ export default function App() {
           </div>
         </header>
 
-        {update?.updateAvailable && !updateHidden && (
+        {update?.updateAvailable && update.latest !== dismissedVersion && (
           <div className="update-bar">
             <span>
               {t(
@@ -116,7 +128,7 @@ export default function App() {
               </a>
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() => setUpdateHidden(true)}
+                onClick={() => setDismissedVersion(update.latest)}
                 aria-label={t("Meldung schließen", "Dismiss notice")}
               >
                 ✕

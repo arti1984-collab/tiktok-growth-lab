@@ -167,8 +167,6 @@ export type PublicSettings = {
   aiModel: string;
   hasApiKey: boolean;
   apiKeySource: "ui" | "env" | "none";
-  hasGithubToken: boolean;
-  githubTokenSource: "ui" | "env" | "none";
   cookieSet: boolean;
   cookieSource: "ui" | "env" | "none";
   minDelayMs: number;

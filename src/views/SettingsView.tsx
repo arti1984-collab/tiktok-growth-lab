@@ -29,7 +29,6 @@ export function SettingsView({
   const [busy, setBusy] = useState<string | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const [githubToken, setGithubToken] = useState("");
   const [message, setMessage] = useState<{ kind: "success" | "error" | "info" | "warn"; text: string } | null>(null);
 
   useEffect(() => {
@@ -143,25 +142,6 @@ export function SettingsView({
       setMessage({ kind: "error", text: (caught as ApiError).message });
     } finally {
       setCheckingUpdate(false);
-    }
-  }
-
-  async function saveToken(clear = false) {
-    setBusy("token");
-    try {
-      const next = await api.saveSettings({ githubToken: clear ? "" : githubToken.trim() });
-      setSettings(next);
-      setGithubToken("");
-      setUpdate(null);
-      setMessage({
-        kind: "success",
-        text: clear ? t("Token entfernt.", "Token removed.") : t("Token gespeichert.", "Token saved."),
-      });
-      onStatusChange();
-    } catch (caught) {
-      setMessage({ kind: "error", text: (caught as ApiError).message });
-    } finally {
-      setBusy(null);
     }
   }
 
@@ -299,38 +279,6 @@ export function SettingsView({
             <p className="muted small">{t("Du nutzt die neueste Version.", "You are on the newest version.")}</p>
           ))}
 
-        <label className="field">
-          <span>{t("GitHub-Token", "GitHub token")}</span>
-          <input
-            type="password"
-            value={githubToken}
-            onChange={(event) => setGithubToken(event.target.value)}
-            placeholder={
-              settings?.hasGithubToken
-                ? t("Ein Token ist hinterlegt", "A token is stored")
-                : "github_pat_… / ghp_…"
-            }
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <small className="muted">
-            {t(
-              "Nur Lesezugriff auf die Releases. Wird ausschließlich für diese Abfrage benutzt und bleibt in der lokalen Datendatei.",
-              "Read access to the releases only. Used solely for this check and kept in the local data file.",
-            )}
-          </small>
-        </label>
-
-        <div className="row gap-sm">
-          <button className="btn btn-sm" onClick={() => void saveToken()} disabled={busy === "token"}>
-            {t("Token speichern", "Save token")}
-          </button>
-          {settings?.hasGithubToken && (
-            <button className="btn btn-sm btn-ghost" onClick={() => void saveToken(true)} disabled={busy === "token"}>
-              {t("Entfernen", "Remove")}
-            </button>
-          )}
-        </div>
       </Section>
 
       <Section

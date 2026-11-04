@@ -136,7 +136,7 @@ fun Root(context: Context) {
     val tabs = listOf("Scan", tr("Wachstum", "Growth"), tr("KI-Studio", "AI studio"), tr("Setup", "Setup"), tr("Hilfe", "Guide"))
     var updateHidden by remember { mutableStateOf(false) }
     // One check per start, so a new release shows up without opening the setup tab.
-    LaunchedEffect(Unit) { state.update = Update.check(state.settings.githubToken) }
+    LaunchedEffect(Unit) { state.update = Update.check() }
 
     // Permission once; without it the line inside the app still shows up.
     LaunchedEffect(Unit) {

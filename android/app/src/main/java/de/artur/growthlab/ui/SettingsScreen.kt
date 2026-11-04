@@ -47,7 +47,6 @@ fun SettingsScreen(state: LabState) {
     var message by remember { mutableStateOf<String?>(null) }
     var loadingModels by remember { mutableStateOf(false) }
     var checkingUpdate by remember { mutableStateOf(false) }
-    var githubToken by remember { mutableStateOf(state.settings.githubToken) }
     var cookie by remember { mutableStateOf(state.settings.cookie) }
     val context = LocalContext.current
 
@@ -104,7 +103,7 @@ fun SettingsScreen(state: LabState) {
                     onClick = {
                         scope.launch {
                             checkingUpdate = true
-                            state.update = Update.check(githubToken)
+                            state.update = Update.check()
                             checkingUpdate = false
                         }
                     },
@@ -121,44 +120,6 @@ fun SettingsScreen(state: LabState) {
                     }
                 }
             }
-            OutlinedTextField(
-                value = githubToken,
-                onValueChange = { githubToken = it },
-                label = { Text(tr("GitHub-Token (nur Lesezugriff)", "GitHub token (read only)"), fontSize = 11.sp) },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = {
-                        state.saveSettings(state.settings.copy(githubToken = githubToken.trim()))
-                        message = tr("Token gespeichert.", "Token saved.")
-                    },
-                ) {
-                    Text(tr("Token speichern", "Save token"), fontSize = 12.sp)
-                }
-                if (state.settings.githubToken.isNotBlank()) {
-                    TextButton(
-                        onClick = {
-                            githubToken = ""
-                            state.saveSettings(state.settings.copy(githubToken = ""))
-                            state.update = null
-                            message = tr("Token entfernt.", "Token removed.")
-                        },
-                    ) {
-                        Text(tr("Entfernen", "Remove"), fontSize = 12.sp)
-                    }
-                }
-            }
-            Text(
-                tr(
-                    "Der Token wird nur für die Versionsabfrage benutzt und bleibt auf dem Gerät.",
-                    "The token is used only for the version check and stays on the device.",
-                ),
-                fontSize = 10.sp,
-                color = MutedColor,
-            )
         }
 
         CardBox {
