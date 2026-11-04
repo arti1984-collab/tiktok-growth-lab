@@ -220,26 +220,77 @@ export async function chat(
   return { text: content, model: response.data?.model || config.model, usage: response.data?.usage };
 }
 
-/** Pulls the first JSON object/array out of a model answer (handles code fences and prose). */
-export function extractJson(text: string): unknown | null {
-  const cleaned = text
-    .replace(/^\s*```(?:json)?/i, "")
-    .replace(/```\s*$/i, "")
-    .trim();
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    // keep going
+/**
+ * Models trip over the same two things: a comma before the closing bracket and
+ * a real line break inside a string. Both are repaired here instead of throwing
+ * the whole answer away.
+ */
+function repairJson(raw: string): string {
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (escaped) {
+      out += char;
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      out += char;
+      escaped = true;
+      continue;
+    }
+    if (char === '"') {
+      inString = !inString;
+      out += char;
+      continue;
+    }
+    if (inString) {
+      if (char === "\n") out += "\\n";
+      else if (char === "\r") continue;
+      else if (char === "\t") out += "\\t";
+      else out += char;
+      continue;
+    }
+    if (char === ",") {
+      let next = index + 1;
+      while (next < raw.length && /\s/.test(raw[next])) next += 1;
+      // A comma right before } or ] is the most common model slip.
+      if (raw[next] === "}" || raw[next] === "]") {
+        out += " ";
+        continue;
+      }
+    }
+    out += char;
   }
-  const start = cleaned.search(/[[{]/);
+  return out;
+}
+
+function parseChunk(chunk: string): unknown | null {
+  try {
+    return JSON.parse(chunk);
+  } catch {
+    // try the repaired version
+  }
+  try {
+    return JSON.parse(repairJson(chunk));
+  } catch {
+    return null;
+  }
+}
+
+/** Text from the first opening bracket up to its matching close. */
+function firstBalanced(text: string): string | null {
+  const start = text.search(/[[{]/);
   if (start === -1) return null;
-  const openChar = cleaned[start];
+  const openChar = text[start];
   const closeChar = openChar === "{" ? "}" : "]";
   let depth = 0;
   let inString = false;
   let escaped = false;
-  for (let index = start; index < cleaned.length; index += 1) {
-    const char = cleaned[index];
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
     if (escaped) {
       escaped = false;
       continue;
@@ -253,14 +304,83 @@ export function extractJson(text: string): unknown | null {
     if (char === openChar) depth += 1;
     if (char === closeChar) {
       depth -= 1;
-      if (depth === 0) {
-        try {
-          return JSON.parse(cleaned.slice(start, index + 1));
-        } catch {
-          return null;
-        }
+      if (depth === 0) return text.slice(start, index + 1);
+    }
+  }
+  return null;
+}
+
+/** Keys whose value is a list; one broken entry must not hide the others. */
+const SALVAGE_KEYS = [
+  "tage",
+  "ideen",
+  "hooks",
+  "captions",
+  "contentSaeulen",
+  "wachstumshebel",
+  "kpiZiele",
+  "staerken",
+  "schwaechen",
+  "schnellsteWins",
+  "risiken",
+  "contentLuecken",
+  "seoKeywords",
+];
+
+function salvageList(text: string, key: string): unknown[] | null {
+  const keyIndex = text.indexOf(`"${key}"`);
+  if (keyIndex === -1) return null;
+  const start = text.indexOf("[", keyIndex);
+  if (start === -1) return null;
+  const items: unknown[] = [];
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let itemStart = -1;
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') inString = !inString;
+    if (inString) continue;
+    if (char === "[" || char === "{") {
+      depth += 1;
+      if (depth === 2 && char === "{") itemStart = index;
+      continue;
+    }
+    if (char === "]" || char === "}") {
+      depth -= 1;
+      if (depth === 0) break;
+      if (depth === 1 && char === "}" && itemStart >= 0) {
+        const item = parseChunk(text.slice(itemStart, index + 1));
+        if (item !== null) items.push(item);
+        itemStart = -1;
       }
     }
+  }
+  return items.length > 0 ? items : null;
+}
+
+/** Pulls the first JSON object/array out of a model answer (handles code fences and prose). */
+export function extractJson(text: string): unknown | null {
+  const cleaned = text
+    .replace(/^\s*```(?:json)?/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+  const sliced = firstBalanced(cleaned);
+  for (const attempt of sliced ? [cleaned, sliced] : [cleaned]) {
+    const parsed = parseChunk(attempt);
+    if (parsed !== null) return parsed;
+  }
+  for (const key of SALVAGE_KEYS) {
+    const items = salvageList(cleaned, key);
+    if (items) return { [key]: items };
   }
   return null;
 }

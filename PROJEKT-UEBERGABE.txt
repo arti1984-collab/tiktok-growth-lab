@@ -227,6 +227,13 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback),
        Cookie-Feld und 10-Minuten-Cache auf Android.
+2.4.0  KI-Antworten lesbar: extractJson repariert Komma vor der
+       schliessenden Klammer und echte Zeilenumbrueche in Strings und
+       rettet einzelne Listeneintraege, statt die ganze Antwort zu
+       verwerfen (server/lib/ai.ts, android data/Ai.kt). Der 7-Tage-Plan
+       wird als Wochenplan gezeigt (components/WeekPlan.tsx, CSS
+       .week-plan), Android umbricht den Rohtext statt ihn
+       waagerecht zu scrollen. Version 2.4.0, versionCode 20.
 2.3.0  Repo oeffentlich, Update-Pruefung ohne Token. Das Token-Feld ist
        aus Web und Android entfernt, /api/update laeuft anonym gegen
        api.github.com. Web prueft beim Start und alle fuenf Minuten,

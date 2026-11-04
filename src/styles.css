@@ -1518,6 +1518,98 @@ details summary:hover {
   padding-left: 12px;
 }
 
+/* ------------------------------------------------------------- week plan */
+
+.week-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+.week-day {
+  background: var(--panel-2);
+  padding: 16px 18px;
+}
+
+.week-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.week-day-index {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-day-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.week-day-time {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-day-topic {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.week-day-hook {
+  margin: 8px 0 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--line-strong);
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+.week-day-rows {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 14px 0 0;
+}
+
+.week-day-rows > div {
+  display: contents;
+}
+
+.week-day-rows dt {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.week-day-rows dd {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+
+.week-day-tags {
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .week-day-rows {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .week-day-rows dt {
+    margin-top: 8px;
+  }
+}
+
 /* ----------------------------------------------------------- providers */
 
 .provider-grid {
