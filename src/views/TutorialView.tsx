@@ -265,8 +265,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Updates", "Updates"],
         text: [
-          "„Nach Updates suchen“ fragt die Releases auf GitHub ab und zeigt, welche Version installiert ist und welche zuletzt erschienen ist. Der Hinweis erscheint danach oben auf jeder Seite. Für die Abfrage braucht das private Repo ein Token mit Lesezugriff, es bleibt in der Datendatei. Die App tauscht sich nicht selbst aus.",
-          "“Check for updates” asks the releases on GitHub and shows which version is installed and which one came out last. The notice then appears on top of every page. The private repo needs a read-only token for the request, it stays in the data file. The app never replaces itself.",
+          "„Nach Updates suchen“ fragt die Releases auf GitHub ab und zeigt, welche Version installiert ist und welche zuletzt erschienen ist. Die Prüfung läuft beim Start und danach alle fünf Minuten von selbst, ohne Einrichtung. Der Hinweis erscheint oben auf jeder Seite. Die App tauscht sich nicht selbst aus.",
+          "“Check for updates” asks the releases on GitHub and shows which version is installed and which one came out last. The check runs on start and every five minutes after that, without any setup. The notice appears on top of every page. The app never replaces itself.",
         ],
       },
       {

@@ -48,28 +48,13 @@ object Update {
         return 0
     }
 
-    suspend fun check(token: String = ""): Info = withContext(Dispatchers.IO) {
+    suspend fun check(): Info = withContext(Dispatchers.IO) {
         val current = BuildConfig.VERSION_NAME
-        if (token.isBlank()) {
-            return@withContext Info(
-                current = current,
-                latest = null,
-                available = false,
-                url = null,
-                exe = null,
-                apk = null,
-                error = tr(
-                    "Für die Prüfung fehlt ein GitHub-Token. Hier im Abschnitt Updates eintragen.",
-                    "The check needs a GitHub token. Add it here in the Updates section.",
-                ),
-            )
-        }
         try {
             val request = Request.Builder()
                 .url("https://api.github.com/repos/$REPO/releases/latest")
                 .header("Accept", "application/vnd.github+json")
                 .header("User-Agent", "TikTok-Growth-Lab")
-                .header("Authorization", "Bearer ${token.trim()}")
                 .build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
@@ -81,7 +66,10 @@ object Update {
                         exe = null,
                         apk = null,
                         error = when (response.code) {
-                            401, 403 -> tr("Der GitHub-Token wurde abgelehnt.", "The GitHub token was rejected.")
+                            401, 403, 429 -> tr(
+                                "GitHub hat die Abfrage gedrosselt. In ein paar Minuten noch einmal.",
+                                "GitHub throttled the request. Try again in a few minutes.",
+                            )
                             404 -> tr("Es gibt noch keine veröffentlichte Version.", "There is no published release yet.")
                             else -> tr("Die Update-Abfrage hat nicht geklappt.", "The update check did not work.")
                         },

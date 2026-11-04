@@ -242,8 +242,8 @@ private fun chapters(): List<Chapter> = listOf(
             Point(
                 tr("Updates", "Updates"),
                 tr(
-                    "Nach Updates suchen fragt die Releases auf GitHub ab. Für das private Repo braucht es ein Token mit Lesezugriff. Der Hinweis erscheint danach oben in der App, installiert wird nichts von selbst.",
-                    "Check for updates asks the releases on GitHub. The private repo needs a read-only token for that. The notice then appears on top of the app, nothing installs itself.",
+                    "Nach Updates suchen fragt die Releases auf GitHub ab. Die Prüfung läuft beim Start und danach alle fünf Minuten von selbst, ohne Einrichtung. Der Hinweis erscheint oben in der App, installiert wird nichts von selbst.",
+                    "Check for updates asks the releases on GitHub. The check runs on start and every five minutes after that, without any setup. The notice appears on top of the app, nothing installs itself.",
                 ),
             ),
             Point(

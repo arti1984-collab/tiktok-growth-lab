@@ -1,15 +1,15 @@
 import { APP_VERSION } from "../config.ts";
 import { tr } from "./lang.ts";
-import { effectiveSettings } from "./store.ts";
 
 /**
- * Fragt die neueste Veröffentlichung auf GitHub ab. Das Ergebnis wird
- * kurz zwischengespeichert, damit nicht jeder Seitenaufruf eine Anfrage
- * kostet; ohne Netz bleibt die App bei "kein Update" statt zu hängen.
+ * Fragt die neueste Veröffentlichung auf GitHub ab. Das Repo ist öffentlich,
+ * die Abfrage braucht also keine Zugangsdaten. Das Ergebnis wird kurz
+ * zwischengespeichert, damit nicht jeder Seitenaufruf eine Anfrage kostet;
+ * ohne Netz bleibt die App bei "kein Update" statt zu hängen.
  */
 
 const REPO = (process.env.UPDATE_REPO || "arti1984-collab/tiktok-growth-lab").trim();
-const CACHE_MS = 15 * 60_000;
+const CACHE_MS = 5 * 60_000;
 
 export type UpdateInfo = {
   current: string;
@@ -57,11 +57,8 @@ export function currentVersion(): string {
   return APP_VERSION;
 }
 
-export async function checkForUpdate(force = false, token?: string): Promise<UpdateInfo> {
+export async function checkForUpdate(force = false): Promise<UpdateInfo> {
   if (!force && cache && Date.now() - cache.at < CACHE_MS) return cache.value;
-
-  // The repository is private, so GitHub answers 404 without a token.
-  const githubToken = (token ?? effectiveSettings().githubToken).trim();
 
   const base: UpdateInfo = {
     current: APP_VERSION,
@@ -77,23 +74,10 @@ export async function checkForUpdate(force = false, token?: string): Promise<Upd
   };
 
   try {
-    if (!githubToken) {
-      const value: UpdateInfo = {
-        ...base,
-        error: tr(
-          "Für die Prüfung fehlt ein GitHub-Token. Einstellungen, Abschnitt Updates.",
-          "The check needs a GitHub token. Settings, section Updates.",
-        ),
-      };
-      cache = { at: Date.now(), value };
-      return value;
-    }
-
     const response = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
       headers: {
         accept: "application/vnd.github+json",
         "user-agent": "TikTok-Growth-Lab",
-        authorization: `Bearer ${githubToken}`,
       },
       signal: AbortSignal.timeout(8000),
     });
@@ -120,14 +104,17 @@ export async function checkForUpdate(force = false, token?: string): Promise<Upd
     return value;
   } catch (error) {
     // Netzfehler sind kein Grund für eine Fehlermeldung im Vordergrund.
+    const message = error instanceof Error ? error.message : "";
     const value: UpdateInfo = {
       ...base,
-      error:
-        error instanceof Error && /HTTP 40[13]/.test(error.message)
-          ? tr("Der GitHub-Token wurde abgelehnt.", "The GitHub token was rejected.")
-          : error instanceof Error && /HTTP 404/.test(error.message)
-            ? tr("Es gibt noch keine veröffentlichte Version.", "There is no published release yet.")
-            : tr("Die Update-Abfrage hat nicht geklappt.", "The update check did not work."),
+      error: /HTTP 40[13]|HTTP 429/.test(message)
+        ? tr(
+            "GitHub hat die Abfrage gedrosselt. In ein paar Minuten noch einmal.",
+            "GitHub throttled the request. Try again in a few minutes.",
+          )
+        : /HTTP 404/.test(message)
+          ? tr("Es gibt noch keine veröffentlichte Version.", "There is no published release yet.")
+          : tr("Die Update-Abfrage hat nicht geklappt.", "The update check did not work."),
     };
     cache = { at: Date.now(), value };
     return value;

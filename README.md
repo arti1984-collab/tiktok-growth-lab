@@ -51,10 +51,10 @@ PDF, auf Android wird derselbe Bericht als Text geteilt.
 
 ### Sprache, Updates, Erinnerung
 Deutsch und Englisch für Oberfläche, Anleitung, Zahlenformate und KI-Texte. Ein Hinweis oben meldet neue Versionen
-(Prüfung gegen die GitHub-Releases, dafür einmalig ein Lesezugriff-Token). Geplante Posts erscheinen als Leiste und
+(Prüfung gegen die GitHub-Releases, ohne Einrichtung, beim Start und alle fünf Minuten). Geplante Posts erscheinen als Leiste und
 als Systemmeldung, sobald sie in den nächsten zwei Stunden fällig sind.
 
-![Einstellungen mit Sprache, Updates und Token-Feld](docs/screenshots/einstellungen.png)
+![Einstellungen mit Sprache, Updates und KI-Anbieter](docs/screenshots/einstellungen.png)
 
 ## Installieren
 
@@ -139,10 +139,10 @@ Android the same report is shared as text.
 
 ### Language, updates, reminders
 German and English for the interface, the guide, number formats and the AI texts. A bar on top announces new
-versions (checked against the GitHub releases, which needs a read-only token once). Planned posts show up as a bar
+versions (checked against the GitHub releases, no setup needed, on start and every five minutes). Planned posts show up as a bar
 and as a system message once they are due within the next two hours.
 
-![Settings with language, updates and the token field](docs/screenshots/einstellungen-en.png)
+![Settings with language, updates and AI providers](docs/screenshots/einstellungen-en.png)
 
 ## Install
 

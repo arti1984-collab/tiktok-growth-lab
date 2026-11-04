@@ -23,7 +23,6 @@ object Store {
                 model = json.optString("model", Provider.GEMINI_MODELS.first().first),
                 apiKey = json.optString("apiKey", ""),
                 language = json.optString("language", "de"),
-                githubToken = json.optString("githubToken", ""),
                 goalFollowers = json.optInt("goalFollowers", 0),
                 goalDate = json.optString("goalDate", ""),
                 cookie = json.optString("cookie", ""),
@@ -39,7 +38,6 @@ object Store {
             .put("model", settings.model)
             .put("apiKey", settings.apiKey)
             .put("language", settings.language)
-            .put("githubToken", settings.githubToken)
             .put("goalFollowers", settings.goalFollowers)
             .put("goalDate", settings.goalDate)
             .put("cookie", settings.cookie)
