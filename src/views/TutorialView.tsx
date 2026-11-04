@@ -64,6 +64,20 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
+        label: ["Video-Check", "Video check"],
+        text: [
+          "Ein einzelnes Video prüfen, auch eines von einem anderen Account: URL einwerfen, „Prüfen“ lesen es aus. Daneben steht dein Median, dein Engagement, das Längenfenster und der beste Slot, damit du siehst, ob das Video über oder unter deinem Schnitt liegt.",
+          "Check a single video, including one from another account: paste the URL and “Check” reads it. Next to it sit your median, your engagement, the length window and the best slot, so you can tell whether the video lands above or below your average.",
+        ],
+      },
+      {
+        label: ["Wochenbericht", "Weekly report"],
+        text: [
+          "Der Knopf im Profilfeld öffnet den Bericht: Follower, Score, Engagement, Views je Video, Posts pro Woche, die stärksten Videos und die Hinweise. „Drucken“ gibt ihn als PDF aus, „Text kopieren“ legt dieselbe Zusammenfassung in die Zwischenablage.",
+          "The button in the profile card opens the report: followers, score, engagement, views per video, posts per week, the strongest videos and the notes. “Print” gives you a PDF, “Copy text” puts the same summary on the clipboard.",
+        ],
+      },
+      {
         label: ["Grenze der Methode", "Limit of the method"],
         text: [
           "Ohne Login liefert TikTok höchstens die letzten 15 Videos. Mehr geht nur mit einem Session-Cookie aus den Einstellungen.",
@@ -75,8 +89,8 @@ const CHAPTERS: Chapter[] = [
   {
     title: ["Wachstum", "Growth"],
     intro: [
-      "Follower-Verlauf für deine eigenen Accounts und für die, die du beobachten willst.",
-      "Follower history for your own accounts and for the ones you want to watch.",
+      "Follower-Verlauf für deine eigenen Accounts und für die, die du beobachten willst, dazu Wochenplan, Ziel-Rechner und Vergleich.",
+      "Follower history for your own accounts and the ones you want to watch, plus the weekly plan, the goal calculator and the comparison.",
     ],
     points: [
       {
@@ -105,6 +119,27 @@ const CHAPTERS: Chapter[] = [
         text: [
           "Öffnet die Messreihe eines Accounts mit allen gespeicherten Werten, damit du Sprünge und Plateaus siehst.",
           "Opens the measurement series of an account with every stored value, so jumps and plateaus become visible.",
+        ],
+      },
+      {
+        label: ["Wochenplan", "Weekly plan"],
+        text: [
+          "„Termine übernehmen“ legt die drei stärksten Zeitfenster als Termine an. Jeder Termin hat ein Datum, eine Uhrzeit, eine Idee und nach dem Posten die Video-URL, die dann automatisch gegen den Median gemessen wird. Der Zähler oben zeigt offene und gepostete Termine, „+ Termin“ legt einen eigenen an.",
+          "“Take slots” turns your three strongest time windows into dates. Each slot has a date, a time, an idea and, after posting, the video URL, which is then measured against your median. The counter shows open and posted slots, “+ Slot” adds your own.",
+        ],
+      },
+      {
+        label: ["Ziel-Rechner", "Goal calculator"],
+        text: [
+          "Ziel-Follower und Datum eintragen, „Ziel speichern“ rechnet: wie viele Follower noch fehlen, wie viele pro Tag und pro Woche nötig sind und wie viele Posts und Views daraus folgen. Grundlage ist dein Schnitt an Views je Video.",
+          "Enter target followers and a date, “Save goal” then works out how many followers are missing, how many per day and per week that needs, and how many posts and views follow from it. The base is your average views per video.",
+        ],
+      },
+      {
+        label: ["Vergleich", "Comparison"],
+        text: [
+          "Hakt zwei bis drei Accounts an, dann stehen sie nebeneinander: Follower, plus oder minus der letzten sieben Tage, Summe seit der ersten Messung, Videos, Engagement, Score und Anzahl der Messpunkte. Der stärkste Zuwachs der Woche steht darunter.",
+          "Tick two or three accounts and they line up side by side: followers, plus or minus of the last seven days, the sum since the first measurement, videos, engagement, score and the number of measurements. The strongest gain of the week is named underneath.",
         ],
       },
       {
@@ -225,6 +260,20 @@ const CHAPTERS: Chapter[] = [
         text: [
           "Pause zwischen zwei TikTok-Anfragen, Zeitzone für die Zeitfenster und optional ein Session-Cookie für mehr als 15 Videos.",
           "Pause between two TikTok requests, timezone for the time windows and optionally a session cookie for more than 15 videos.",
+        ],
+      },
+      {
+        label: ["Updates", "Updates"],
+        text: [
+          "„Nach Updates suchen“ fragt die Releases auf GitHub ab und zeigt, welche Version installiert ist und welche zuletzt erschienen ist. Der Hinweis erscheint danach oben auf jeder Seite. Für die Abfrage braucht das private Repo ein Token mit Lesezugriff, es bleibt in der Datendatei. Die App tauscht sich nicht selbst aus.",
+          "“Check for updates” asks the releases on GitHub and shows which version is installed and which one came out last. The notice then appears on top of every page. The private repo needs a read-only token for the request, it stays in the data file. The app never replaces itself.",
+        ],
+      },
+      {
+        label: ["Benachrichtigungen", "Notifications"],
+        text: [
+          "Erlaubt der Browser Meldungen, dann erinnert die App zwei Stunden vor einem geplanten Termin, zusätzlich zur Leiste auf jeder Seite. Ohne Erlaubnis bleibt die Leiste.",
+          "If the browser allows notifications the app reminds you two hours before a planned slot, in addition to the bar on every page. Without permission the bar still shows up.",
         ],
       },
       {
