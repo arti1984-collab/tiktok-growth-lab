@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.15.0, Branch main
+Stand: 04.11.2026, Version 2.16.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -211,6 +211,20 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.16.0 Quelltext im Archiv statt daneben:
+       - electron-builder packt die App jetzt als app.asar (build.asar true
+         in package.json). Vorher lag resources/app entpackt daneben, damit
+         war build/server/index.mjs mit dem kompletten Scraper lesbar.
+       - build:server laeuft mit --minify. Der Server-Bundle ist kleiner und
+         nicht mehr im Klartext lesbar.
+       - README und LICENSE sagen jetzt, dass der Quelltext nicht
+         veroeffentlicht ist. Das Repo ist privat, nur die exe aus den
+         Releases ist fuer andere erreichbar.
+       - Grenze der Massnahme: asar ist kein Kopierschutz. Wer die exe
+         entpackt, kommt weiterhin an den Code. Es erschwert das Nachbauen,
+         es verhindert es nicht. Wirklich schuetzen wuerde nur, den Scraper
+         auszulagern.
+       Version 2.16.0.
 2.15.0 Profil-Check nach dem Scan:
        - Das Eingabefeld heisst jetzt "Link oder Name des Profils", der Knopf
          "Schwaechen pruefen". Damit ist die Abfrage eine einzige Zeile.

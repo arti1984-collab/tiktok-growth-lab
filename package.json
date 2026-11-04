@@ -1,6 +1,6 @@
 {
   "name": "tiktok-growth-lab",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "private": true,
   "type": "module",
   "description": "TikTok Growth Lab – Scraping-Dashboard mit KI-Coach für mehr Follower und Reichweite",
@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "tsx watch server/dev.ts",
     "build": "vite build",
-    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=build/server/index.mjs",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --minify --outfile=build/server/index.mjs",
     "build:app": "node scripts/make-icon.mjs && npm run build && npm run build:server",
     "desktop": "npm run build:app && electron .",
     "dist": "npm run build:app && electron-builder --win portable && npm run sign",
@@ -38,7 +38,7 @@
   "build": {
     "appId": "de.artur.tiktokgrowthlab",
     "productName": "TikTok Growth Lab",
-    "asar": false,
+    "asar": true,
     "directories": {
       "output": "release",
       "buildResources": "build"
