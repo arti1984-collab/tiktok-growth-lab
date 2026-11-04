@@ -1,5 +1,16 @@
 import { tr } from "./lang";
-import type { Account, AiMode, AiResponse, Provider, PublicSettings, ScanResult, Status, UpdateInfo } from "./types";
+import type {
+  Account,
+  AiMode,
+  AiResponse,
+  PlanItem,
+  PlanStatus,
+  Provider,
+  PublicSettings,
+  ScanResult,
+  Status,
+  UpdateInfo,
+} from "./types";
 
 export class ApiError extends Error {
   hint: string;
@@ -64,6 +75,20 @@ export const api = {
   providers: () => request<{ providers: Provider[] }>("/api/ai/providers"),
 
   watchlist: () => request<{ accounts: Account[] }>("/api/watchlist"),
+
+  plan: () => request<{ items: PlanItem[] }>("/api/plan"),
+
+  addPlan: (items: { date?: string; time?: string; note?: string }[]) =>
+    request<{ items: PlanItem[] }>("/api/plan", { method: "POST", body: JSON.stringify({ items }) }),
+
+  updatePlan: (id: string, patch: { status?: PlanStatus; note?: string; videoUrl?: string; date?: string; time?: string }) =>
+    request<{ items: PlanItem[] }>(`/api/plan/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(patch),
+    }),
+
+  deletePlan: (id: string) =>
+    request<{ items: PlanItem[] }>(`/api/plan/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
   track: (handle: string) =>
     request<{ account: Account; accounts: Account[] }>("/api/watchlist", {

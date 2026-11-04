@@ -313,6 +313,70 @@ select:disabled {
   gap: 16px;
 }
 
+/* Wochenplan: eine Zeile pro Termin, ruhig und ohne Karten im Kartenstapel. */
+.plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.plan-row:first-child {
+  border-top: 0;
+}
+
+.plan-row.is-done .plan-when strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.plan-when {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.plan-when strong {
+  font-size: 1rem;
+}
+
+.plan-body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-body .inline-input {
+  width: 100%;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .plan-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .plan-actions {
+    justify-content: flex-start;
+  }
+}
+
 /* Update-Hinweis: eine Zeile über den Reitern, nicht als Fenster. */
 .update-bar {
   display: flex;

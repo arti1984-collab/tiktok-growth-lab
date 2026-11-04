@@ -29,15 +29,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.artur.growthlab.LabState
+import de.artur.growthlab.data.PlanItem
 import de.artur.growthlab.data.Snapshot
 import de.artur.growthlab.data.TikTok
 import de.artur.growthlab.data.TrackedAccount
 import de.artur.growthlab.data.deltaAll
+import de.artur.growthlab.data.weekdayName
 import de.artur.growthlab.data.first
 import de.artur.growthlab.data.latest
 import de.artur.growthlab.data.tr
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun GrowthScreen(state: LabState) {
@@ -54,6 +60,8 @@ fun GrowthScreen(state: LabState) {
             tr("Wachstums-Tracking", "Growth tracking"),
             tr("Jeder Scan und jede Messung erzeugt einen Punkt im Verlauf.", "Every scan and every refresh adds a point to the history."),
         )
+
+        PlanCard(state)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
@@ -133,6 +141,180 @@ fun GrowthScreen(state: LabState) {
             )
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+/* ------------------------------------------------------------- Wochenplan */
+
+private fun isoDate(calendar: Calendar): String =
+    SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)
+
+/** Wochentag 1 bis 7 (Montag zuerst) auf den nächsten passenden Tag legen. */
+private fun nextDateFor(weekday: Int): String {
+    val today = Calendar.getInstance()
+    val current = ((today.get(Calendar.DAY_OF_WEEK) + 5) % 7) + 1
+    var diff = (weekday - current + 7) % 7
+    if (diff == 0) diff = 7
+    today.add(Calendar.DAY_OF_MONTH, diff)
+    return isoDate(today)
+}
+
+private fun videoIdFromUrl(url: String): String? =
+    Regex("/video/(\\d{6,})").find(url)?.groupValues?.getOrNull(1)
+
+@Composable
+private fun PlanCard(state: LabState) {
+    val slots = state.scan?.metrics?.bestSlots ?: emptyList()
+    val median = state.scan?.metrics?.medianViews ?: 0L
+    val planned = state.plan.count { it.status == "planned" }
+    val done = state.plan.count { it.status == "done" }
+
+    fun suggested(): List<PlanItem> {
+        val picked = mutableListOf<Pair<Int, Int>>()
+        for (slot in slots) {
+            if (picked.size >= 3) break
+            if (picked.any { it.first == slot.weekday }) continue
+            picked.add(slot.weekday to slot.hour)
+        }
+        if (picked.isEmpty()) {
+            val tomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 1) }
+            val dayAfter = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 2) }
+            return listOf(isoDate(tomorrow), isoDate(dayAfter)).map { date ->
+                PlanItem(id = UUID.randomUUID().toString(), date = date, time = "19:00")
+            }
+        }
+        return picked.map { (weekday, hour) ->
+            PlanItem(
+                id = UUID.randomUUID().toString(),
+                date = nextDateFor(weekday),
+                time = String.format(Locale.US, "%02d:00", hour),
+            )
+        }
+    }
+
+    CardBox {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("Wochenplan", "Weekly plan"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            if (state.plan.isNotEmpty()) {
+                Text("$planned ${tr("offen", "open")} · $done ${tr("gepostet", "posted")}", fontSize = 10.sp, color = MutedColor)
+            }
+        }
+        Text(
+            tr(
+                "Termine aus den besten Zeiten. Nach dem Posten die Video-URL eintragen, dann steht die Zahl daneben.",
+                "Dates from your best times. Paste the video URL after posting and the number appears next to it.",
+            ),
+            fontSize = 11.sp,
+            color = MutedColor,
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { state.addPlan(suggested()) }, enabled = !state.busy) {
+                Text(
+                    if (slots.isEmpty()) tr("2 Abende planen", "Plan 2 evenings")
+                    else tr("3 Termine übernehmen", "Take 3 slots"),
+                    fontSize = 12.sp,
+                )
+            }
+            TextButton(
+                onClick = {
+                    val tomorrow = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 1) }
+                    state.addPlan(
+                        listOf(PlanItem(id = UUID.randomUUID().toString(), date = isoDate(tomorrow), time = "19:00")),
+                    )
+                },
+            ) {
+                Text(tr("+ Termin", "+ Slot"), fontSize = 12.sp)
+            }
+        }
+
+        if (state.plan.isEmpty()) {
+            Text(
+                tr(
+                    "Noch nichts geplant. Ein Scan liefert die drei stärksten Zeiten, ohne Scan nimmt der Plan zwei Abende vor.",
+                    "Nothing planned yet. A scan finds your three strongest times, without one the plan suggests two evenings.",
+                ),
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+        }
+
+        state.plan.forEach { item ->
+            var note by remember(item.id) { mutableStateOf(item.note) }
+            var url by remember(item.id) { mutableStateOf(item.videoUrl) }
+            val date = runCatching {
+                Calendar.getInstance().apply { time = SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(item.date) ?: time }
+            }.getOrNull()
+            val weekday = date?.let { ((it.get(Calendar.DAY_OF_WEEK) + 5) % 7) + 1 }
+            val video = videoIdFromUrl(item.videoUrl)?.let { id -> state.scan?.videos?.firstOrNull { it.id == id } }
+
+            DividerLine()
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    buildString {
+                        append(item.time)
+                        append("  ")
+                        append(item.date)
+                        weekday?.let { append(" · "); append(weekdayName(it)) }
+                    },
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (item.status == "done") MutedColor else InkColor,
+                )
+                Row { TextButton(onClick = { state.removePlan(item.id) }) { Text("✕", color = MutedColor, fontSize = 12.sp) } }
+            }
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text(tr("Idee oder Hook", "Idea or hook"), fontSize = 11.sp) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (note != item.note) {
+                TextButton(onClick = { state.updatePlan(item.copy(note = note)) }) {
+                    Text(tr("Idee speichern", "Save idea"), fontSize = 11.sp)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { state.updatePlan(item.copy(status = if (item.status == "done") "planned" else "done")) },
+                ) {
+                    Text(
+                        if (item.status == "done") tr("wieder offen", "reopen") else tr("gepostet", "posted"),
+                        fontSize = 12.sp,
+                    )
+                }
+            }
+            if (item.status == "done") {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text(tr("Video-URL", "Video URL"), fontSize = 11.sp) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (url != item.videoUrl) {
+                    TextButton(onClick = { state.updatePlan(item.copy(videoUrl = url.trim())) }) {
+                        Text(tr("URL speichern", "Save URL"), fontSize = 11.sp)
+                    }
+                }
+                Text(
+                    if (video != null) {
+                        tr(
+                            "${num(video.views)} Views, ${if (median > 0) dec(video.views.toDouble() / median * 100) else "–"} % des Medians",
+                            "${num(video.views)} views, ${if (median > 0) dec(video.views.toDouble() / median * 100) else "–"}% of the median",
+                        )
+                    } else {
+                        tr(
+                            "Noch nicht im letzten Scan, der Vergleich kommt mit dem nächsten.",
+                            "Not in the last scan yet, the comparison follows with the next one.",
+                        )
+                    },
+                    fontSize = 10.sp,
+                    color = MutedColor,
+                )
+            }
+        }
     }
 }
 

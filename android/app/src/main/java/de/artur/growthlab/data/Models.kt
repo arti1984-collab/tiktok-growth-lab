@@ -118,6 +118,17 @@ data class AiSettings(
     val githubToken: String = "",
 )
 
+/** Ein Termin im Wochenplan: Datum und Uhrzeit lokal, Video-URL nach dem Posten. */
+data class PlanItem(
+    val id: String,
+    val date: String,
+    val time: String,
+    val note: String = "",
+    val status: String = "planned",
+    val videoUrl: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
 data class AiAnswer(
     val mode: String,
     val model: String,

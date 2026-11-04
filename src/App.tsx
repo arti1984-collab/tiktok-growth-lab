@@ -147,7 +147,7 @@ export default function App() {
               }}
             />
           )}
-          {tab === "watch" && <WatchView />}
+          {tab === "watch" && <WatchView scan={scan} />}
           {tab === "studio" && <StudioView scan={scan} status={status} initialMode={studioMode} />}
           {tab === "settings" && <SettingsView status={status} onStatusChange={refreshStatus} />}
           {tab === "guide" && <TutorialView />}
