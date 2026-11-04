@@ -8,12 +8,13 @@ import java.util.Locale
 /** Port of server/lib/metrics.ts – same numbers and wording as the desktop app. */
 object MetricsEngine {
 
-    val weekdayNames = listOf("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag")
+    /** Wochentagsnamen kommen aus Lang.kt und folgen der eingestellten Sprache. */
+    val weekdayNames: List<String> get() = de.artur.growthlab.data.weekdayNames
 
-    private fun fmt(value: Long): String = NumberFormat.getIntegerInstance(Locale.GERMANY).format(value)
-    private fun pct(value: Double): String = String.format(Locale.GERMANY, "%.1f", value)
-    private fun one(value: Double): String = String.format(Locale.GERMANY, "%.1f", value)
-    private fun two(value: Double): String = String.format(Locale.GERMANY, "%.2f", value)
+    private fun fmt(value: Long): String = NumberFormat.getIntegerInstance(Language.locale).format(value)
+    private fun pct(value: Double): String = String.format(Language.locale, "%.1f", value)
+    private fun one(value: Double): String = String.format(Language.locale, "%.1f", value)
+    private fun two(value: Double): String = String.format(Language.locale, "%.2f", value)
 
     private fun median(values: List<Long>): Long {
         if (values.isEmpty()) return 0
@@ -76,8 +77,11 @@ object MetricsEngine {
         insights = listOf(
             Insight(
                 "info",
-                "Noch keine Post-Daten",
-                "Füge 5–30 Video-Links von @${profile.handle} hinzu, damit Engagement, beste Posting-Zeiten und Formate berechnet werden können.",
+                tr("Noch keine Post-Daten", "No post data yet"),
+                tr(
+                    "Füge 5–30 Video-Links von @${profile.handle} hinzu, damit Engagement, beste Posting-Zeiten und Formate berechnet werden können.",
+                    "Add 5–30 video links for @${profile.handle} so engagement, best posting times and formats can be calculated.",
+                ),
             ),
         ),
     )
@@ -178,39 +182,66 @@ object MetricsEngine {
             insights.add(
                 Insight(
                     "info",
-                    "Bestes Zeitfenster",
-                    "Deine stärksten Posts laufen ${weekdayNames[best.weekday - 1]} (Ø ${fmt(best.avgViews)} Views)." +
-                        (bestSlot?.let {
-                            " Bestes Einzel-Zeitfenster: ${weekdayNames[it.weekday - 1]} um ${it.hour}:00 Uhr – Ø ${fmt(it.avgViews)} Views aus ${it.posts} ${if (it.posts == 1) "Post" else "Posts"}."
-                        } ?: ""),
+                    tr("Bestes Zeitfenster", "Best time window"),
+                    tr(
+                        "Deine stärksten Posts laufen ${weekdayNames[best.weekday - 1]} (Ø ${fmt(best.avgViews)} Views)." +
+                            (bestSlot?.let {
+                                " Bestes Einzel-Zeitfenster: ${weekdayNames[it.weekday - 1]} um ${it.hour}:00 Uhr – Ø ${fmt(it.avgViews)} Views aus ${it.posts} ${if (it.posts == 1) "Post" else "Posts"}."
+                            } ?: ""),
+                        "Your strongest posts run on ${weekdayNames[best.weekday - 1]} (Ø ${fmt(best.avgViews)} views)." +
+                            (bestSlot?.let {
+                                " Best single window: ${weekdayNames[it.weekday - 1]} at ${it.hour}:00, Ø ${fmt(it.avgViews)} views from ${it.posts} post${if (it.posts == 1) "" else "s"}."
+                            } ?: ""),
+                    ),
                 ),
             )
         }
 
-        val erVerdict = when {
-            engagementRate >= 8 -> "sehr stark"
-            engagementRate >= 4.5 -> "solide"
-            engagementRate >= 2 -> "ausbaufähig"
-            else -> "kritisch niedrig"
-        }
+        val erVerdict = tr(
+            when {
+                engagementRate >= 8 -> "sehr stark"
+                engagementRate >= 4.5 -> "solide"
+                engagementRate >= 2 -> "ausbaufähig"
+                else -> "kritisch niedrig"
+            },
+            when {
+                engagementRate >= 8 -> "very strong"
+                engagementRate >= 4.5 -> "solid"
+                engagementRate >= 2 -> "room to grow"
+                else -> "critically low"
+            },
+        )
         insights.add(
             Insight(
                 if (engagementRate >= 4.5) "good" else "warn",
-                "Engagement-Rate ${pct(engagementRate)} % – $erVerdict",
-                "Likes ${pct(likeRate)} % · Kommentare ${pct(commentRate)} % · Shares ${pct(shareRate)} % · Saves ${pct(saveRate)} % (Benchmark: 4,5 % gesamt). Shares und Saves sind 2026 die stärksten Reichweiten-Signale – hier lohnt Optimierung am meisten.",
+                tr("Engagement-Rate ${pct(engagementRate)} % – $erVerdict", "Engagement rate ${pct(engagementRate)}% – $erVerdict"),
+                tr(
+                    "Likes ${pct(likeRate)} % · Kommentare ${pct(commentRate)} % · Shares ${pct(shareRate)} % · Saves ${pct(saveRate)} % (Benchmark: 4,5 % gesamt). Shares und Saves sind 2026 die stärksten Reichweiten-Signale – hier lohnt Optimierung am meisten.",
+                    "Likes ${pct(likeRate)}% · comments ${pct(commentRate)}% · shares ${pct(shareRate)}% · saves ${pct(saveRate)}% (benchmark: 4.5% overall). Shares and saves are the strongest reach signals in 2026, so this is where tuning pays off most.",
+                ),
             ),
         )
 
-        val reachVerdict = when {
-            viewsPerFollower >= 2 -> "Du hast echte Reichweite über deine Follower hinaus."
-            viewsPerFollower >= 1 -> "Solide – der For You Feed greift."
-            else -> "Deine Videos laufen vor allem im eigenen Follower-Kreis."
-        }
+        val reachVerdict = tr(
+            when {
+                viewsPerFollower >= 2 -> "Du hast echte Reichweite über deine Follower hinaus."
+                viewsPerFollower >= 1 -> "Solide – der For You Feed greift."
+                else -> "Deine Videos laufen vor allem im eigenen Follower-Kreis."
+            },
+            when {
+                viewsPerFollower >= 2 -> "You reach well beyond your own followers."
+                viewsPerFollower >= 1 -> "Solid – the For You feed is picking it up."
+                else -> "Your videos mostly run inside your own follower circle."
+            },
+        )
         insights.add(
             Insight(
                 if (viewsPerFollower >= 1) "good" else "warn",
-                "${two(viewsPerFollower)} Views pro Follower",
-                "Ø ${fmt(avgViews)} Views bei ${fmt(profile.followers)} Followern. $reachVerdict",
+                tr("${two(viewsPerFollower)} Views pro Follower", "${two(viewsPerFollower)} views per follower"),
+                tr(
+                    "Ø ${fmt(avgViews)} Views bei ${fmt(profile.followers)} Followern. $reachVerdict",
+                    "Ø ${fmt(avgViews)} views with ${fmt(profile.followers)} followers. $reachVerdict",
+                ),
             ),
         )
 
@@ -219,10 +250,15 @@ object MetricsEngine {
             insights.add(
                 Insight(
                     if (pause) "warn" else if (postsPerWeek >= 2) "good" else "info",
-                    "Rhythmus: ${one(postsPerWeek)} Posts/Woche",
-                    "Ø alle ${one(avgDaysBetweenPosts)} Tage ein Post. " +
-                        (daysSinceLastPost?.let { "Letzter Post vor ${it.toInt()} Tagen. " } ?: "") +
-                        (if (pause) "Lange Pausen kosten Reichweite – plane lieber kleine, regelmäßige Uploads." else ""),
+                    tr("Rhythmus: ${one(postsPerWeek)} Posts/Woche", "Cadence: ${one(postsPerWeek)} posts/week"),
+                    tr(
+                        "Ø alle ${one(avgDaysBetweenPosts)} Tage ein Post. " +
+                            (daysSinceLastPost?.let { "Letzter Post vor ${it.toInt()} Tagen. " } ?: "") +
+                            (if (pause) "Lange Pausen kosten Reichweite – plane lieber kleine, regelmäßige Uploads." else ""),
+                        "One post every ${one(avgDaysBetweenPosts)} days on average. " +
+                            (daysSinceLastPost?.let { "Last post ${it.toInt()} days ago. " } ?: "") +
+                            (if (pause) "Long breaks cost reach, so plan small, regular uploads instead." else ""),
+                    ),
                 ),
             )
         }
@@ -231,8 +267,14 @@ object MetricsEngine {
             insights.add(
                 Insight(
                     if (outlierVideos.isNotEmpty()) "good" else "info",
-                    "${outlierVideos.size} von $sampleSize Videos laufen überdurchschnittlich",
-                    "Dein bestes Video läuft ${one(bestMultiple)}× so gut wie der Median (${fmt(medianViews)} Views). Analysiere genau diese Videos und baue Serien daraus.",
+                    tr(
+                        "${outlierVideos.size} von $sampleSize Videos laufen überdurchschnittlich",
+                        "${outlierVideos.size} of $sampleSize videos beat the average",
+                    ),
+                    tr(
+                        "Dein bestes Video läuft ${one(bestMultiple)}× so gut wie der Median (${fmt(medianViews)} Views). Analysiere genau diese Videos und baue Serien daraus.",
+                        "Your best video does ${one(bestMultiple)}× the median (${fmt(medianViews)} views). Study exactly those videos and turn them into series.",
+                    ),
                 ),
             )
         }
@@ -242,8 +284,11 @@ object MetricsEngine {
             insights.add(
                 Insight(
                     "info",
-                    "Längen-Fenster: ${bestBucket.label}",
-                    "In diesem Fenster holst du Ø ${fmt(bestBucket.avgViews)} Views (${bestBucket.posts} Videos). Videos unter 3 Sekunden Hook-Retention verlieren – prüfe bei Flops die ersten 2 Sekunden.",
+                    tr("Längen-Fenster: ${bestBucket.label}", "Length window: ${bestBucket.label}"),
+                    tr(
+                        "In diesem Fenster holst du Ø ${fmt(bestBucket.avgViews)} Views (${bestBucket.posts} Videos). Videos unter 3 Sekunden Hook-Retention verlieren – prüfe bei Flops die ersten 2 Sekunden.",
+                        "This window brings Ø ${fmt(bestBucket.avgViews)} views (${bestBucket.posts} videos). Videos that lose hook retention under 3 seconds drop off, so check the first 2 seconds of every flop.",
+                    ),
                 ),
             )
         }
@@ -252,8 +297,11 @@ object MetricsEngine {
             insights.add(
                 Insight(
                     "info",
-                    "Hashtag-Nutzung",
-                    "Am häufigsten: #${topTag.tag} (${topTag.posts}×, Ø ${fmt(topTag.avgViews)} Views). Ø ${one(avgHashtags)} Hashtags pro Video – 3 bis 5 passende Tags (Nische + Reichweite) reichen.",
+                    tr("Hashtag-Nutzung", "Hashtag usage"),
+                    tr(
+                        "Am häufigsten: #${topTag.tag} (${topTag.posts}×, Ø ${fmt(topTag.avgViews)} Views). Ø ${one(avgHashtags)} Hashtags pro Video – 3 bis 5 passende Tags (Nische + Reichweite) reichen.",
+                        "Most used: #${topTag.tag} (${topTag.posts}×, Ø ${fmt(topTag.avgViews)} views). Ø ${one(avgHashtags)} hashtags per video; 3 to 5 fitting tags (niche plus reach) are enough.",
+                    ),
                 ),
             )
         }
@@ -262,8 +310,12 @@ object MetricsEngine {
             Insight(
                 if (originalSoundShare >= 50) "good" else "info",
                 "Sound & Hook",
-                "Ø Beschreibung $avgDescLength Zeichen, ${questionShare.toInt()} % der Captions stellen eine Frage, ${emojiShare.toInt()} % nutzen Emojis, ${originalSoundShare.toInt()} % Originalton. " +
-                    (if (originalSoundShare >= 50) "Originalton ist gut für Wiedererkennung." else "Trend-Sounds können die Reichweite kurzfristig deutlich erhöhen."),
+                tr(
+                    "Ø Beschreibung $avgDescLength Zeichen, ${questionShare.toInt()} % der Captions stellen eine Frage, ${emojiShare.toInt()} % nutzen Emojis, ${originalSoundShare.toInt()} % Originalton. " +
+                        (if (originalSoundShare >= 50) "Originalton ist gut für Wiedererkennung." else "Trend-Sounds können die Reichweite kurzfristig deutlich erhöhen."),
+                    "Ø caption length $avgDescLength characters, ${questionShare.toInt()}% of captions ask a question, ${emojiShare.toInt()}% use emojis, ${originalSoundShare.toInt()}% original sound. " +
+                        (if (originalSoundShare >= 50) "Original sound helps recognition." else "Trend sounds can lift reach noticeably for a short time."),
+                ),
             ),
         )
 

@@ -16,6 +16,75 @@ object TextExport {
     private const val WIDTH = 88
     private val HEAD_KEYS = listOf("titel", "name", "hebel", "massnahme", "text", "caption", "tag", "typ")
 
+    private val LABELS_EN = mapOf(
+        "diagnose" to "Diagnosis",
+        "positionierung" to "Positioning",
+        "nische" to "Niche",
+        "zielgruppe" to "Audience",
+        "alleinstellung" to "Differentiator",
+        "profilVersprechen" to "Profile promise",
+        "bioVorschlag" to "Bio suggestion",
+        "contentSaeulen" to "Content pillars",
+        "anteilProzent" to "Share",
+        "warum" to "Why",
+        "beispielThemen" to "Example topics",
+        "hooks" to "Hooks",
+        "text" to "Text",
+        "typ" to "Type",
+        "zielgruppeHook" to "Audience",
+        "postingPlan" to "Posting plan",
+        "tag" to "Day",
+        "uhrzeit" to "Time",
+        "format" to "Format",
+        "thema" to "Topic",
+        "hook" to "Hook",
+        "hashtagStrategie" to "Hashtag strategy",
+        "reichweite" to "Reach",
+        "marke" to "Brand",
+        "soundStrategie" to "Sound strategy",
+        "seoKeywords" to "SEO keywords",
+        "wachstumshebel" to "Growth levers",
+        "hebel" to "Lever",
+        "schritte" to "Steps",
+        "kpiZiele" to "KPI targets",
+        "followerIn30Tagen" to "Followers in 30 days",
+        "viewsProVideo" to "Views per video",
+        "engagementRateProzent" to "Engagement rate",
+        "warnung" to "Warning",
+        "score" to "Score",
+        "zusammenfassung" to "Summary",
+        "staerken" to "Strengths",
+        "schwaechen" to "Weaknesses",
+        "schnellsteWins" to "Quickest wins",
+        "massnahme" to "Action",
+        "erwarteteWirkung" to "Expected effect",
+        "aufwand" to "Effort",
+        "umsetzungInMinuten" to "Implementation (minutes)",
+        "contentLuecken" to "Content gaps",
+        "risiken" to "Risks",
+        "fazit" to "Conclusion",
+        "ideen" to "Ideas",
+        "titel" to "Title",
+        "drehbuch" to "Script",
+        "sekunde" to "Second",
+        "bild" to "Shot",
+        "cta" to "Call to action",
+        "warumEsFunktioniert" to "Why it works",
+        "hashtags" to "Hashtags",
+        "sound" to "Sound",
+        "schwierigkeit" to "Difficulty",
+        "ziel" to "Goal",
+        "captions" to "Captions",
+        "caption" to "Caption",
+        "onScreenText" to "On-screen text",
+        "begruendung" to "Reasoning",
+        "hinweis" to "Note",
+        "tage" to "7-day plan",
+        "suchbegriffe" to "Search terms",
+        "rohtext" to "AI answer",
+        "usage" to "Usage",
+    )
+
     private val LABELS = mapOf(
         "diagnose" to "Diagnose",
         "positionierung" to "Positionierung",
@@ -94,27 +163,29 @@ object TextExport {
             .replace(Regex("[^a-z0-9]+"), "-")
             .trim('-')
         val day = SimpleDateFormat("yyyy-MM-dd", Locale.GERMANY).format(date)
-        return "tiktok-growth-lab-" + slug.ifBlank { "ki-antwort" } + "-" + day + ".txt"
+        return "tiktok-growth-lab-" + slug.ifBlank { tr("ki-antwort", "ai-answer") } + "-" + day + ".txt"
     }
 
     fun build(title: String, model: String, handle: String?, raw: String, date: Date = Date()): String {
         val out = StringBuilder()
         out.append("TikTok Growth Lab\n")
         out.append(title).append("\n")
-        out.append("Datum: ").append(SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.GERMANY).format(date)).append("\n")
+        out.append(tr("Datum: ", "Date: "))
+            .append(SimpleDateFormat(if (english()) "MM/dd/yyyy, HH:mm" else "dd.MM.yyyy, HH:mm", Language.locale).format(date))
+            .append("\n")
         if (!handle.isNullOrBlank()) out.append("Account: @").append(handle).append("\n")
-        out.append("Modell: ").append(model.ifBlank { "unbekannt" }).append("\n\n")
+        out.append(tr("Modell: ", "Model: ")).append(model.ifBlank { tr("unbekannt", "unknown") }).append("\n\n")
         out.append("=".repeat(64)).append("\n\n")
 
         val root = parse(raw)
         if (root == null) {
-            wrap(raw.ifBlank { "Keine Antwort erhalten." }, 0).forEach { out.append(it).append("\n") }
+            wrap(raw.ifBlank { tr("Keine Antwort erhalten.", "No answer received.") }, 0).forEach { out.append(it).append("\n") }
         } else {
             val keys = root.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
                 val value = root.opt(key)
-                out.append(label(key).uppercase(Locale.GERMANY)).append("\n\n")
+                out.append(label(key).uppercase(Language.locale)).append("\n\n")
                 when {
                     isPrimitive(value) -> wrap(primitive(value), 2)
                     value is JSONArray -> renderArray(value, 0)
@@ -156,21 +227,25 @@ object TextExport {
         return null
     }
 
-    private fun label(key: String): String = LABELS[key] ?: key
-        .replace(Regex("([a-z])([A-Z])"), "$1 $2")
-        .replace('_', ' ')
-        .replaceFirstChar { it.uppercase(Locale.GERMANY) }
+    private fun label(key: String): String {
+        val table = if (english()) LABELS_EN else LABELS
+        table[key]?.let { return it }
+        return key
+            .replace(Regex("([a-z])([A-Z])"), "$1 $2")
+            .replace('_', ' ')
+            .replaceFirstChar { it.uppercase(Language.locale) }
+    }
 
     private fun isPrimitive(value: Any?): Boolean =
         value == null || value == JSONObject.NULL || value is String || value is Number || value is Boolean
 
     private fun primitive(value: Any?): String = when {
         value == null || value == JSONObject.NULL -> "-"
-        value is Boolean -> if (value) "ja" else "nein"
+        value is Boolean -> if (value) tr("ja", "yes") else tr("nein", "no")
         value is Number -> {
             val number = value.toDouble()
-            if (number % 1.0 == 0.0) NumberFormat.getIntegerInstance(Locale.GERMANY).format(number.toLong())
-            else String.format(Locale.GERMANY, "%.2f", number)
+            if (number % 1.0 == 0.0) NumberFormat.getIntegerInstance(Language.locale).format(number.toLong())
+            else String.format(Language.locale, "%.2f", number)
         }
         else -> value.toString()
     }
@@ -208,7 +283,7 @@ object TextExport {
                 isPrimitive(item) -> out.addAll(wrapItem(primitive(item), pad.length, "- "))
                 item is JSONObject -> {
                     val headKey = item.keys().asSequence().firstOrNull { HEAD_KEYS.contains(it) }
-                    val head = headKey?.let { primitive(item.opt(it)) } ?: "Eintrag ${index + 1}"
+                    val head = headKey?.let { primitive(item.opt(it)) } ?: tr("Eintrag ${index + 1}", "Entry ${index + 1}")
                     out.addAll(wrapItem(head, pad.length, "${index + 1}. "))
                     val keys = item.keys()
                     while (keys.hasNext()) {

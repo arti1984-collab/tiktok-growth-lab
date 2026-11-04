@@ -35,6 +35,7 @@ import de.artur.growthlab.data.TrackedAccount
 import de.artur.growthlab.data.deltaAll
 import de.artur.growthlab.data.first
 import de.artur.growthlab.data.latest
+import de.artur.growthlab.data.tr
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -49,13 +50,16 @@ fun GrowthScreen(state: LabState) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ScreenTitle("Wachstums-Tracking", "Jeder Scan und jede Messung erzeugt einen Punkt im Verlauf.")
+        ScreenTitle(
+            tr("Wachstums-Tracking", "Growth tracking"),
+            tr("Jeder Scan und jede Messung erzeugt einen Punkt im Verlauf.", "Every scan and every refresh adds a point to the history."),
+        )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = handle,
                 onValueChange = { handle = it },
-                label = { Text("@account hinzufügen") },
+                label = { Text(tr("@account hinzufügen", "add @account")) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
@@ -78,7 +82,7 @@ fun GrowthScreen(state: LabState) {
                 },
                 enabled = !state.busy && handle.isNotBlank(),
             ) {
-                Text("Hinzufügen")
+                Text(tr("Hinzufügen", "Add"))
             }
         }
 
@@ -101,15 +105,22 @@ fun GrowthScreen(state: LabState) {
             enabled = !state.busy && state.accounts.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(if (state.busy) "Messe…" else "Alle messen")
+            Text(if (state.busy) tr("Messe…", "Measuring…") else tr("Alle messen", "Measure all"))
         }
 
         addError?.let { Text(it, color = Danger, fontSize = 12.sp) }
 
         if (state.accounts.isEmpty()) {
             CardBox {
-                Text("Noch keine Accounts", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text("Trage oben einen TikTok-Namen ein – oder scanne im Tab „Scan“ mit aktivem Tracking.", fontSize = 12.sp, color = MutedColor)
+                Text(tr("Noch keine Accounts", "No accounts yet"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text(
+                    tr(
+                        "Trage oben einen TikTok-Namen ein – oder scanne im Tab „Scan“ mit aktivem Tracking.",
+                        "Add a TikTok name above, or scan in the Scan tab with tracking switched on.",
+                    ),
+                    fontSize = 12.sp,
+                    color = MutedColor,
+                )
             }
         }
 
@@ -135,7 +146,10 @@ private fun AccountCard(account: TrackedAccount, open: Boolean, onToggle: () -> 
             Column(Modifier.weight(1f)) {
                 Text("@${account.handle}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Text(
-                    account.nickname + " · " + (latest?.let { "${it.videos} Videos" } ?: "keine Messung"),
+                    account.nickname + " · " + (
+                        latest?.let { "${it.videos} ${tr("Videos", "videos")}" }
+                            ?: tr("keine Messung", "no measurement")
+                        ),
                     fontSize = 11.sp,
                     color = MutedColor,
                 )
@@ -144,14 +158,19 @@ private fun AccountCard(account: TrackedAccount, open: Boolean, onToggle: () -> 
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            KpiTile("Gesamt", if (delta == null) "–" else if (delta >= 0) "+${num(delta)}" else num(delta), "${account.snapshots.size} Messpunkte", Modifier.weight(1f))
+            KpiTile(
+                tr("Gesamt", "Total"),
+                if (delta == null) "–" else if (delta >= 0) "+${num(delta)}" else num(delta),
+                "${account.snapshots.size} ${tr("Messpunkte", "measurements")}",
+                Modifier.weight(1f),
+            )
             KpiTile("Likes", latest?.let { num(it.hearts) } ?: "–", null, Modifier.weight(1f))
             KpiTile("Score", latest?.score?.let { "$it/100" } ?: "–", null, Modifier.weight(1f))
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = onToggle) { Text(if (open) "Werte schließen" else "Werte im Detail") }
-            TextButton(onClick = onRemove) { Text("entfernen", color = MutedColor) }
+            TextButton(onClick = onToggle) { Text(if (open) tr("Werte schließen", "Hide values") else tr("Werte im Detail", "Values in detail")) }
+            TextButton(onClick = onRemove) { Text(tr("entfernen", "remove"), color = MutedColor) }
         }
 
         if (open) {
@@ -166,23 +185,26 @@ private fun DetailValues(account: TrackedAccount) {
     val latest = snapshots.lastOrNull()
 
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        KpiTile("Follower", latest?.let { num(it.followers) } ?: "–", null, Modifier.weight(1f))
-        KpiTile("Folgt selbst", latest?.let { num(it.following) } ?: "–", null, Modifier.weight(1f))
+        KpiTile(tr("Follower", "Followers"), latest?.let { num(it.followers) } ?: "–", null, Modifier.weight(1f))
+        KpiTile(tr("Folgt selbst", "Following"), latest?.let { num(it.following) } ?: "–", null, Modifier.weight(1f))
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
         KpiTile("Engagement", latest?.engagementRate?.let { "${dec(it)} %" } ?: "–", null, Modifier.weight(1f))
-        KpiTile("Likes gesamt", latest?.let { num(it.hearts) } ?: "–", null, Modifier.weight(1f))
+        KpiTile(tr("Likes gesamt", "Likes total"), latest?.let { num(it.hearts) } ?: "–", null, Modifier.weight(1f))
     }
 
     if (snapshots.size < 2) {
         Text(
-            "Eine Kurve entsteht ab zwei Messpunkten – klicke nach deinem nächsten Upload auf „Alle messen“.",
+            tr(
+                "Eine Kurve entsteht ab zwei Messpunkten – klicke nach deinem nächsten Upload auf „Alle messen“.",
+                "A curve starts with two measurements, so press \"Measure all\" after your next upload.",
+            ),
             fontSize = 11.sp,
             color = MutedColor,
         )
     }
 
-    Text("Messungen", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+    Text(tr("Messungen", "Measurements"), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
     snapshots.reversed().take(12).forEachIndexed { index, snapshot ->
         val previous = snapshots.reversed().getOrNull(index + 1)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -190,7 +212,8 @@ private fun DetailValues(account: TrackedAccount) {
             Text(
                 buildString {
                     append(num(snapshot.followers))
-                    append(" Follower")
+                    append(" ")
+                    append(tr("Follower", "followers"))
                     if (previous != null) {
                         val diff = snapshot.followers - previous.followers
                         append(" · ")
@@ -210,7 +233,7 @@ private fun SnapshotNote(latest: Snapshot?) {
     if (latest == null) return
     Surface(color = MaterialTheme.colorScheme.surfaceVariant) {
         Text(
-            "Letzte Messung: ${dateShort(latest.at)}",
+            tr("Letzte Messung: ${dateShort(latest.at)}", "Last measurement: ${dateShort(latest.at)}"),
             fontSize = 10.sp,
             color = MutedColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

@@ -20,15 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import de.artur.growthlab.data.Language
+import de.artur.growthlab.data.formatDateOnly
+import de.artur.growthlab.data.formatDateTime
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-fun num(value: Long): String = NumberFormat.getIntegerInstance(Locale.GERMANY).format(value)
-fun dec(value: Double, digits: Int = 1): String = String.format(Locale.GERMANY, "%.${digits}f", value)
-fun dateShort(millis: Long): String = SimpleDateFormat("dd.MM.yy, HH:mm", Locale.GERMANY).format(Date(millis))
-fun dateOnly(millis: Long): String = SimpleDateFormat("dd.MM.yy", Locale.GERMANY).format(Date(millis))
+fun num(value: Long): String = NumberFormat.getIntegerInstance(Language.locale).format(value)
+fun dec(value: Double, digits: Int = 1): String = String.format(Language.locale, "%.${digits}f", value)
+fun dateShort(millis: Long): String = formatDateTime(millis)
+fun dateOnly(millis: Long): String = formatDateOnly(millis)
 
 private val PanelShape = RoundedCornerShape(2.dp)
 

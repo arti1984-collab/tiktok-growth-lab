@@ -112,6 +112,8 @@ data class AiSettings(
     val baseUrl: String = Provider.GEMINI_BASE,
     val model: String = Provider.GEMINI_MODELS.first().first,
     val apiKey: String = "",
+    /** "de" oder "en" – steuert Oberfläche und Sprache der KI-Antworten. */
+    val language: String = "de",
 )
 
 data class AiAnswer(

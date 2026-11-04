@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
 import { formatCompact, formatDateTime, formatSigned, formatNumber } from "../format";
+import { useT } from "../lang";
 import type { Account } from "../types";
 import { Alert, EmptyState, Section, Sparkline, Spinner } from "../components/ui";
 import { AccountDetails, type MetricKey } from "../components/AccountDetails";
 
 export function WatchView() {
+  const t = useT();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [handle, setHandle] = useState("");
   const [loading, setLoading] = useState(true);
@@ -72,11 +74,14 @@ export function WatchView() {
   return (
     <div className="stack">
       <Section
-        title="Wachstums-Tracking"
-        subtitle="Follower-Verlauf deiner Accounts und Wettbewerber. Jeder Scan und jede Aktualisierung erzeugt einen Messpunkt."
+        title={t("Wachstums-Tracking", "Growth tracking")}
+        subtitle={t(
+          "Follower-Verlauf deiner Accounts und Wettbewerber. Jeder Scan und jede Aktualisierung erzeugt einen Messpunkt.",
+          "Follower history for your accounts and competitors. Every scan and every refresh adds a measurement.",
+        )}
         actions={
           <button className="btn" onClick={refresh} disabled={busy !== null || accounts.length === 0}>
-            {busy === "refresh" ? <Spinner label="Aktualisiere…" /> : "Alle messen"}
+            {busy === "refresh" ? <Spinner label={t("Aktualisiere…", "Refreshing…")} /> : t("Alle messen", "Measure all")}
           </button>
         }
       >
@@ -85,11 +90,11 @@ export function WatchView() {
             className="inline-input"
             value={handle}
             onChange={(event) => setHandle(event.target.value)}
-            placeholder="@account hinzufügen"
+            placeholder={t("@account hinzufügen", "add @account")}
             spellCheck={false}
           />
           <button className="btn btn-primary" type="submit" disabled={busy !== null || !handle.trim()}>
-            {busy === "add" ? <Spinner label="Lade…" /> : "Hinzufügen"}
+            {busy === "add" ? <Spinner label={t("Lade…", "Loading…")} /> : t("Hinzufügen", "Add")}
           </button>
         </form>
         {error && <Alert kind="error">{error}</Alert>}
@@ -97,26 +102,29 @@ export function WatchView() {
 
       {loading ? (
         <Section>
-          <Spinner label="Lade Watchlist…" />
+          <Spinner label={t("Lade Watchlist…", "Loading watchlist…")} />
         </Section>
       ) : accounts.length === 0 ? (
         <EmptyState
-          title="Watchlist ist leer"
-          text="Füge Accounts hinzu, um Follower-Entwicklung über Zeit zu messen. Ohne Messpunkte gibt es kein Wachstum zu sehen – TikTok liefert keine Historie."
+          title={t("Watchlist ist leer", "The watchlist is empty")}
+          text={t(
+            "Füge Accounts hinzu, um Follower-Entwicklung über Zeit zu messen. Ohne Messpunkte gibt es kein Wachstum zu sehen – TikTok liefert keine Historie.",
+            "Add accounts to measure follower growth over time. Without measurements there is no growth to see, since TikTok hands out no history.",
+          )}
         />
       ) : (
-        <Section title={`${accounts.length} getrackte Accounts`}>
+        <Section title={t(`${accounts.length} getrackte Accounts`, `${accounts.length} tracked accounts`)}>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Account</th>
-                  <th className="right">Follower</th>
-                  <th className="right">7 Tage</th>
-                  <th className="right">Gesamt</th>
-                  <th className="right">Videos</th>
-                  <th>Verlauf</th>
-                  <th>Letzte Messung</th>
+                  <th>{t("Account", "Account")}</th>
+                  <th className="right">{t("Follower", "Followers")}</th>
+                  <th className="right">{t("7 Tage", "7 days")}</th>
+                  <th className="right">{t("Gesamt", "Total")}</th>
+                  <th className="right">{t("Videos", "Videos")}</th>
+                  <th>{t("Verlauf", "History")}</th>
+                  <th>{t("Letzte Messung", "Last measurement")}</th>
                   <th />
                 </tr>
               </thead>
@@ -138,7 +146,7 @@ export function WatchView() {
                       <button
                         className="value-btn"
                         onClick={() => setDetail({ handle: account.handle, metric: "followers" })}
-                        title="Follower-Verlauf ansehen"
+                        title={t("Follower-Verlauf ansehen", "Show the follower history")}
                       >
                         {formatNumber(account.latest?.followers ?? null)}
                       </button>
@@ -147,7 +155,7 @@ export function WatchView() {
                       <button
                         className="value-btn"
                         onClick={() => setDetail({ handle: account.handle, metric: "followers" })}
-                        title="Follower-Veränderung im Detail"
+                        title={t("Follower-Veränderung im Detail", "Follower change in detail")}
                       >
                         {formatSigned(account.delta7)}
                       </button>
@@ -156,7 +164,7 @@ export function WatchView() {
                       <button
                         className="value-btn"
                         onClick={() => setDetail({ handle: account.handle, metric: "followers" })}
-                        title="Follower seit dem ersten Messpunkt"
+                        title={t("Follower seit dem ersten Messpunkt", "Followers since the first measurement")}
                       >
                         {formatSigned(account.deltaAll)}
                       </button>
@@ -165,7 +173,7 @@ export function WatchView() {
                       <button
                         className="value-btn"
                         onClick={() => setDetail({ handle: account.handle, metric: "videos" })}
-                        title="Video-Anzahl im Verlauf"
+                        title={t("Video-Anzahl im Verlauf", "Video count over time")}
                       >
                         {formatCompact(account.latest?.videos ?? null)}
                       </button>
@@ -179,17 +187,17 @@ export function WatchView() {
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => setDetail({ handle: account.handle, metric: "followers" })}
-                          title="Alle Werte dieses Accounts ansehen"
+                          title={t("Alle Werte dieses Accounts ansehen", "Show every value of this account")}
                         >
-                          Werte
+                          {t("Werte", "Values")}
                         </button>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => remove(account.handle)}
                           disabled={busy !== null}
-                          title="Aus Watchlist entfernen"
+                          title={t("Aus Watchlist entfernen", "Remove from the watchlist")}
                         >
-                          entfernen
+                          {t("entfernen", "remove")}
                         </button>
                       </div>
                     </td>
@@ -199,8 +207,10 @@ export function WatchView() {
             </table>
           </div>
           <p className="muted small">
-            Auf jede Zahl klicken, um ihren Verlauf zu öffnen – Follower, Likes, Videos, Folgt-selbst, Engagement-Rate und
-            Score. Nach jedem eigenen Upload einmal „Alle messen“ klicken, so entsteht eine echte Kurve.
+            {t(
+              "Auf jede Zahl klicken, um ihren Verlauf zu öffnen – Follower, Likes, Videos, Folgt-selbst, Engagement-Rate und Score. Nach jedem eigenen Upload einmal „Alle messen“ klicken, so entsteht eine echte Kurve.",
+              "Click any number to open its history: followers, likes, videos, following, engagement rate and score. Press \"Measure all\" after every upload of your own and a real curve builds up.",
+            )}
           </p>
         </Section>
       )}

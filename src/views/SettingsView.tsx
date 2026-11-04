@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, api } from "../api";
+import { useT } from "../lang";
 import type { Provider, PublicSettings, Status } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
 import { formatDecimal } from "../format";
@@ -13,6 +14,7 @@ export function SettingsView({
   status: Status | null;
   onStatusChange: () => void;
 }) {
+  const t = useT();
   const [settings, setSettings] = useState<PublicSettings | null>(null);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [baseUrl, setBaseUrl] = useState("");
@@ -61,7 +63,10 @@ export function SettingsView({
     setFreeModels([]);
     setMessage({
       kind: "info",
-      text: `${provider.name} · ${modelLabel} eingetragen. Key einfügen, „Modelle laden“ für die volle Auswahl, dann speichern.`,
+      text: t(
+        `${provider.name} · ${modelLabel} eingetragen. Key einfügen, „Modelle laden“ für die volle Auswahl, dann speichern.`,
+        `${provider.name} · ${modelLabel} filled in. Add the key, press "Load models" for the full list, then save.`,
+      ),
     });
   }
 
@@ -77,12 +82,21 @@ export function SettingsView({
       setModels(data.models);
       setFreeModels(data.free ?? []);
       if (data.models.length === 0) {
-        setMessage({ kind: "warn", text: "Der Anbieter hat keine Modelle gemeldet – Modellnamen bitte prüfen." });
+        setMessage({
+          kind: "warn",
+          text: t(
+            "Der Anbieter hat keine Modelle gemeldet – Modellnamen bitte prüfen.",
+            "The provider reported no models, please check the model name.",
+          ),
+        });
       } else if (!silent) {
         const free = (data.free ?? []).length;
         setMessage({
           kind: "info",
-          text: `${data.models.length} Modelle gefunden${free > 0 ? `, davon ${free} kostenlos` : ""} – jetzt im Dropdown auswählen und speichern.`,
+          text: t(
+            `${data.models.length} Modelle gefunden${free > 0 ? `, davon ${free} kostenlos` : ""} – jetzt im Dropdown auswählen und speichern.`,
+            `${data.models.length} models found${free > 0 ? `, ${free} of them free` : ""}, pick one in the dropdown and save.`,
+          ),
         });
       }
     } catch (caught) {
@@ -104,7 +118,21 @@ export function SettingsView({
       setSettings(data);
       setApiKey("");
       setCookie("");
-      setMessage({ kind: "success", text: "Gespeichert." });
+      setMessage({ kind: "success", text: t("Gespeichert.", "Saved.") });
+      onStatusChange();
+    } catch (caught) {
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function chooseLanguage(language: "de" | "en") {
+    setBusy("language");
+    try {
+      const data = await api.saveSettings({ language });
+      setSettings(data);
+      // The whole page follows the new language through the status refresh.
       onStatusChange();
     } catch (caught) {
       setMessage({ kind: "error", text: (caught as ApiError).message });
@@ -119,7 +147,10 @@ export function SettingsView({
       const data = await api.saveSettings({ aiApiKey: "", cookie: "" });
       setSettings(data);
       setApiKey("");
-      setMessage({ kind: "info", text: "Key und Cookie entfernt – .env-Werte greifen wieder." });
+      setMessage({
+        kind: "info",
+        text: t("Key und Cookie entfernt – .env-Werte greifen wieder.", "Key and cookie removed, the .env values apply again."),
+      });
       onStatusChange();
     } catch (caught) {
       setMessage({ kind: "error", text: (caught as ApiError).message });
@@ -132,7 +163,13 @@ export function SettingsView({
     setBusy("cache");
     try {
       await api.clearCache();
-      setMessage({ kind: "info", text: "Cache geleert – der nächste Scan liest wieder live von TikTok." });
+      setMessage({
+        kind: "info",
+        text: t(
+          "Cache geleert – der nächste Scan liest wieder live von TikTok.",
+          "Cache cleared, the next scan reads live from TikTok again.",
+        ),
+      });
       onStatusChange();
     } catch (caught) {
       setMessage({ kind: "error", text: (caught as ApiError).message });
@@ -141,12 +178,45 @@ export function SettingsView({
     }
   }
 
+  const currentLanguage = settings?.language ?? "de";
+
   return (
     <div className="stack">
+      <Section
+        title={t("Sprache", "Language")}
+        subtitle={t(
+          "Gilt für die Oberfläche, die Anleitung und die Texte der KI. Die Wahl liegt in der Datendatei und gilt nach einem Neustart weiter.",
+          "Applies to the interface, the guide and the texts the AI writes. The choice is stored in the data file and survives a restart.",
+        )}
+      >
+        <div className="row gap-sm wrap">
+          <button
+            type="button"
+            className={`chip-btn${currentLanguage === "de" ? " chip-btn-active" : ""}`}
+            onClick={() => void chooseLanguage("de")}
+            disabled={busy !== null}
+          >
+            Deutsch
+          </button>
+          <button
+            type="button"
+            className={`chip-btn${currentLanguage === "en" ? " chip-btn-active" : ""}`}
+            onClick={() => void chooseLanguage("en")}
+            disabled={busy !== null}
+          >
+            English
+          </button>
+          {busy === "language" && <Spinner label={t("Speichere…", "Saving…")} />}
+        </div>
+      </Section>
+
       {providers.length > 0 && (
         <Section
-          title="Anbieter & kostenlose Modelle"
-          subtitle="Ein Klick setzt Basis-URL und Modell. Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – alles bleibt lokal."
+          title={t("Anbieter & kostenlose Modelle", "Providers & free models")}
+          subtitle={t(
+            "Ein Klick setzt Basis-URL und Modell. Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – alles bleibt lokal.",
+            "One click fills in base URL and model. Free keys are available at Google AI Studio, Groq and OpenRouter; everything stays local.",
+          )}
         >
           <div className="provider-grid">
             {providers.map((provider) => {
@@ -155,13 +225,13 @@ export function SettingsView({
                 <article key={provider.id} className={`provider${isActive ? " provider-active" : ""}`}>
                   <header className="provider-head">
                     <strong>{provider.name}</strong>
-                    <Badge tone={provider.free ? "good" : "warn"}>{provider.free ? "kostenlos" : "kostenpflichtig"}</Badge>
-                    {provider.recommended && <Badge tone="accent">Empfehlung</Badge>}
-                    {isActive && <Badge tone="info">aktiv</Badge>}
+                    <Badge tone={provider.free ? "good" : "warn"}>{provider.free ? t("kostenlos", "free") : t("kostenpflichtig", "paid")}</Badge>
+                    {provider.recommended && <Badge tone="accent">{t("Empfehlung", "recommended")}</Badge>}
+                    {isActive && <Badge tone="info">{t("aktiv", "active")}</Badge>}
                   </header>
                   <p className="muted small">{provider.freeNote}</p>
                   <p className="muted small">
-                    <strong>Limits:</strong> {provider.limits}
+                    <strong>{t("Limits", "Limits")}:</strong> {provider.limits}
                   </p>
                   <div className="provider-models">
                     {provider.models.map((entry) => (
@@ -169,7 +239,7 @@ export function SettingsView({
                         key={entry.id}
                         type="button"
                         className={`chip-btn${isActive && model === entry.id ? " chip-btn-active" : ""}`}
-                        title={`${entry.note} · JSON-Qualität: ${entry.json}`}
+                        title={`${entry.note} · ${t("JSON-Qualität", "JSON quality")}: ${entry.json}`}
                         onClick={() => usePreset(provider, entry.id, entry.label)}
                       >
                         {entry.label}
@@ -178,7 +248,7 @@ export function SettingsView({
                   </div>
                   <div className="row gap-sm wrap provider-actions">
                     <a className="provider-key" href={provider.keyUrl} target="_blank" rel="noreferrer">
-                      {provider.local ? "Ollama installieren ↗" : "Key holen ↗"}
+                      {provider.local ? t("Ollama installieren ↗", "Install Ollama ↗") : t("Key holen ↗", "Get a key ↗")}
                     </a>
                     <code className="provider-url">{provider.baseUrl}</code>
                   </div>
@@ -187,31 +257,46 @@ export function SettingsView({
             })}
           </div>
           <Alert kind="info">
-            ChatGPT im Browser ist gratis, die <strong>API von OpenAI ist es nicht</strong> – dort gibt es kein kostenloses
-            Kontingent. Wirklich kostenlos sind Gemini, Groq, OpenRouter (Modelle mit <code>:free</code>) und Ollama lokal.
-            Free-Tier-Inhalte dürfen bei Google und OpenRouter zum Verbessern der Modelle verwendet werden.
+            {t("ChatGPT im Browser ist gratis, die ", "ChatGPT in the browser is free, the ")}
+            <strong>{t("API von OpenAI ist es nicht", "OpenAI API is not")}</strong>
+            {t(
+              " – dort gibt es kein kostenloses Kontingent. Wirklich kostenlos sind Gemini, Groq, OpenRouter (Modelle mit ",
+              " – there is no free quota there. Genuinely free are Gemini, Groq, OpenRouter (models with ",
+            )}
+            <code>:free</code>
+            {t(
+              ") und Ollama lokal. Free-Tier-Inhalte dürfen bei Google und OpenRouter zum Verbessern der Modelle verwendet werden.",
+              ") and Ollama locally. Google and OpenRouter may use free tier content to improve their models.",
+            )}
           </Alert>
         </Section>
       )}
 
       <Section
-        title="KI-Anbieter"
-        subtitle="Jede OpenAI-kompatible API. Key bleibt lokal auf diesem Rechner und wird nie an den Browser zurückgegeben."
+        title={t("KI-Anbieter", "AI provider")}
+        subtitle={t(
+          "Jede OpenAI-kompatible API. Key bleibt lokal auf diesem Rechner und wird nie an den Browser zurückgegeben.",
+          "Any OpenAI-compatible API. The key stays local and is never sent back to the browser.",
+        )}
       >
         <div className="grid-two">
           <label className="field">
-            <span>Basis-URL</span>
+            <span>{t("Basis-URL", "Base URL")}</span>
             <input value={baseUrl} onChange={(event) => setBaseUrl(event.target.value)} placeholder="https://api.openai.com/v1" spellCheck={false} />
             <small className="muted">
-              {activeProvider ? `Erkannt: ${activeProvider.name}` : "Auch eigene Gateways und lokale Server möglich."}
+              {activeProvider
+                ? t(`Erkannt: ${activeProvider.name}`, `Detected: ${activeProvider.name}`)
+                : t("Auch eigene Gateways und lokale Server möglich.", "Own gateways and local servers work too.")}
             </small>
           </label>
 
           <div className="field">
             <span>
-              Modell{" "}
+              {t("Modell", "Model")}{" "}
               {settings && (
-                <Badge tone={settings.hasApiKey ? "good" : "warn"}>{settings.hasApiKey ? `Key: ${settings.apiKeySource}` : "kein Key"}</Badge>
+                <Badge tone={settings.hasApiKey ? "good" : "warn"}>
+                  {settings.hasApiKey ? `Key: ${settings.apiKeySource}` : t("kein Key", "no key")}
+                </Badge>
               )}
             </span>
             {visibleModels.length > 0 ? (
@@ -219,14 +304,17 @@ export function SettingsView({
                 value={model}
                 onChange={(event) => {
                   setModel(event.target.value);
-                  setMessage({ kind: "info", text: `Modell gewählt: ${event.target.value} – noch speichern.` });
+                  setMessage({
+                    kind: "info",
+                    text: t(`Modell gewählt: ${event.target.value} – noch speichern.`, `Model picked: ${event.target.value}, still needs saving.`),
+                  });
                 }}
               >
-                {!visibleModels.includes(model) && <option value={model}>{model || "– Modell wählen –"}</option>}
+                {!visibleModels.includes(model) && <option value={model}>{model || t("– Modell wählen –", "– pick a model –")}</option>}
                 {visibleModels.map((entry) => (
                   <option key={entry} value={entry}>
                     {entry}
-                    {freeModels.includes(entry) ? " · kostenlos" : ""}
+                    {freeModels.includes(entry) ? t(" · kostenlos", " · free") : ""}
                   </option>
                 ))}
               </select>
@@ -246,19 +334,28 @@ export function SettingsView({
             </datalist>
             <small className="muted">
               {visibleModels.length > 0
-                ? `${visibleModels.length} Modelle zur Auswahl${freeOnly ? " (nur kostenlose)" : ""}.`
-                : "Key einfügen und „Modelle laden“ – dann erscheint hier die Auswahlliste."}
+                ? t(
+                    `${visibleModels.length} Modelle zur Auswahl${freeOnly ? " (nur kostenlose)" : ""}.`,
+                    `${visibleModels.length} models to choose from${freeOnly ? " (free only)" : ""}.`,
+                  )
+                : t(
+                    "Key einfügen und „Modelle laden“ – dann erscheint hier die Auswahlliste.",
+                    "Add the key and press \"Load models\", then the list appears here.",
+                  )}
             </small>
             {freeModels.length > 0 && (
               <label className="inline-check">
                 <input type="checkbox" checked={freeOnly} onChange={(event) => setFreeOnly(event.target.checked)} />
-                nur kostenlose Modelle anzeigen
+                {t("nur kostenlose Modelle anzeigen", "show free models only")}
               </label>
             )}
           </div>
 
           <label className="field">
-            <span>API-Key {settings?.hasApiKey && <small className="muted">(gesetzt – leer lassen zum Behalten)</small>}</span>
+            <span>
+              {t("API-Key", "API key")}{" "}
+              {settings?.hasApiKey && <small className="muted">{t("(gesetzt – leer lassen zum Behalten)", "(set, leave empty to keep)")}</small>}
+            </span>
             <input
               type="password"
               value={apiKey}
@@ -266,33 +363,50 @@ export function SettingsView({
               onBlur={() => {
                 if (apiKey.trim() !== "" && models.length === 0) void loadModels(true);
               }}
-              placeholder={activeProvider?.local ? "nicht nötig bei lokalem Server" : "sk-…"}
+              placeholder={activeProvider?.local ? t("nicht nötig bei lokalem Server", "not needed for a local server") : "sk-…"}
               autoComplete="off"
               spellCheck={false}
             />
-            <small className="muted">Nach dem Einfügen lädt die Modellliste automatisch – oder direkt „Modelle laden“.</small>
+            <small className="muted">
+              {t(
+                "Nach dem Einfügen lädt die Modellliste automatisch – oder direkt „Modelle laden“.",
+                "Pasting a key loads the model list automatically, or press \"Load models\".",
+              )}
+            </small>
           </label>
           <div className="field align-end">
             <button className="btn" onClick={() => void loadModels()} disabled={busy !== null}>
-              {busy === "models" ? <Spinner label="Lade…" /> : "Modelle laden"}
+              {busy === "models" ? <Spinner label={t("Lade…", "Loading…")} /> : t("Modelle laden", "Load models")}
             </button>
           </div>
         </div>
       </Section>
 
-      <Section title="Scraper" subtitle="Höflich bleiben: TikTok sperrt IPs, die zu schnell anfragen.">
+      <Section
+        title={t("Scraper", "Scraper")}
+        subtitle={t("Höflich bleiben: TikTok sperrt IPs, die zu schnell anfragen.", "Stay polite: TikTok blocks IPs that request too fast.")}
+      >
         <div className="grid-two">
           <label className="field">
-            <span>Mindestabstand zwischen Anfragen: {formatDecimal(delay / 1000, 1)} s</span>
+            <span>
+              {t("Mindestabstand zwischen Anfragen", "Minimum delay between requests")}: {formatDecimal(delay / 1000, 1)} s
+            </span>
             <input type="range" min={600} max={5000} step={100} value={delay} onChange={(event) => setDelay(Number(event.target.value))} />
-            <small className="muted">20 Videos ≈ {Math.round((20 * delay) / 1000)} s. Bei „ratelimit triggered“ erhöhen.</small>
+            <small className="muted">
+              {t(
+                `20 Videos ≈ ${Math.round((20 * delay) / 1000)} s. Bei „ratelimit triggered“ erhöhen.`,
+                `20 videos ≈ ${Math.round((20 * delay) / 1000)} s. Raise it when you see "ratelimit triggered".`,
+              )}
+            </small>
           </label>
           <label className="field">
-            <span>Zeitzone für „beste Posting-Zeiten“</span>
+            <span>{t("Zeitzone für „beste Posting-Zeiten“", "Timezone for the best posting times")}</span>
             <input value={timezone} onChange={(event) => setTimezone(event.target.value)} placeholder="Europe/Berlin" spellCheck={false} />
           </label>
           <label className="field span-2">
-            <span>TikTok-Cookies (optional) {settings?.cookieSet && <Badge tone="good">gesetzt</Badge>}</span>
+            <span>
+              {t("TikTok-Cookies (optional)", "TikTok cookies (optional)")} {settings?.cookieSet && <Badge tone="good">{t("gesetzt", "set")}</Badge>}
+            </span>
             <textarea
               value={cookie}
               onChange={(event) => setCookie(event.target.value)}
@@ -301,7 +415,10 @@ export function SettingsView({
               spellCheck={false}
             />
             <small className="muted">
-              Nur nötig, wenn TikTok blockt. Im Browser auf tiktok.com: DevTools → Application → Cookies → sessionid kopieren.
+              {t(
+                "Nur nötig, wenn TikTok blockt. Im Browser auf tiktok.com: DevTools → Application → Cookies → sessionid kopieren.",
+                "Only needed when TikTok blocks. In the browser on tiktok.com: DevTools → Application → Cookies → copy sessionid.",
+              )}
             </small>
           </label>
         </div>
@@ -309,43 +426,43 @@ export function SettingsView({
 
       <div className="row gap wrap">
         <button className="btn btn-primary" onClick={save} disabled={busy !== null}>
-          {busy === "save" ? <Spinner label="Speichere…" /> : "Einstellungen speichern"}
+          {busy === "save" ? <Spinner label={t("Speichere…", "Saving…")} /> : t("Einstellungen speichern", "Save settings")}
         </button>
         <button className="btn" onClick={clearCache} disabled={busy !== null}>
-          Cache leeren
+          {t("Cache leeren", "Clear cache")}
         </button>
         <button className="btn btn-ghost" onClick={clearKey} disabled={busy !== null}>
-          Key & Cookie löschen
+          {t("Key & Cookie löschen", "Delete key & cookie")}
         </button>
       </div>
 
-      {message && (
-        <Alert kind={message.kind}>
-          {message.text}
-        </Alert>
-      )}
+      {message && <Alert kind={message.kind}>{message.text}</Alert>}
 
       {status && (
-        <Section title="Systemstatus">
+        <Section title={t("Systemstatus", "System status")}>
           <ul className="kv">
             <li>
               <span>KI</span>
-              <strong>{status.ai.configured ? `${status.ai.model} @ ${status.ai.baseUrl}` : "nicht konfiguriert"}</strong>
+              <strong>{status.ai.configured ? `${status.ai.model} @ ${status.ai.baseUrl}` : t("nicht konfiguriert", "not configured")}</strong>
             </li>
             <li>
-              <span>Scraper</span>
+              <span>{t("Scraper", "Scraper")}</span>
               <strong>
-                {formatDecimal(status.scraping.minDelayMs / 1000, 1)} s Abstand · Cookie {status.scraping.cookieSet ? "aktiv" : "inaktiv"} · {status.scraping.cacheEntries} Cache-Einträge
+                {formatDecimal(status.scraping.minDelayMs / 1000, 1)} s {t("Abstand", "delay")} · Cookie{" "}
+                {status.scraping.cookieSet ? t("aktiv", "active") : t("inaktiv", "inactive")} · {status.scraping.cacheEntries}{" "}
+                {t("Cache-Einträge", "cache entries")}
               </strong>
             </li>
             <li>
-              <span>Zeitzone</span>
+              <span>{t("Zeitzone", "Timezone")}</span>
               <strong>{status.timezone}</strong>
             </li>
             <li>
-              <span>Erreichbarkeit</span>
+              <span>{t("Erreichbarkeit", "Reachability")}</span>
               <strong>
-                {status.server.localOnly ? `nur dieser Rechner (${status.server.host})` : `im Netzwerk offen (${status.server.host})`}
+                {status.server.localOnly
+                  ? t(`nur dieser Rechner (${status.server.host})`, `this computer only (${status.server.host})`)
+                  : t(`im Netzwerk offen (${status.server.host})`, `open on the network (${status.server.host})`)}
               </strong>
             </li>
             <li>
@@ -354,8 +471,10 @@ export function SettingsView({
             </li>
           </ul>
           <Alert kind="warn">
-            Automatisiertes Auslesen von TikTok-Daten widerspricht den TikTok-Nutzungsbedingungen und kann zu Sperren führen. Nutze
-            das Tool für eigene Accounts und für öffentlich sichtbare Marktforschung, mit niedriger Frequenz und auf eigenes Risiko.
+            {t(
+              "Automatisiertes Auslesen von TikTok-Daten widerspricht den TikTok-Nutzungsbedingungen und kann zu Sperren führen. Nutze das Tool für eigene Accounts und für öffentlich sichtbare Marktforschung, mit niedriger Frequenz und auf eigenes Risiko.",
+              "Automated reading of TikTok data goes against the TikTok terms of service and can lead to blocks. Use the tool for your own accounts and publicly visible market research, at a low frequency and at your own risk.",
+            )}
           </Alert>
         </Section>
       )}

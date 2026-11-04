@@ -28,7 +28,10 @@ import androidx.compose.ui.unit.sp
 import de.artur.growthlab.LabState
 import de.artur.growthlab.data.Ai
 import de.artur.growthlab.data.AiSettings
+import de.artur.growthlab.data.Language
 import de.artur.growthlab.data.Provider
+import de.artur.growthlab.data.english
+import de.artur.growthlab.data.tr
 import kotlinx.coroutines.launch
 
 @Composable
@@ -45,10 +48,34 @@ fun SettingsScreen(state: LabState) {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ScreenTitle("Einstellungen", "Kostenlose KI-Anbieter, Modell und Key.")
+        ScreenTitle(tr("Einstellungen", "Settings"), tr("Sprache, kostenlose KI-Anbieter, Modell und Key.", "Language, free AI providers, model and key."))
 
         CardBox {
-            Text("Anbieter", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(tr("Sprache", "Language"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                tr(
+                    "Gilt für die Oberfläche, die Anleitung und die Texte der KI. Die Wahl bleibt nach einem Neustart gespeichert.",
+                    "Applies to the interface, the guide and the texts the AI writes. The choice survives a restart.",
+                ),
+                fontSize = 11.sp,
+                color = MutedColor,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = !english(),
+                    onClick = { state.saveSettings(state.settings.copy(language = "de")) },
+                    label = { Text("Deutsch", fontSize = 12.sp) },
+                )
+                FilterChip(
+                    selected = english(),
+                    onClick = { state.saveSettings(state.settings.copy(language = "en")) },
+                    label = { Text("English", fontSize = 12.sp) },
+                )
+            }
+        }
+
+        CardBox {
+            Text(tr("Anbieter", "Providers"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
             Provider.entries.forEach { entry ->
                 FilterChip(
                     selected = baseUrl == entry.baseUrl,
@@ -74,7 +101,7 @@ fun SettingsScreen(state: LabState) {
         OutlinedTextField(
             value = baseUrl,
             onValueChange = { baseUrl = it },
-            label = { Text("Basis-URL (OpenAI-kompatibel)") },
+            label = { Text(tr("Basis-URL (OpenAI-kompatibel)", "Base URL (OpenAI compatible)")) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -82,7 +109,7 @@ fun SettingsScreen(state: LabState) {
         OutlinedTextField(
             value = model,
             onValueChange = { model = it },
-            label = { Text("Modell") },
+            label = { Text(tr("Modell", "Model")) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -103,8 +130,12 @@ fun SettingsScreen(state: LabState) {
                         loadingModels = true
                         message = null
                         try {
-                            models = Ai.listModels(AiSettings(baseUrl, model, apiKey))
-                            message = if (models.isEmpty()) "Der Anbieter hat keine Modelle gemeldet." else "${models.size} Modelle geladen."
+                            models = Ai.listModels(AiSettings(baseUrl, model, apiKey, Language.current.code))
+                            message = if (models.isEmpty()) {
+                                tr("Der Anbieter hat keine Modelle gemeldet.", "The provider reported no models.")
+                            } else {
+                                tr("${models.size} Modelle geladen.", "${models.size} models loaded.")
+                            }
                         } catch (error: Exception) {
                             message = error.message
                         } finally {
@@ -115,22 +146,30 @@ fun SettingsScreen(state: LabState) {
                 enabled = !loadingModels,
                 modifier = Modifier.weight(1f),
             ) {
-                Text(if (loadingModels) "Lade…" else "Modelle laden", fontSize = 12.sp)
+                Text(if (loadingModels) tr("Lade…", "Loading…") else tr("Modelle laden", "Load models"), fontSize = 12.sp)
             }
             Button(
                 onClick = {
-                    state.saveSettings(AiSettings(baseUrl.trim(), model.trim(), apiKey.trim()))
-                    message = "Gespeichert. Key liegt nur auf diesem Handy."
+                    // The language is kept, the rest comes from the fields.
+                    state.saveSettings(AiSettings(baseUrl.trim(), model.trim(), apiKey.trim(), state.settings.language))
+                    message = tr(
+                        "Gespeichert. Key liegt nur auf diesem Handy.",
+                        "Saved. The key stays on this phone only.",
+                    )
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Speichern", fontSize = 12.sp)
+                Text(tr("Speichern", "Save"), fontSize = 12.sp)
             }
         }
 
         if (models.isNotEmpty()) {
             CardBox {
-                Text("Verfügbare Modelle (antippen zum Übernehmen)", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(
+                    tr("Verfügbare Modelle (antippen zum Übernehmen)", "Available models (tap to use)"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                )
                 models.take(40).forEach { entry ->
                     TextButton(onClick = { model = entry }) {
                         Text(entry, fontSize = 11.sp)
@@ -146,9 +185,12 @@ fun SettingsScreen(state: LabState) {
         }
 
         CardBox {
-            Text("Woher die Daten kommen", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(tr("Woher die Daten kommen", "Where the data comes from"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
             Text(
-                "Profile und Videos werden direkt von tiktok.com gelesen, ohne Login. Alles wird nur auf diesem Handy gespeichert; nach außen gehen ausschließlich die Anfragen an TikTok und deinen KI-Anbieter.",
+                tr(
+                    "Profile und Videos werden direkt von tiktok.com gelesen, ohne Login. Alles wird nur auf diesem Handy gespeichert; nach außen gehen ausschließlich die Anfragen an TikTok und deinen KI-Anbieter.",
+                    "Profiles and videos are read straight from tiktok.com without a login. Everything stays on this phone; the only requests leaving it are the ones to TikTok and your AI provider.",
+                ),
                 fontSize = 11.sp,
                 color = MutedColor,
             )

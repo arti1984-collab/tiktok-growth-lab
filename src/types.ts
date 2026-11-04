@@ -106,6 +106,7 @@ export type ScanResult = {
 export type Status = {
   ok: boolean;
   version: string;
+  language: "de" | "en";
   timezone: string;
   ai: { configured: boolean; baseUrl: string; model: string };
   server: { host: string; localOnly: boolean };
@@ -136,6 +137,7 @@ export type Account = {
 };
 
 export type PublicSettings = {
+  language: "de" | "en";
   aiBaseUrl: string;
   aiModel: string;
   hasApiKey: boolean;

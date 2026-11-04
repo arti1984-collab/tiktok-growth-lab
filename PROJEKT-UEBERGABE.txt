@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 1.6.1, Branch main
+Stand: 04.11.2026, Version 1.7.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -177,6 +177,12 @@ und ein Release mit exe und apk. Ein Upload mit gleicher Nummer gilt nicht.
        Erklaerung jedes Punktes, und diese Uebergabedatei.
 1.6.1  Versionsnummer unten rechts: Web in der Fusszeile aus /api/status,
        Android als kleine Zeile ueber der Navigationsleiste aus BuildConfig.
+1.7.0  Sprache umschaltbar (Deutsch/Englisch). Die Wahl liegt in der
+       Datendatei (settings.language), gilt fuer Oberflaeche, Anleitung,
+       Zahlen- und Datumsformate, JSON-Feldnamen im Export und fuer die
+       Sprache der KI-Antworten. Web: src/lang.tsx mit t(de, en),
+       server/lib/lang.ts fuer Fehler- und Auswertungstexte. Android:
+       data/Lang.kt mit Language.current, gespeichert in den Einstellungen.
 
 
 8. BEKANNTE GRENZEN

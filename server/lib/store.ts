@@ -20,6 +20,7 @@ export type TrackedAccount = {
 };
 
 export type Settings = {
+  language?: "de" | "en";
   aiBaseUrl?: string;
   aiModel?: string;
   aiApiKey?: string;
@@ -80,6 +81,7 @@ export function getSettings(): Settings {
 export function effectiveSettings() {
   const s = data.settings;
   return {
+    language: s.language === "en" ? ("en" as const) : ("de" as const),
     aiBaseUrl: s.aiBaseUrl || ENV_DEFAULTS.aiBaseUrl,
     aiModel: s.aiModel || ENV_DEFAULTS.aiModel,
     aiApiKey: s.aiApiKey || ENV_DEFAULTS.aiApiKey,
@@ -94,6 +96,7 @@ export function effectiveSettings() {
 export function publicSettings() {
   const eff = effectiveSettings();
   return {
+    language: eff.language,
     aiBaseUrl: eff.aiBaseUrl,
     aiModel: eff.aiModel,
     hasApiKey: Boolean(eff.aiApiKey),
@@ -107,6 +110,10 @@ export function publicSettings() {
 
 export function updateSettings(patch: Settings) {
   const next: Settings = { ...data.settings };
+  // The language is stored explicitly; deleting it would silently fall back to German.
+  if (patch.language === "de" || patch.language === "en") {
+    next.language = patch.language;
+  }
   for (const key of ["aiBaseUrl", "aiModel", "aiApiKey", "cookie", "timezone"] as const) {
     const value = patch[key];
     if (typeof value !== "string") continue;

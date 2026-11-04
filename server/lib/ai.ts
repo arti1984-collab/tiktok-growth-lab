@@ -1,5 +1,6 @@
 import { effectiveSettings } from "./store.ts";
 import { getJson, postJson } from "./http.ts";
+import { tr } from "./lang.ts";
 import { isLocalBaseUrl } from "./providers.ts";
 
 export type AiConfig = { baseUrl: string; model: string; apiKey: string; keyless: boolean };
@@ -46,12 +47,19 @@ async function request<T>(call: () => Promise<T>): Promise<T> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/timeout|abort/i.test(message)) {
-      throw new AiError("TIMEOUT", "Der KI-Anbieter hat zu lange nicht geantwortet.", "Später erneut versuchen oder ein schnelleres Modell wählen.");
+      throw new AiError(
+        "TIMEOUT",
+        tr("Der KI-Anbieter hat zu lange nicht geantwortet.", "The AI provider took too long to answer."),
+        tr("Später erneut versuchen oder ein schnelleres Modell wählen.", "Try again later or pick a faster model."),
+      );
     }
     throw new AiError(
       "PROVIDER",
-      "Der KI-Anbieter ist nicht erreichbar.",
-      `Prüfe die Basis-URL unter Einstellungen (${message.slice(0, 120)}).`,
+      tr("Der KI-Anbieter ist nicht erreichbar.", "The AI provider cannot be reached."),
+      tr(
+        `Prüfe die Basis-URL unter Einstellungen (${message.slice(0, 120)}).`,
+        `Check the base URL in the settings (${message.slice(0, 120)}).`,
+      ),
     );
   }
 }
@@ -79,28 +87,48 @@ function mapHttpError(status: number, text: string): AiError {
   if (isOverload(status, detail)) {
     return new AiError(
       "OVERLOAD",
-      `Der KI-Anbieter ist gerade überlastet (HTTP ${status}).`,
-      `Meist vorübergehend: in 30–60 Sekunden erneut versuchen, ein kleineres Modell wählen (z. B. "Flash-Lite") oder in den Einstellungen auf einen anderen kostenlosen Anbieter wechseln (Groq, OpenRouter). Anbieter-Meldung: ${detail || "keine"}`,
+      tr(
+        `Der KI-Anbieter ist gerade überlastet (HTTP ${status}).`,
+        `The AI provider is overloaded right now (HTTP ${status}).`,
+      ),
+      tr(
+        `Meist vorübergehend: in 30–60 Sekunden erneut versuchen, ein kleineres Modell wählen (z. B. "Flash-Lite") oder in den Einstellungen auf einen anderen kostenlosen Anbieter wechseln (Groq, OpenRouter). Anbieter-Meldung: ${detail || "keine"}`,
+        `Usually temporary: try again in 30–60 seconds, pick a smaller model (for example "Flash-Lite") or switch to another free provider in the settings (Groq, OpenRouter). Provider message: ${detail || "none"}`,
+      ),
     );
   }
   if (status === 401 || status === 403) {
-    return new AiError("AUTH", "Der API-Key wurde abgelehnt (401/403).", "Prüfe den Key unter Einstellungen.");
+    return new AiError(
+      "AUTH",
+      tr("Der API-Key wurde abgelehnt (401/403).", "The API key was rejected (401/403)."),
+      tr("Prüfe den Key unter Einstellungen.", "Check the key in the settings."),
+    );
   }
   if (status === 404) {
     return new AiError(
       "MODEL",
-      "Modell oder Basis-URL nicht gefunden (404).",
-      "Prüfe AI_BASE_URL und den Modellnamen – über „Modelle laden“ siehst du die verfügbaren Modelle.",
+      tr("Modell oder Basis-URL nicht gefunden (404).", "Model or base URL not found (404)."),
+      tr(
+        "Prüfe AI_BASE_URL und den Modellnamen – über „Modelle laden“ siehst du die verfügbaren Modelle.",
+        "Check the base URL and the model name – \"Load models\" shows what the provider offers.",
+      ),
     );
   }
   if (status === 429) {
     return new AiError(
       "RATE_LIMIT",
-      "Der KI-Anbieter drosselt gerade (429).",
-      "Free-Tier-Limit erreicht (Groq/OpenRouter sind schnell ausgeschöpft). Kurz warten, Modell wechseln oder einen anderen kostenlosen Anbieter wählen.",
+      tr("Der KI-Anbieter drosselt gerade (429).", "The AI provider is throttling right now (429)."),
+      tr(
+        "Free-Tier-Limit erreicht (Groq/OpenRouter sind schnell ausgeschöpft). Kurz warten, Modell wechseln oder einen anderen kostenlosen Anbieter wählen.",
+        "Free tier limit reached (Groq and OpenRouter run out quickly). Wait a moment, change the model or pick another free provider.",
+      ),
     );
   }
-  return new AiError("PROVIDER", `Der KI-Anbieter antwortet mit HTTP ${status}.`, detail);
+  return new AiError(
+    "PROVIDER",
+    tr(`Der KI-Anbieter antwortet mit HTTP ${status}.`, `The AI provider answers with HTTP ${status}.`),
+    detail,
+  );
 }
 
 type ChatCompletion = {
@@ -142,8 +170,11 @@ export async function chat(
   if (!config.apiKey && !config.keyless) {
     throw new AiError(
       "NO_KEY",
-      "Kein KI-Key hinterlegt.",
-      "Trage unter Einstellungen einen API-Key ein (oder setze AI_API_KEY in der .env). Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – ohne Key funktionieren Scraping und Analyse trotzdem.",
+      tr("Kein KI-Key hinterlegt.", "No AI key stored."),
+      tr(
+        "Trage unter Einstellungen einen API-Key ein (oder setze AI_API_KEY in der .env). Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – ohne Key funktionieren Scraping und Analyse trotzdem.",
+        "Add an API key in the settings (or set AI_API_KEY in .env). Free keys are available at Google AI Studio, Groq and OpenRouter; scraping and analysis work without a key too.",
+      ),
     );
   }
 
@@ -181,8 +212,9 @@ export async function chat(
   if (!content.trim()) {
     throw new AiError(
       "PROVIDER",
-      "Der KI-Anbieter hat eine leere Antwort geliefert.",
-      lastMessage.slice(0, 300) || "Oft ein Zeichen für Überlastung – bitte erneut versuchen.",
+      tr("Der KI-Anbieter hat eine leere Antwort geliefert.", "The AI provider returned an empty answer."),
+      lastMessage.slice(0, 300) ||
+        tr("Oft ein Zeichen für Überlastung – bitte erneut versuchen.", "Often a sign of overload – please try again."),
     );
   }
   return { text: content, model: response.data?.model || config.model, usage: response.data?.usage };

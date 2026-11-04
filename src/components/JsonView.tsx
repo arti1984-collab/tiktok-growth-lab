@@ -1,4 +1,74 @@
 import type { ReactNode } from "react";
+import { activeLanguage, useLang, type Lang } from "../lang";
+
+export const LABELS_EN: Record<string, string> = {
+  diagnose: "Diagnosis",
+  positionierung: "Positioning",
+  nische: "Niche",
+  zielgruppe: "Audience",
+  alleinstellung: "Differentiator",
+  profilVersprechen: "Profile promise",
+  bioVorschlag: "Bio suggestion",
+  contentSaeulen: "Content pillars",
+  anteilProzent: "Share",
+  warum: "Why",
+  beispielThemen: "Example topics",
+  hooks: "Hooks",
+  text: "Hook",
+  typ: "Type",
+  zielgruppeHook: "Audience",
+  postingPlan: "Posting plan",
+  tag: "Day",
+  uhrzeit: "Time",
+  format: "Format",
+  thema: "Topic",
+  hook: "Hook",
+  hashtagStrategie: "Hashtag strategy",
+  reichweite: "Reach",
+  marke: "Brand",
+  soundStrategie: "Sound strategy",
+  seoKeywords: "SEO keywords",
+  wachstumshebel: "Growth levers",
+  hebel: "Lever",
+  schritte: "Steps",
+  kpiZiele: "KPI targets",
+  followerIn30Tagen: "Followers in 30 days",
+  viewsProVideo: "Views per video",
+  engagementRateProzent: "Engagement rate",
+  warnung: "Warning",
+  score: "Score",
+  zusammenfassung: "Summary",
+  staerken: "Strengths",
+  schwaechen: "Weaknesses",
+  schnellsteWins: "Quickest wins",
+  massnahme: "Action",
+  erwarteteWirkung: "Expected effect",
+  aufwand: "Effort",
+  umsetzungInMinuten: "Implementation (minutes)",
+  contentLuecken: "Content gaps",
+  risiken: "Risks",
+  fazit: "Conclusion",
+  ideen: "Ideas",
+  titel: "Title",
+  drehbuch: "Script",
+  sekunde: "Second",
+  bild: "Shot",
+  cta: "Call to action",
+  warumEsFunktioniert: "Why it works",
+  hashtags: "Hashtags",
+  sound: "Sound",
+  schwierigkeit: "Difficulty",
+  ziel: "Goal",
+  captions: "Captions",
+  caption: "Caption",
+  onScreenText: "On-screen text",
+  begruendung: "Reasoning",
+  hinweis: "Note",
+  tage: "7-day plan",
+  suchbegriffe: "Search terms",
+  rohtext: "AI answer",
+  usage: "Usage",
+};
 
 export const LABELS: Record<string, string> = {
   diagnose: "Diagnose",
@@ -68,18 +138,23 @@ export const LABELS: Record<string, string> = {
   usage: "Verbrauch",
 };
 
-const label = (key: string) => {
-  if (LABELS[key]) return LABELS[key];
+export const labelFor = (key: string, lang: Lang = activeLanguage()): string => {
+  const table = lang === "en" ? LABELS_EN : LABELS;
+  if (table[key]) return table[key];
   const spaced = key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ");
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 };
+
+const label = (key: string) => labelFor(key);
 
 const isPrimitive = (value: unknown) => value === null || ["string", "number", "boolean"].includes(typeof value);
 
 function renderPrimitive(value: unknown): ReactNode {
   if (value === null || value === undefined) return <span className="muted">–</span>;
-  if (typeof value === "boolean") return <span>{value ? "ja" : "nein"}</span>;
-  if (typeof value === "number") return <strong className="num">{value.toLocaleString("de-DE")}</strong>;
+  if (typeof value === "boolean")
+    return <span>{value ? (activeLanguage() === "en" ? "yes" : "ja") : activeLanguage() === "en" ? "no" : "nein"}</span>;
+  if (typeof value === "number")
+    return <strong className="num">{value.toLocaleString(activeLanguage() === "en" ? "en-US" : "de-DE")}</strong>;
   const text = String(value);
   if (/^https?:\/\//.test(text)) {
     return (
@@ -152,6 +227,8 @@ function JsonBody({ data }: { data: unknown }) {
 }
 
 export function JsonView({ data }: { data: unknown }) {
+  // Reading the language here is what makes the labels switch with the setting.
+  useLang();
   return (
     <div className="json-view">
       <JsonBody data={data} />

@@ -21,6 +21,7 @@ object Store {
                 baseUrl = json.optString("baseUrl", Provider.GEMINI_BASE),
                 model = json.optString("model", Provider.GEMINI_MODELS.first().first),
                 apiKey = json.optString("apiKey", ""),
+                language = json.optString("language", "de"),
             )
         } catch (error: Exception) {
             AiSettings()
@@ -32,6 +33,7 @@ object Store {
             .put("baseUrl", settings.baseUrl)
             .put("model", settings.model)
             .put("apiKey", settings.apiKey)
+            .put("language", settings.language)
         prefs(context).edit().putString(KEY_SETTINGS, json.toString()).apply()
     }
 

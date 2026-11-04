@@ -1,4 +1,8 @@
-import { LABELS } from "./components/JsonView";
+import { labelFor } from "./components/JsonView";
+import { activeLanguage } from "./lang";
+
+const locale = () => (activeLanguage() === "en" ? "en-US" : "de-DE");
+const english = () => activeLanguage() === "en";
 
 /**
  * Textdatei statt JSON: Überschriften je Block, zwei Leerzeichen Einzug,
@@ -11,16 +15,12 @@ const HEAD_KEYS = ["titel", "name", "hebel", "massnahme", "text", "caption", "ta
 
 const isPrimitive = (value: unknown) => value === null || ["string", "number", "boolean"].includes(typeof value);
 
-const label = (key: string) => {
-  if (LABELS[key]) return LABELS[key];
-  const spaced = key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ");
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-};
+const label = (key: string) => labelFor(key);
 
 function primitive(value: unknown): string {
   if (value === null || value === undefined) return "-";
-  if (typeof value === "boolean") return value ? "ja" : "nein";
-  if (typeof value === "number") return value.toLocaleString("de-DE");
+  if (typeof value === "boolean") return value ? (english() ? "yes" : "ja") : english() ? "no" : "nein";
+  if (typeof value === "number") return value.toLocaleString(locale());
   return String(value);
 }
 
@@ -63,7 +63,7 @@ function renderArray(items: unknown[], depth: number): string[] {
     if (item && typeof item === "object") {
       const fields = Object.entries(item as Record<string, unknown>);
       const headKey = fields.find(([key]) => HEAD_KEYS.includes(key))?.[0];
-      const head = headKey ? primitive((item as Record<string, unknown>)[headKey]) : `Eintrag ${index + 1}`;
+      const head = headKey ? primitive((item as Record<string, unknown>)[headKey]) : `${english() ? "Entry" : "Eintrag"} ${index + 1}`;
       out.push(...wrapItem(head, pad.length, `${index + 1}. `));
       for (const [key, value] of fields) {
         if (key === headKey) continue;
@@ -111,10 +111,10 @@ export function buildTextExport(input: {
   const lines: string[] = [
     "TikTok Growth Lab",
     input.title,
-    `Datum: ${date.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })}`,
+    `${english() ? "Date" : "Datum"}: ${date.toLocaleString(locale(), { dateStyle: "medium", timeStyle: "short" })}`,
   ];
   if (input.handle) lines.push(`Account: @${input.handle}`);
-  lines.push(`Modell: ${input.model || "unbekannt"}`, "", "=".repeat(64), "");
+  lines.push(`${english() ? "Model" : "Modell"}: ${input.model || (english() ? "unknown" : "unbekannt")}`, "", "=".repeat(64), "");
 
   const result = input.result;
   if (result && typeof result === "object" && !Array.isArray(result)) {
@@ -130,7 +130,7 @@ export function buildTextExport(input: {
       lines.push("");
     }
   } else {
-    lines.push(...wrap(String(result ?? "Keine Antwort erhalten."), 0), "");
+    lines.push(...wrap(String(result ?? (english() ? "No answer received." : "Keine Antwort erhalten.")), 0), "");
   }
 
   return `${lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd()}\n`;
@@ -146,7 +146,7 @@ export function textFilename(title: string, date = new Date()): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   const day = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  return `tiktok-growth-lab-${slug || "ki-antwort"}-${day}.txt`;
+  return `tiktok-growth-lab-${slug || (english() ? "ai-answer" : "ki-antwort")}-${day}.txt`;
 }
 
 export function downloadTextFile(filename: string, content: string): void {

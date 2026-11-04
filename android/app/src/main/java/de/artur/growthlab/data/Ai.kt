@@ -85,8 +85,8 @@ object Ai {
         } catch (error: Exception) {
             throw AiException(
                 "PROVIDER",
-                "Der KI-Anbieter ist nicht erreichbar.",
-                error.message?.take(140) ?: "Prüfe die Basis-URL und deine Verbindung.",
+                tr("Der KI-Anbieter ist nicht erreichbar.", "The AI provider cannot be reached."),
+                error.message?.take(140) ?: tr("Prüfe die Basis-URL und deine Verbindung.", "Check the base URL and your connection."),
             )
         }
     }
@@ -109,13 +109,38 @@ object Ai {
     private fun mapError(status: Int, message: String): AiException = when {
         isOverload(status, message) -> AiException(
             "OVERLOAD",
-            "Der KI-Anbieter ist gerade überlastet (HTTP $status).",
-            "Meist vorübergehend: gleich erneut versuchen oder ein kleineres Modell wählen (Flash-Lite). Anbieter-Meldung: ${message.take(200)}",
+            tr("Der KI-Anbieter ist gerade überlastet (HTTP $status).", "The AI provider is overloaded right now (HTTP $status)."),
+            tr(
+                "Meist vorübergehend: gleich erneut versuchen oder ein kleineres Modell wählen (Flash-Lite). Anbieter-Meldung: ${message.take(200)}",
+                "Usually temporary: try again in a moment or pick a smaller model (Flash-Lite). Provider message: ${message.take(200)}",
+            ),
         )
-        status == 401 || status == 403 -> AiException("AUTH", "Der API-Key wurde abgelehnt (HTTP $status).", "Prüfe den Key unter Einstellungen.")
-        status == 404 -> AiException("MODEL", "Modell oder Basis-URL nicht gefunden (404).", "Prüfe Basis-URL und Modellnamen – „Modelle laden“ zeigt, was der Anbieter anbietet.")
-        status == 429 -> AiException("RATE_LIMIT", "Der KI-Anbieter drosselt gerade (429).", "Free-Tier-Limit erreicht: kurz warten, Modell wechseln oder anderen Anbieter nehmen.")
-        else -> AiException("PROVIDER", "Der KI-Anbieter antwortet mit HTTP $status.", message.take(250))
+        status == 401 || status == 403 -> AiException(
+            "AUTH",
+            tr("Der API-Key wurde abgelehnt (HTTP $status).", "The API key was rejected (HTTP $status)."),
+            tr("Prüfe den Key unter Einstellungen.", "Check the key in the settings."),
+        )
+        status == 404 -> AiException(
+            "MODEL",
+            tr("Modell oder Basis-URL nicht gefunden (404).", "Model or base URL not found (404)."),
+            tr(
+                "Prüfe Basis-URL und Modellnamen – „Modelle laden“ zeigt, was der Anbieter anbietet.",
+                "Check the base URL and the model name – \"Load models\" shows what the provider offers.",
+            ),
+        )
+        status == 429 -> AiException(
+            "RATE_LIMIT",
+            tr("Der KI-Anbieter drosselt gerade (429).", "The AI provider is throttling right now (429)."),
+            tr(
+                "Free-Tier-Limit erreicht: kurz warten, Modell wechseln oder anderen Anbieter nehmen.",
+                "Free tier limit reached: wait a moment, change the model or pick another provider.",
+            ),
+        )
+        else -> AiException(
+            "PROVIDER",
+            tr("Der KI-Anbieter antwortet mit HTTP $status.", "The AI provider answers with HTTP $status."),
+            message.take(250),
+        )
     }
 
     suspend fun listModels(settings: AiSettings): List<String> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -137,8 +162,11 @@ object Ai {
         if (settings.apiKey.isBlank()) {
             throw AiException(
                 "NO_KEY",
-                "Kein KI-Key hinterlegt.",
-                "Trage unter Einstellungen einen kostenlosen Key ein (Google AI Studio, Groq oder OpenRouter). Scannen und Rechnen funktionieren auch ohne.",
+                tr("Kein KI-Key hinterlegt.", "No AI key stored."),
+                tr(
+                    "Trage unter Einstellungen einen kostenlosen Key ein (Google AI Studio, Groq oder OpenRouter). Scannen und Rechnen funktionieren auch ohne.",
+                    "Add a free key in the settings (Google AI Studio, Groq or OpenRouter). Scanning and the numbers work without one.",
+                ),
             )
         }
         val base = settings.baseUrl.trimEnd('/')
@@ -171,7 +199,11 @@ object Ai {
             ""
         }
         if (content.isBlank()) {
-            throw AiException("PROVIDER", "Der Anbieter hat eine leere Antwort geliefert.", message.take(200).ifBlank { "Oft ein Zeichen für Überlastung." })
+            throw AiException(
+                "PROVIDER",
+                tr("Der Anbieter hat eine leere Antwort geliefert.", "The provider returned an empty answer."),
+                message.take(200).ifBlank { tr("Oft ein Zeichen für Überlastung.", "Often a sign of overload.") },
+            )
         }
         content
     }
