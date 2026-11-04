@@ -451,9 +451,8 @@ export async function getVideo(handle: string, id: string): Promise<Video> {
       wrapHttpError(error, subject);
     }
   }
-  const scope = extractScope(html!);
-  const detail = scope?.["webapp.video-detail"] as Json | undefined;
-  if (!detail) {
+  const parsed = parseVideoHtml(html!, handle);
+  if (!parsed.found) {
     // oEmbed has no numbers, but it tells a dead video from a blocked one.
     const meta = await getOembed(`${WEB}/@${handle}/video/${id}`);
     if (meta) {
@@ -472,15 +471,30 @@ export async function getVideo(handle: string, id: string): Promise<Video> {
     failFromResponse(html!, subject);
   }
 
-  const item = ((detail!.itemInfo ?? {}) as Json).itemStruct as Json | undefined;
-  if (!item) {
+  if (!parsed.video) {
     throw new TikTokError(
       "NOT_FOUND",
       tr("TikTok liefert zu diesem Video keine Daten.", "TikTok returns no data for this video."),
       tr("Ist das Video noch online?", "Is the video still online?"),
     );
   }
-  return mapVideoItem(item, handle);
+  return parsed.video;
+}
+
+export type ParsedVideo = { found: boolean; video: Video | null };
+
+/**
+ * Videoseite auswerten, ohne Netz. found sagt, ob TikTok ueberhaupt einen
+ * Block geliefert hat; video bleibt null, wenn der Eintrag darin fehlt.
+ */
+export function parseVideoHtml(html: string, fallbackHandle: string): ParsedVideo {
+  const scope = extractScope(html);
+  const detail = scope?.["webapp.video-detail"] as Json | undefined;
+  if (!detail) return { found: false, video: null };
+
+  const item = ((detail.itemInfo ?? {}) as Json).itemStruct as Json | undefined;
+  if (!item) return { found: true, video: null };
+  return { found: true, video: mapVideoItem(item, fallbackHandle) };
 }
 
 /** Accepts any TikTok video URL (also short links) and returns the video data. */
