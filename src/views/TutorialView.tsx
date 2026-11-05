@@ -80,8 +80,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Wochenbericht", "Weekly report"],
         text: [
-          "Der Knopf im Profilfeld öffnet den Bericht: Follower, Score, Engagement, Views je Video, Posts pro Woche, die stärksten Videos und die Hinweise. „Drucken“ gibt ihn als PDF aus, „Text kopieren“ legt dieselbe Zusammenfassung in die Zwischenablage.",
-          "The button in the profile card opens the report: followers, score, engagement, views per video, posts per week, the strongest videos and the notes. “Print” gives you a PDF, “Copy text” puts the same summary on the clipboard.",
+          "Der Knopf im Profilfeld öffnet den Bericht: Follower, Score, Engagement, Views je Video, Posts pro Woche, die stärksten Videos und die Hinweise. „Text kopieren“ legt dieselbe Zusammenfassung in die Zwischenablage.",
+          "The button in the profile card opens the report: followers, score, engagement, views per video, posts per week, the strongest videos and the notes. “Copy text” puts the same summary on the clipboard.",
         ],
       },
       {

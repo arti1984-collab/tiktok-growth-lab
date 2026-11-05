@@ -4,8 +4,8 @@ import { useT } from "../lang";
 import type { ScanResult } from "../types";
 
 /**
- * Wochenbericht als Druckansicht: der Browser macht daraus ein PDF, ohne dass
- * die App eine Bibliothek für PDFs mitbringen muss.
+ * Wochenbericht als Overlay: die Zahlen eines Scans zum Nachlesen und zum
+ * Weitergeben per Zwischenablage.
  */
 export function ReportOverlay({ scan, onClose }: { scan: ScanResult; onClose: () => void }) {
   const t = useT();
@@ -52,11 +52,8 @@ export function ReportOverlay({ scan, onClose }: { scan: ScanResult; onClose: ()
               @{scan.profile.handle} · {formatDate(scan.scannedAt / 1000)}
             </p>
           </div>
-          <div className="row gap-sm no-print">
-            <button className="btn btn-sm btn-primary" onClick={() => window.print()}>
-              {t("Drucken / als PDF", "Print / save as PDF")}
-            </button>
-            <button className="btn btn-sm" onClick={() => void copy()}>
+          <div className="row gap-sm">
+            <button className="btn btn-sm btn-primary" onClick={() => void copy()}>
               {t("Text kopieren", "Copy text")}
             </button>
             <button className="btn btn-ghost btn-sm" onClick={onClose}>

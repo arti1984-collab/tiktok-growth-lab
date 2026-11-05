@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.17.0, Branch main
+Stand: 05.11.2026, Version 2.18.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -202,8 +202,8 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        - Ziel-Rechner: Ziel-Follower und Datum, daraus Follower pro Tag
          und Woche, Views pro Woche und noetige Posts. Ziel liegt in
          den Einstellungen (goalFollowers, goalDate).
-       - Wochenbericht: Overlay in der Scan-Ansicht mit Druckansicht
-         (Browser-PDF) und Kopierfunktion.
+       - Wochenbericht: Overlay in der Scan-Ansicht mit den Zahlen, den
+         besten Videos, den Hinweisen und der Kopierfunktion.
        - Erinnerung: Leiste fuer faellige Termine plus Systemmeldung
          ueber die Notification-API (Knopf in den Einstellungen); laeuft,
          solange die App offen ist.
@@ -211,6 +211,14 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.18.0 Drucken und PDF entfernt: Der Bericht ist ein Leseblatt, kein
+       Ausdruck. Der Knopf "Drucken / als PDF" und das komplette
+       @media-print-Regelwerk sind raus (components/ReportOverlay.tsx,
+       styles.css): kein @page, kein Verstecken der App per visibility,
+       keine Seitenumbruch-Regeln, kein .no-print. Geblieben ist "Text
+       kopieren" als einzige Aktion neben dem Schliessen, jetzt als
+       Hauptknopf. Der Wochenbericht selbst bleibt inhaltlich unveraendert.
+       Version 2.18.0.
 2.17.0 Ergebnis-Check: erledigte Termine werden selbst nachgemessen.
        Bei jedem Scan und bei "Alle messen" holt die App bis zu vier
        erledigte Termine mit Video-URL direkt von TikTok und schreibt Views,
@@ -341,8 +349,6 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
          unter 70 Prozent zeigt der Scan eine Warnzeile.
        - Zaehler: Scans, Fehlschläge, Rate-Limits und KI-Antworten stehen
          unter diagnostics in /api/status (server/lib/stats.ts).
-       - Druck: A4 mit 14 mm Rand, Tabellenzeilen und Ueberschriften
-         brechen nicht ueber die Seitenkante.
        - Closed Loop: Plan-Eintraege speichern postedAt, actualViews und
          actualLikes, im Plan laesst sich die View-Zahl eintragen und der
          Anteil am Median ablesen. store.json wandert auf Version 2 und

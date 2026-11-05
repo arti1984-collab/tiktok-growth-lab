@@ -58,8 +58,8 @@ Accounts in eine Watchlist legen, jeder Scan und jede Messung erzeugt einen Punk
 selbst keine Follower-Historie herausgibt: die Kurve entsteht aus den eigenen Messungen.
 
 ### Wochenbericht
-Druckbare Ansicht mit den wichtigsten Zahlen, den besten Videos und den Empfehlungen. Der Browser macht daraus ein
-PDF.
+Die wichtigsten Zahlen, die besten Videos und die Empfehlungen in einem Blatt, das sich als Text in die
+Zwischenablage kopieren lässt.
 
 ### Sprache, Updates, Erinnerung
 Deutsch und Englisch für Oberfläche, Anleitung, Zahlenformate und KI-Texte. Neue Versionen lädt die Windows-App im
