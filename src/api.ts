@@ -4,7 +4,7 @@ import type {
   AiMode,
   AiResponse,
   FreeScan,
-  PlanItem,
+  PlanPayload,
   PlanStatus,
   Provider,
   PublicSettings,
@@ -92,10 +92,10 @@ export const api = {
 
   video: (url: string) => request<{ video: Video }>("/api/video", { method: "POST", body: JSON.stringify({ url }) }),
 
-  plan: () => request<{ items: PlanItem[] }>("/api/plan"),
+  plan: () => request<PlanPayload>("/api/plan"),
 
   addPlan: (items: { date?: string; time?: string; note?: string }[]) =>
-    request<{ items: PlanItem[] }>("/api/plan", { method: "POST", body: JSON.stringify({ items }) }),
+    request<PlanPayload>("/api/plan", { method: "POST", body: JSON.stringify({ items }) }),
 
   updatePlan: (
     id: string,
@@ -110,13 +110,13 @@ export const api = {
       actualLikes?: number;
     },
   ) =>
-    request<{ items: PlanItem[] }>(`/api/plan/${encodeURIComponent(id)}`, {
+    request<PlanPayload>(`/api/plan/${encodeURIComponent(id)}`, {
       method: "PUT",
       body: JSON.stringify(patch),
     }),
 
   deletePlan: (id: string) =>
-    request<{ items: PlanItem[] }>(`/api/plan/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    request<PlanPayload>(`/api/plan/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
   track: (handle: string) =>
     request<{ account: Account; accounts: Account[] }>("/api/watchlist", {

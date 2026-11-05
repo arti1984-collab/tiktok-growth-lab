@@ -18,6 +18,7 @@ import { AiError, aiConfig, aiConfigured, listModels } from "./lib/ai.ts";
 import { scanFreeModels } from "./lib/modelScan.ts";
 import { normalizeScanInput } from "./lib/scanInput.ts";
 import { assessQuality, qualityGate } from "./lib/quality.ts";
+import { outcomesFrom, summarizePlan, type PlanFeedback } from "./lib/feedback.ts";
 import { diagnostics, recordFailure, recordScan, recordScanStart } from "./lib/stats.ts";
 import {
   addPlan,
@@ -82,6 +83,50 @@ type ScanResult = {
 
 /** Last scan per handle – used to ground the AI in real numbers. */
 const lastScans = new Map<string, ScanResult>();
+
+/** Der juengste Scan ist die Messlatte fuer die eigenen Posts. */
+function newestScan(): ScanResult | null {
+  const scans = [...lastScans.values()];
+  return scans.length > 0
+    ? scans.reduce((newest, current) => (current.scannedAt > newest.scannedAt ? current : newest))
+    : null;
+}
+
+function planFeedback(): PlanFeedback {
+  return summarizePlan(outcomesFrom(listPlan(), newestScan()));
+}
+
+/** Plan und Ergebnis-Check gehoeren zusammen, sonst zeigt die Karte alte Zahlen. */
+function planPayload() {
+  return { items: listPlan(), feedback: planFeedback() };
+}
+
+const RESULT_REFRESH_LIMIT = 4;
+
+/**
+ * Erledigte Plan-Posts selbst nachmessen: die Video-URL steht im Eintrag, die
+ * Zahlen kommen von TikTok. Damit muss niemand Views abtippen, und die Frage
+ * "haelt mein Slot?" beruht auf Messungen statt auf Erinnerung.
+ */
+async function refreshPlanResults(): Promise<number> {
+  const due = listPlan().filter((item) => item.status === "done" && item.videoUrl.trim() !== "");
+  let updated = 0;
+  for (const item of due.slice(0, RESULT_REFRESH_LIMIT)) {
+    try {
+      const video = await getVideoFromInput(item.videoUrl.trim());
+      if (video.views <= 0) continue;
+      updatePlanEntry(item.id, {
+        actualViews: video.views,
+        actualLikes: video.likes,
+        postedAt: item.postedAt > 0 ? item.postedAt : video.createdAt * 1000,
+      });
+      updated += 1;
+    } catch {
+      // Ein toter oder privater Link darf den Scan nicht kippen.
+    }
+  }
+  return updated;
+}
 
 const asyncHandler =
   (handler: (req: express.Request, res: express.Response) => Promise<unknown>) =>
@@ -289,6 +334,9 @@ app.post(
     };
     lastScans.set(profile.handle.toLowerCase(), result);
 
+    // Erledigte Plan-Posts im Hintergrund nachmessen; der Scan wartet nicht darauf.
+    void refreshPlanResults().catch(() => undefined);
+
     if (req.body?.track) {
       trackAccount(profile.handle, profile.nickname, profile.avatar);
       addSnapshot(profile.handle, snapshotFrom(profile, metrics));
@@ -352,7 +400,7 @@ app.post(
       });
       return;
     }
-    res.json(await generate(mode, payload, context, gate));
+    res.json(await generate(mode, payload, context, gate, planFeedback()));
   }),
 );
 
@@ -424,6 +472,8 @@ app.post(
         });
       }
     }
+    // "Alle messen" prueft auch die erledigten Plan-Posts.
+    await refreshPlanResults();
     res.json({ accounts: listAccounts().map(accountView), errors });
   }),
 );
@@ -452,22 +502,25 @@ app.post(
 /* -------------------------------------------------------------------- plan */
 
 app.get("/api/plan", (_req, res) => {
-  res.json({ items: listPlan() });
+  res.json(planPayload());
 });
 
 app.post("/api/plan", (req, res) => {
   const body = req.body ?? {};
   const entries = Array.isArray(body.items) ? body.items : [body];
   const cleaned = entries.filter((entry: unknown) => entry && typeof entry === "object") as Record<string, unknown>[];
-  res.json({ items: addPlan(cleaned) });
+  addPlan(cleaned);
+  res.json(planPayload());
 });
 
 app.put("/api/plan/:id", (req, res) => {
-  res.json({ items: updatePlanEntry(req.params.id, (req.body ?? {}) as Record<string, never>) });
+  updatePlanEntry(req.params.id, (req.body ?? {}) as Record<string, never>);
+  res.json(planPayload());
 });
 
 app.delete("/api/plan/:id", (req, res) => {
-  res.json({ items: deletePlanEntry(req.params.id) });
+  deletePlanEntry(req.params.id);
+  res.json(planPayload());
 });
 
 /* ---------------------------------------------------------------- settings */
