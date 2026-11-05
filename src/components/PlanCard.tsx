@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "../api";
 import { formatCompact, formatNumber, weekdayName } from "../format";
 import { useT } from "../lang";
-import type { PlanItem, ScanResult } from "../types";
-import { Alert, Section, Spinner } from "./ui";
+import type { PlanFeedback, PlanItem, PlanPayload, ScanResult } from "../types";
+import { Alert, Section, Spinner, Stat } from "./ui";
 
 /**
  * Wochenplan: aus den besten Slots des Scans werden echte Termine. Nach dem
@@ -31,17 +31,28 @@ function nextDateFor(weekday: number, from: Date): Date {
 export function PlanCard({ scan }: { scan: ScanResult | null }) {
   const t = useT();
   const [items, setItems] = useState<PlanItem[]>([]);
+  const [feedback, setFeedback] = useState<PlanFeedback | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Jeder Scan misst die erledigten Posts neu, deshalb danach erneut laden.
+  const scannedAt = scan?.scannedAt ?? 0;
   useEffect(() => {
+    let active = true;
     api
       .plan()
-      .then((data) => setItems(data.items))
+      .then((data) => {
+        if (!active) return;
+        setItems(data.items);
+        setFeedback(data.feedback);
+      })
       .catch((caught: ApiError) => setError(caught.message))
       .finally(() => setLoading(false));
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [scannedAt]);
 
   const median = scan?.metrics.medianViews ?? 0;
   const slots = scan?.metrics.bestSlots ?? [];
@@ -69,12 +80,13 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
       .sort((left, right) => left.date.localeCompare(right.date));
   }, [slots]);
 
-  async function run(key: string, action: () => Promise<{ items: PlanItem[] }>) {
+  async function run(key: string, action: () => Promise<PlanPayload>) {
     setBusy(key);
     setError(null);
     try {
       const data = await action();
       setItems(data.items);
+      setFeedback(data.feedback);
     } catch (caught) {
       setError((caught as ApiError).message);
     } finally {
@@ -92,6 +104,28 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
     if (!video) return null;
     return { views: video.views, multiple: median > 0 ? video.views / median : 0 };
   }
+
+  const times = (value: number | null) => (value === null ? "–" : `${value.toFixed(2)}x`);
+  const measuredNote = feedback
+    ? feedback.reliable
+      ? feedback.onSlot.count > 0 && feedback.moved.count > 0
+        ? t(
+            `Am geplanten Termin: ${feedback.onSlot.count} Posts, im Schnitt ${times(feedback.onSlot.avgMultiple)}. Verschoben: ${
+              feedback.moved.count
+            } Posts, im Schnitt ${times(feedback.moved.avgMultiple)}.`,
+            `On the planned slot: ${feedback.onSlot.count} posts, ${times(feedback.onSlot.avgMultiple)} on average. Moved: ${
+              feedback.moved.count
+            } posts, ${times(feedback.moved.avgMultiple)} on average.`,
+          )
+        : t(
+            "Noch kein Vergleich zwischen geplantem Termin und verschobenen Posts.",
+            "No comparison between the planned slot and moved posts yet.",
+          )
+      : t(
+          `Erst ${feedback.measured} von 3 Posts gemessen. Ab 3 Posts sagt der Vergleich etwas über deinen Slot aus.`,
+          `Only ${feedback.measured} of 3 posts measured. From 3 posts on the comparison says something about your slot.`,
+        )
+    : "";
 
   return (
     <Section
@@ -128,6 +162,30 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
         </>
       }
     >
+      {feedback && feedback.measured > 0 && (
+        <div className="stack-tight">
+          <div className="row gap wrap">
+            <Stat
+              label={t("Posts nach Plan", "Planned posts")}
+              value={String(feedback.measured)}
+              hint={t("mit Zahlen gemessen", "measured with numbers")}
+            />
+            <Stat
+              label={t("Über deinem Median", "Above your median")}
+              value={`${feedback.overMedian} von ${feedback.measured}`}
+              tone={feedback.overMedian * 2 > feedback.measured ? "good" : "warn"}
+              hint={t("gegen den Median des letzten Scans", "against the median of the last scan")}
+            />
+            <Stat
+              label={t("Im Schnitt", "On average")}
+              value={times(feedback.avgMultiple)}
+              tone="accent"
+              hint={t("1.00x heißt: genau dein Median", "1.00x means: exactly your median")}
+            />
+          </div>
+          <p className="muted small">{measuredNote}</p>
+        </div>
+      )}
       {error && <Alert kind="error">{error}</Alert>}
       {loading ? (
         <Spinner label={t("Lade Plan…", "Loading the plan…")} />

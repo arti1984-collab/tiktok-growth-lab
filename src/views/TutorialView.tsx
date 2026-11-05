@@ -131,8 +131,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Wochenplan", "Weekly plan"],
         text: [
-          "„Termine übernehmen“ legt die drei stärksten Zeitfenster als Termine an. Jeder Termin hat ein Datum, eine Uhrzeit, eine Idee und nach dem Posten die Video-URL, die dann automatisch gegen den Median gemessen wird. Der Zähler oben zeigt offene und gepostete Termine, „+ Termin“ legt einen eigenen an.",
-          "“Take slots” turns your three strongest time windows into dates. Each slot has a date, a time, an idea and, after posting, the video URL, which is then measured against your median. The counter shows open and posted slots, “+ Slot” adds your own.",
+          "„Termine übernehmen“ legt die drei stärksten Zeitfenster als Termine an. Jeder Termin hat ein Datum, eine Uhrzeit, eine Idee und nach dem Posten die Video-URL, die dann automatisch gegen den Median gemessen wird. Der Zähler oben zeigt offene und gepostete Termine, „+ Termin“ legt einen eigenen an. Sobald drei Termine Zahlen haben, steht darüber die Trefferquote: wie viele über deinem Median lagen, wie viel Median sie im Schnitt erreichten und ob der geplante Slot besser lief als ein verschobener Post. Diese Zahlen liest auch die KI als Beleg, statt nur zu raten.",
+          "“Take slots” turns your three strongest time windows into dates. Each slot has a date, a time, an idea and, after posting, the video URL, which is then measured against your median. The counter shows open and posted slots, “+ Slot” adds your own. Once three slots have numbers, the hit rate sits above them: how many landed above your median, how much median they reached on average, and whether the planned slot did better than a moved post. The AI reads those numbers as evidence instead of guessing.",
         ],
       },
       {

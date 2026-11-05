@@ -33,8 +33,11 @@ und die besten Zeiten stellen. Beantwortet die Frage, warum ein Video lief und e
 
 ### Wochenplan, Ziel-Rechner, Vergleich
 Der Scan liefert die starken Zeiten, der Wochenplan macht daraus echte Termine mit Idee, Status und Video-URL. Nach
-dem Posten steht die Zahl neben dem Termin. Der Ziel-Rechner sagt, wie viele Follower, Views und Posts pro Woche für
-ein Ziel nötig sind. Der Vergleich legt zwei bis drei Accounts aus der Watchlist nebeneinander.
+dem Posten steht die Zahl neben dem Termin, die App misst erledigte Termine bei jedem Scan selbst nach. Ab drei
+gemessenen Posts steht darüber die Trefferquote: wie viele Termine über dem Median lagen, wie viel Median sie im
+Schnitt erreichten und ob der geplante Slot besser lief als ein verschobener Post. Dieselben Zahlen bekommt die KI
+als belegten Kontext, damit ihre Empfehlung auf deinen Ergebnissen steht statt auf einer Annahme. Der Ziel-Rechner
+sagt, wie viele Follower, Views und Posts pro Woche für ein Ziel nötig sind. Der Vergleich legt zwei bis drei Accounts aus der Watchlist nebeneinander.
 
 ![Wachstumsansicht mit Wochenplan und Ziel-Rechner](docs/screenshots/wachstum.png)
 

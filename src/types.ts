@@ -139,6 +139,22 @@ export type PlanItem = {
   actualLikes: number;
 };
 
+/** Ergebnis-Check: was aus den Posts des Wochenplans geworden ist. */
+export type PlanFeedback = {
+  total: number;
+  /** Posts, zu denen es Zahlen gibt und die damit vergleichbar sind. */
+  measured: number;
+  overMedian: number;
+  avgMultiple: number | null;
+  onSlot: { count: number; avgMultiple: number | null };
+  moved: { count: number; avgMultiple: number | null };
+  /** Ab genug Messpunkten ist der Vergleich eine Aussage, nicht Zufall. */
+  reliable: boolean;
+};
+
+/** Plan und sein Ergebnis-Check kommen immer zusammen. */
+export type PlanPayload = { items: PlanItem[]; feedback: PlanFeedback };
+
 /** Der Hintergrund-Download der neuen Windows-Datei. */
 export type UpdateDownload = {
   state: "idle" | "downloading" | "ready" | "failed";

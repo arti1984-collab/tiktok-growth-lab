@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 04.11.2026, Version 2.16.0, Branch main
+Stand: 05.11.2026, Version 2.17.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -211,6 +211,20 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.17.0 Ergebnis-Check: erledigte Termine werden selbst nachgemessen.
+       Bei jedem Scan und bei "Alle messen" holt die App bis zu vier
+       erledigte Termine mit Video-URL direkt von TikTok und schreibt Views,
+       Likes und den Post-Zeitpunkt in den Eintrag (server/index.ts,
+       refreshPlanResults). server/lib/feedback.ts rechnet daraus den
+       Vergleich zum Median: wie viele Posts darueber lagen, wie viel
+       Medians-fache sie im Schnitt erreichten und getrennt davon, ob ein
+       Post am geplanten Termin (plus/minus 90 Minuten) oder verschoben
+       lief. Ab drei gemessenen Posts gilt die Aussage als belastbar, darunter
+       steht nur ein Hinweis. Der Wochenplan zeigt die Zahlen oben
+       (components/PlanCard.tsx), der KI-Prompt bekommt sie als belegten
+       Kontext (server/lib/prompts.ts). GET/POST/PUT/DELETE /api/plan liefern
+       items und feedback zusammen. Tests in test/feedback.test.ts.
+       Version 2.17.0.
 2.16.0 Quelltext im Archiv statt daneben:
        - electron-builder packt die App jetzt als app.asar (build.asar true
          in package.json). Vorher lag resources/app entpackt daneben, damit

@@ -4,6 +4,7 @@ import { recordAiCall } from "./stats.ts";
 import { WEEKDAYS, type Metrics } from "./metrics.ts";
 import { getLang, tr } from "./lang.ts";
 import { gateInstruction, type QualityGate } from "./quality.ts";
+import { feedbackBlock, type PlanFeedback } from "./feedback.ts";
 
 const WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const weekdayLabel = (weekday: number): string =>
@@ -219,7 +220,12 @@ export async function generate(
   payload: AiPayload,
   context: ScanContext | undefined,
   gate?: QualityGate | null,
+  feedback?: PlanFeedback | null,
 ) {
+  // Was aus den eigenen Posts geworden ist, ist der einzige belegte Teil des
+  // Prompts: er kommt aus Messungen, nicht aus einer Annahme.
+  const resultBlock = feedback ? feedbackBlock(feedback) : "";
+
   const userPrompt = [
     modeInstruction(mode, payload),
     "",
@@ -228,6 +234,7 @@ export async function generate(
     "",
     "GESCRAPTE TIKTOK-DATEN:",
     contextBlock(context),
+    ...(resultBlock ? ["", "ERGEBNIS-CHECK DER EIGENEN POSTS:", resultBlock] : []),
     "",
     "AUSGABE-SCHEMA (nur dieses JSON, keine Kommentare):",
     SCHEMAS[mode],
