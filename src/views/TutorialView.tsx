@@ -138,8 +138,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Ziel-Rechner", "Goal calculator"],
         text: [
-          "Ziel-Follower und Datum eintragen, „Ziel speichern“ rechnet: wie viele Follower noch fehlen, wie viele pro Tag und pro Woche nötig sind und wie viele Posts und Views daraus folgen. Grundlage ist dein Schnitt an Views je Video.",
-          "Enter target followers and a date, “Save goal” then works out how many followers are missing, how many per day and per week that needs, and how many posts and views follow from it. The base is your average views per video.",
+          "Zuerst das Profil wählen, dann Ziel-Follower und Datum eintragen. „Ziel speichern“ rechnet: wie viele Follower noch fehlen, wie viele pro Tag und pro Woche nötig sind und wie viele Posts und Views daraus folgen. Jedes Profil hat sein eigenes Ziel, und der Startpunkt bleibt gespeichert: darunter steht, wie viele Follower seit dem Zielstart dazugekommen sind. Grundlage der Post-Zahlen ist dein Schnitt an Views je Video aus dem letzten Scan.",
+          "Pick the profile first, then enter target followers and a date. “Save goal” works out how many followers are missing, how many per day and per week that needs, and how many posts and views follow from it. Every profile keeps its own goal, and the starting point stays stored: underneath you see how many followers came in since the goal started. The post numbers are based on your average views per video from the last scan.",
         ],
       },
       {

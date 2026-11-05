@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { DATA_DIR, ENV_DEFAULTS, STORE_FILE } from "../config.ts";
+import { normalizeGoals, removeGoal, upsertGoal, type Goal } from "./goals.ts";
 
 export type Snapshot = {
   at: number;
@@ -29,8 +30,17 @@ export type Settings = {
   cookie?: string;
   minDelayMs?: number;
   timezone?: string;
+  /** Alt: ein Ziel ohne Profil. Bleibt als Vorlage, bis eines gespeichert wird. */
   goalFollowers?: number;
   goalDate?: string;
+  /** Ein Ziel pro Profil, damit Wachstum dazugehoert. */
+  goals?: Goal[];
+};
+
+/** Was die Oberflaeche schicken darf: Einstellungen plus die Ziel-Aktionen. */
+export type SettingsPatch = Settings & {
+  goal?: { handle: string; followers: number; date: string; startFollowers?: number };
+  removeGoal?: string;
 };
 
 export type PlanStatus = "planned" | "done" | "skipped";
@@ -160,10 +170,11 @@ export function publicSettings() {
     timezone: eff.timezone,
     goalFollowers: eff.goalFollowers,
     goalDate: eff.goalDate,
+    goals: normalizeGoals(data.settings.goals),
   };
 }
 
-export function updateSettings(patch: Settings) {
+export function updateSettings(patch: SettingsPatch) {
   const next: Settings = { ...data.settings };
   // The language is stored explicitly; deleting it would silently fall back to German.
   if (patch.language === "de" || patch.language === "en") {
@@ -189,6 +200,12 @@ export function updateSettings(patch: Settings) {
     const goal = Math.round(patch.goalFollowers);
     if (goal > 0) next.goalFollowers = goal;
     else delete next.goalFollowers;
+  }
+  if (patch.goal && typeof patch.goal === "object") {
+    next.goals = upsertGoal(next.goals, patch.goal);
+  }
+  if (typeof patch.removeGoal === "string" && patch.removeGoal.trim() !== "") {
+    next.goals = removeGoal(next.goals, patch.removeGoal);
   }
   if (typeof patch.minDelayMs === "number" && Number.isFinite(patch.minDelayMs)) {
     const delay = Math.max(400, Math.min(10_000, Math.round(patch.minDelayMs)));
