@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.21.0, Branch main
+Stand: 05.11.2026, Version 2.22.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.22.0 Anleitung kennt das Zuklappen: Der Punkt "Ziel-Rechner" in
+       views/TutorialView.tsx nennt in beiden Sprachen beide Schalter, den
+       Titel der Karte und die Zeile mit dem gewaehlten Account. Version
+       2.22.0.
 2.21.0 Werte im Ziel-Rechner zuklappbar: Unter Profilfeld und Ziel-Feldern
        steht eine Zeile mit dem gewaehlten Account (@handle, Followerzahl)
        und einem Pfeil. Ein Klick darauf blendet die Werteliste (Heute, Seit
