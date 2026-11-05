@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.20.0, Branch main
+Stand: 05.11.2026, Version 2.21.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,15 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.21.0 Werte im Ziel-Rechner zuklappbar: Unter Profilfeld und Ziel-Feldern
+       steht eine Zeile mit dem gewaehlten Account (@handle, Followerzahl)
+       und einem Pfeil. Ein Klick darauf blendet die Werteliste (Heute, Seit
+       Zielstart, Noch noetig, Tage, pro Tag und Woche, Basis), den
+       Fortschrittsbalken und die Hinweise aus, der zweite Klick holt sie
+       zurueck. Profilfeld, Ziel und Datum bleiben sichtbar, Fehlermeldungen
+       ebenfalls. Der Pfeil kommt aus der neuen Komponente Chevron in
+       components/ui.tsx, die Gestaltung steht in styles.css
+       (.values-toggle). Version 2.21.0.
 2.20.0 Ziel-Rechner auf- und zuklappbar: Der Titel der Karte ist ein Knopf
        mit Pfeil. Zugeklappt bleiben nur Titel, Erklaerung und die beiden
        Knoepfe stehen, der Rest der Karte verschwindet; die Karte startet

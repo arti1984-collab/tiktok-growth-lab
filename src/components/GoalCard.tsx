@@ -3,7 +3,7 @@ import { ApiError, api } from "../api";
 import { formatCompact, formatDate, formatDecimal, formatNumber, formatSigned } from "../format";
 import { useT } from "../lang";
 import type { Account, Goal, PublicSettings, ScanResult } from "../types";
-import { Alert, ProgressBar, Section, Spinner } from "./ui";
+import { Alert, Chevron, ProgressBar, Section, Spinner } from "./ui";
 
 /**
  * Ziel-Rechner: ein Ziel gehoert zu einem Profil. Aus Ziel, Datum und den
@@ -31,6 +31,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
+  const [showValues, setShowValues] = useState(true);
 
   useEffect(() => {
     api
@@ -216,7 +217,29 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </Alert>
       )}
 
-      {profile && followers !== null && (
+      {profile && (
+        <button
+          type="button"
+          className="values-toggle"
+          aria-expanded={showValues}
+          onClick={() => setShowValues((value) => !value)}
+        >
+          <span className="row gap-sm center">
+            <Chevron open={showValues} />
+            <strong>@{profile.handle}</strong>
+          </span>
+          <span className="row gap-sm center muted small">
+            {profile.followers !== null && (
+              <span>
+                {formatNumber(profile.followers)} {t("Follower", "followers")}
+              </span>
+            )}
+            <span>{showValues ? t("Werte ausblenden", "Hide values") : t("Werte anzeigen", "Show values")}</span>
+          </span>
+        </button>
+      )}
+
+      {showValues && profile && followers !== null && (
         <ul className="kv">
           <li>
             <span>{t("Heute", "Today")}</span>
@@ -280,7 +303,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </ul>
       )}
 
-      {start !== null && followers !== null && grown !== null && span > 0 && (
+      {showValues && start !== null && followers !== null && grown !== null && span > 0 && (
         <div className="stack-tight">
           <ProgressBar
             value={followers - start}
@@ -300,7 +323,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </div>
       )}
 
-      {saved && start === null && (
+      {showValues && saved && start === null && (
         <p className="muted small">
           {t(
             "Für dieses Ziel gibt es noch keinen Startpunkt. Er entsteht beim nächsten Speichern mit den aktuellen Followern.",
@@ -309,7 +332,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </p>
       )}
 
-      {profile && !scannedHere && (
+      {showValues && profile && !scannedHere && (
         <p className="muted small">
           {t(
             "Views pro Video und Views pro Follower kommen aus dem letzten Scan. Für ein anderes Profil bleiben Views und Posts pro Woche leer, bis du es selbst scannst.",
@@ -318,7 +341,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </p>
       )}
 
-      {postsPerWeek !== null && postsPerWeek > 14 && (
+      {showValues && postsPerWeek !== null && postsPerWeek > 14 && (
         <Alert kind="warn">
           {t(
             "Das sind mehr als zwei Posts am Tag. Entweder das Ziel weiter nach hinten legen oder die Zahl realistischer setzen.",
@@ -327,7 +350,8 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
         </Alert>
       )}
 
-      {saved ? (
+      {showValues &&
+        (saved ? (
         <p className="muted small">
           {t(
             `Gespeichertes Ziel für @${saved.handle}: ${formatNumber(saved.followers)} bis ${formatDate(
@@ -345,7 +369,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
             "The previous goal without a profile sits in the fields as a template. Saving attaches it to the selected profile.",
           )}
         </p>
-      ) : null}
+        ) : null)}
     </Section>
   );
 }
