@@ -77,7 +77,7 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
   return (
     <div className="stack">
       <PlanCard scan={scan} />
-      <GoalCard scan={scan} />
+      <GoalCard scan={scan} accounts={accounts} />
       <CompareCard accounts={accounts} />
 
       <Section

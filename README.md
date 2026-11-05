@@ -37,7 +37,8 @@ dem Posten steht die Zahl neben dem Termin, die App misst erledigte Termine bei 
 gemessenen Posts steht darüber die Trefferquote: wie viele Termine über dem Median lagen, wie viel Median sie im
 Schnitt erreichten und ob der geplante Slot besser lief als ein verschobener Post. Dieselben Zahlen bekommt die KI
 als belegten Kontext, damit ihre Empfehlung auf deinen Ergebnissen steht statt auf einer Annahme. Der Ziel-Rechner
-sagt, wie viele Follower, Views und Posts pro Woche für ein Ziel nötig sind. Der Vergleich legt zwei bis drei Accounts aus der Watchlist nebeneinander.
+hängt an einem Profil: er sagt, wie viele Follower, Views und Posts pro Woche für ein Ziel nötig sind, und zeigt
+daneben, wie viele Follower seit dem Zielstart dazugekommen sind. Der Vergleich legt zwei bis drei Accounts aus der Watchlist nebeneinander.
 
 ![Wachstumsansicht mit Wochenplan und Ziel-Rechner](docs/screenshots/wachstum.png)
 
@@ -143,8 +144,8 @@ It answers why one video worked and another did not.
 
 ### Weekly plan, goal calculator, comparison
 The scan finds your strong times, the plan turns them into real slots with an idea, a status and a video URL. Once
-posted, the number appears next to the slot. The goal calculator says how many followers, views and posts per week a
-target needs. The comparison puts two or three watchlist accounts side by side.
+posted, the number appears next to the slot. The goal calculator belongs to a profile: it says how many followers,
+views and posts per week a target needs and shows how many followers came in since the goal started. The comparison puts two or three watchlist accounts side by side.
 
 ![Growth view with weekly plan and goal calculator](docs/screenshots/wachstum-en.png)
 

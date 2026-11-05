@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.18.0, Branch main
+Stand: 05.11.2026, Version 2.19.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -199,9 +199,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
          Hashtags und Zeitpunkt mit Median und besten Slots.
        - Vergleich: zwei bis drei Watchlist-Accounts nebeneinander
          (components/CompareCard.tsx, GrowthScreen).
-       - Ziel-Rechner: Ziel-Follower und Datum, daraus Follower pro Tag
-         und Woche, Views pro Woche und noetige Posts. Ziel liegt in
-         den Einstellungen (goalFollowers, goalDate).
+       - Ziel-Rechner: Profil waehlen, Ziel-Follower und Datum, daraus
+         Follower pro Tag und Woche, Views pro Woche und noetige Posts.
+         Jedes Profil hat sein eigenes Ziel mit Startpunkt
+         (settings.goals, server/lib/goals.ts).
        - Wochenbericht: Overlay in der Scan-Ansicht mit den Zahlen, den
          besten Videos, den Hinweisen und der Kopierfunktion.
        - Erinnerung: Leiste fuer faellige Termine plus Systemmeldung
@@ -211,6 +212,19 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.19.0 Ziele gehoeren zu einem Profil: Oben im Ziel-Rechner steht eine
+       Auswahl aller Profile aus Scan und Watchlist, jedes Ziel haengt an
+       einem Handle. Beim ersten Speichern merkt sich das Ziel den
+       Follower-Stand als Startpunkt, danach zeigt die Karte "Seit
+       Zielstart" die Differenz und darunter einen Fortschrittsbalken bis
+       zum Ziel. Ein spaeter hoeher gesetztes Ziel behaelt den alten
+       Startpunkt, damit die Strecke nicht wieder bei null beginnt.
+       Views und Posts pro Woche rechnet nur das gescannte Profil, fuer
+       fremde Profile fehlen die Views je Video. Gespeichert wird in
+       settings.goals, die reine Logik liegt in server/lib/goals.ts und
+       ist mit test/goals.test.ts abgedeckt. Das alte Ziel ohne Profil
+       bleibt als Vorlage in den Feldern, bis eines gespeichert wird.
+       Version 2.19.0.
 2.18.0 Drucken und PDF entfernt: Der Bericht ist ein Leseblatt, kein
        Ausdruck. Der Knopf "Drucken / als PDF" und das komplette
        @media-print-Regelwerk sind raus (components/ReportOverlay.tsx,

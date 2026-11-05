@@ -214,6 +214,16 @@ export type Account = {
   history: Snapshot[];
 };
 
+/** Ein Ziel, das an ein Profil haengt: daraus entsteht das Wachstum seit dem Start. */
+export type Goal = {
+  handle: string;
+  followers: number;
+  date: string;
+  /** Follower beim Anlegen des Ziels, 0 wenn unbekannt. */
+  startFollowers: number;
+  startedAt: number;
+};
+
 export type PublicSettings = {
   language: "de" | "en";
   aiBaseUrl: string;
@@ -228,6 +238,7 @@ export type PublicSettings = {
   timezone: string;
   goalFollowers: number;
   goalDate: string;
+  goals: Goal[];
 };
 
 export type ProviderModel = {

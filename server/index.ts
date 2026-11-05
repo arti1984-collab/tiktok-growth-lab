@@ -32,7 +32,7 @@ import {
   trackAccount,
   untrackAccount,
   updateSettings,
-  type Settings,
+  type SettingsPatch,
   type Snapshot,
   type TrackedAccount,
 } from "./lib/store.ts";
@@ -530,7 +530,7 @@ app.get("/api/settings", (_req, res) => {
 });
 
 app.put("/api/settings", (req, res) => {
-  const body = (req.body ?? {}) as Settings;
+  const body = (req.body ?? {}) as SettingsPatch;
   res.json(updateSettings(body));
 });
 
