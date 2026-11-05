@@ -632,6 +632,27 @@ select:disabled {
   transform: rotate(90deg);
 }
 
+.values-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--ink);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.values-toggle:hover {
+  background: rgba(243, 235, 221, 0.03);
+}
+
 /* ---------------------------------------------------------------- forms */
 
 .field {
@@ -842,7 +863,8 @@ input[type="range"]:focus-visible {
 
   .tab,
   .btn,
-  .chevron {
+  .chevron,
+  .values-toggle {
     transition: none;
   }
 }

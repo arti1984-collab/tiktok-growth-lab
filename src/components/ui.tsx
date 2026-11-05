@@ -29,9 +29,7 @@ export function Section({
               (collapsible ? (
                 <h2>
                   <button type="button" className="card-toggle" aria-expanded={!collapsed} onClick={onToggle}>
-                    <svg className={`chevron${collapsed ? "" : " open"}`} width="12" height="12" viewBox="0 0 12 12" aria-hidden>
-                      <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <Chevron open={!collapsed} />
                     {title}
                   </button>
                 </h2>
@@ -45,6 +43,14 @@ export function Section({
       )}
       {!collapsed && children}
     </section>
+  );
+}
+
+export function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg className={`chevron${open ? " open" : ""}`} width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
