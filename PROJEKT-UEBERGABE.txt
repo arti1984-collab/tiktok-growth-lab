@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.19.0, Branch main
+Stand: 05.11.2026, Version 2.20.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,13 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.20.0 Ziel-Rechner auf- und zuklappbar: Der Titel der Karte ist ein Knopf
+       mit Pfeil. Zugeklappt bleiben nur Titel, Erklaerung und die beiden
+       Knoepfe stehen, der Rest der Karte verschwindet; die Karte startet
+       offen. Moeglich macht das die neue Option collapsible, collapsed und
+       onToggle in components/ui.tsx (Section); den Zustand haelt
+       GoalCard.tsx, die Gestaltung steht in styles.css (.card-toggle,
+       .chevron, .card.is-collapsed). Version 2.20.0.
 2.19.0 Ziele gehoeren zu einem Profil: Oben im Ziel-Rechner steht eine
        Auswahl aller Profile aus Scan und Watchlist, jedes Ziel haengt an
        einem Handle. Beim ersten Speichern merkt sich das Ziel den

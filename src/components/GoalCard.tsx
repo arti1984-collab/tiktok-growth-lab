@@ -30,6 +30,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
   const [date, setDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     api
@@ -158,6 +159,9 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
   return (
     <Section
       title={t("Ziel-Rechner", "Goal calculator")}
+      collapsible
+      collapsed={!open}
+      onToggle={() => setOpen((value) => !value)}
       subtitle={t(
         "Profil wählen, Ziel und Datum eintragen: daraus wird, wie viele Follower, Views und Posts pro Woche nötig sind und wie viel seit dem Zielstart dazukam.",
         "Pick a profile, enter a target and a date: that becomes the followers, views and posts per week it takes, plus how much has come in since the goal started.",

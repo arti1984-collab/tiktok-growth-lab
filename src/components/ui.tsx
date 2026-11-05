@@ -6,25 +6,44 @@ export function Section({
   actions,
   children,
   className = "",
+  collapsible = false,
+  collapsed = false,
+  onToggle,
 }: {
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Titel wird zum Knopf, der den Inhalt ein- und ausklappt. */
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }) {
   return (
-    <section className={`card ${className}`}>
+    <section className={`card ${className}${collapsed ? " is-collapsed" : ""}`}>
       {(title || actions) && (
         <header className="card-head">
           <div>
-            {title && <h2>{title}</h2>}
+            {title &&
+              (collapsible ? (
+                <h2>
+                  <button type="button" className="card-toggle" aria-expanded={!collapsed} onClick={onToggle}>
+                    <svg className={`chevron${collapsed ? "" : " open"}`} width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+                      <path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {title}
+                  </button>
+                </h2>
+              ) : (
+                <h2>{title}</h2>
+              ))}
             {subtitle && <p className="muted small">{subtitle}</p>}
           </div>
           {actions && <div className="row gap-sm">{actions}</div>}
         </header>
       )}
-      {children}
+      {!collapsed && children}
     </section>
   );
 }
