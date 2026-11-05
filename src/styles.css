@@ -597,6 +597,41 @@ select:disabled {
   margin-top: 4px;
 }
 
+.card.is-collapsed .card-head {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.card-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+}
+
+.card-toggle:hover {
+  color: var(--gold);
+}
+
+.chevron {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.chevron.open {
+  transform: rotate(90deg);
+}
+
 /* ---------------------------------------------------------------- forms */
 
 .field {
@@ -806,7 +841,8 @@ input[type="range"]:focus-visible {
   }
 
   .tab,
-  .btn {
+  .btn,
+  .chevron {
     transition: none;
   }
 }
