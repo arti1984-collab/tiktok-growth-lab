@@ -14,6 +14,26 @@ import { Alert, Chevron, ProgressBar, Section, Spinner } from "./ui";
 const today = () => new Date(new Date().toDateString());
 const daysBetween = (from: Date, to: Date) => Math.round((to.getTime() - from.getTime()) / 86_400_000);
 
+/** Zuklapp-Zustand, der den Reiterwechsel und das Neuladen uebersteht. */
+function useStoredOpen(key: string, fallback: boolean) {
+  const [open, setOpen] = useState<boolean>(() => {
+    try {
+      const stored = window.localStorage.getItem(key);
+      return stored === null ? fallback : stored === "1";
+    } catch {
+      return fallback;
+    }
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, open ? "1" : "0");
+    } catch {
+      // Ohne Speicher gilt der Zustand nur bis zum Neuladen.
+    }
+  }, [key, open]);
+  return [open, () => setOpen((current) => !current)] as const;
+}
+
 type GoalProfile = {
   handle: string;
   nickname: string;
@@ -30,8 +50,8 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
   const [date, setDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(true);
-  const [showValues, setShowValues] = useState(true);
+  const [open, toggleOpen] = useStoredOpen("goalCard.open", true);
+  const [showValues, toggleValues] = useStoredOpen("goalCard.values", true);
 
   useEffect(() => {
     api
@@ -162,7 +182,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
       title={t("Ziel-Rechner", "Goal calculator")}
       collapsible
       collapsed={!open}
-      onToggle={() => setOpen((value) => !value)}
+      onToggle={toggleOpen}
       subtitle={t(
         "Profil wählen, Ziel und Datum eintragen: daraus wird, wie viele Follower, Views und Posts pro Woche nötig sind und wie viel seit dem Zielstart dazukam.",
         "Pick a profile, enter a target and a date: that becomes the followers, views and posts per week it takes, plus how much has come in since the goal started.",
@@ -222,7 +242,7 @@ export function GoalCard({ scan, accounts }: { scan: ScanResult | null; accounts
           type="button"
           className="values-toggle"
           aria-expanded={showValues}
-          onClick={() => setShowValues((value) => !value)}
+          onClick={toggleValues}
         >
           <span className="row gap-sm center">
             <Chevron open={showValues} />

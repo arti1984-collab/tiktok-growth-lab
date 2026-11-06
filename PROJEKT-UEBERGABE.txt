@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.22.0, Branch main
+Stand: 05.11.2026, Version 2.23.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,16 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.23.0 README-Bilder ohne echten Account: Die Screenshots in
+       docs/screenshots (scan, wachstum, studio, jeweils deutsch und
+       englisch) zeigen ein erfundenes Profil mit leerem Avatar und
+       maskiertem Kontonamen (Punkte statt Name und @handle). Aufgenommen
+       wurde die App im Electron-Fenster bei 1280x900, ohne Fensterrahmen
+       und ohne die Konto-Daten des Nutzers. Zuklapp-Zustand bleibt: Karte
+       und Werteliste im Ziel-Rechner liegen mit ihrem offenen oder
+       zugeklappten Zustand unter goalCard.open und goalCard.values im
+       localStorage (useStoredOpen in components/GoalCard.tsx) und gehen
+       beim Wechsel im oberen Menue nicht mehr auf. Version 2.23.0.
 2.22.0 Anleitung kennt das Zuklappen: Der Punkt "Ziel-Rechner" in
        views/TutorialView.tsx nennt in beiden Sprachen beide Schalter, den
        Titel der Karte und die Zeile mit dem gewaehlten Account. Version
