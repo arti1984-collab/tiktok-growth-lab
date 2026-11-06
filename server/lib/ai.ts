@@ -240,8 +240,8 @@ export async function chat(
       "NO_KEY",
       tr("Kein KI-Key hinterlegt.", "No AI key stored."),
       tr(
-        "Trage unter Einstellungen einen API-Key ein (oder setze AI_API_KEY in der .env). Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – ohne Key funktionieren Scraping und Analyse trotzdem.",
-        "Add an API key in the settings (or set AI_API_KEY in .env). Free keys are available at Google AI Studio, Groq and OpenRouter; scraping and analysis work without a key too.",
+        "Trage unter Einstellungen einen API-Key ein (oder setze AI_API_KEY in der .env). Kostenlose Keys gibt es bei Google AI Studio, Groq und OpenRouter – ohne Key funktionieren Scannen und Analyse trotzdem.",
+        "Add an API key in the settings (or set AI_API_KEY in .env). Free keys are available at Google AI Studio, Groq and OpenRouter; scanning and analysis work without a key too.",
       ),
     );
   }

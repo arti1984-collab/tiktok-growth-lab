@@ -23,7 +23,7 @@ ein Growth-Score von 0 bis 100, die besten Zeitfenster und automatisch formulier
 Ein Feld reicht: Link oder Name des Profils eintragen, "Schwächen prüfen" starten. Direkt unter dem Profil steht die
 Karte "Wo es hakt": Interaktion, Reichweite, Rhythmus, Originalton und eine zu dünne Datenbasis, dringende Punkte
 zuerst. Jeder Punkt nennt die Zahl dahinter und unter "Besser machen" den konkreten nächsten Schritt. Das rechnet
-der Server aus den gescrapten Zahlen, ohne KI.
+der Server aus den gescannten Zahlen, ohne KI.
 
 ![Scan-Ansicht mit Profilkarte, Video-Check und Kennzahlen](docs/screenshots/scan.png)
 
@@ -44,7 +44,7 @@ daneben, wie viele Follower seit dem Zielstart dazugekommen sind. Der Vergleich 
 
 ### KI-Studio
 Sieben Werkmappen: 30-Tage-Strategie, Profil-Audit, Video-Ideen, Captions, Hooks, 7-Tage-Plan und Hashtags. Die KI
-arbeitet mit den gescrapten Zahlen, nicht mit Allgemeinplätzen. Jeder OpenAI-kompatible Anbieter geht, kostenlos
+arbeitet mit den gescannten Zahlen, nicht mit Allgemeinplätzen. Jeder OpenAI-kompatible Anbieter geht, kostenlos
 starten Gemini, Groq oder OpenRouter mit eigenem Key.
 
 ![KI-Studio mit den sieben Werkmappen](docs/screenshots/studio.png)
@@ -134,7 +134,7 @@ score from 0 to 100, the best time windows and automatically written recommendat
 One field is enough: enter the profile link or name and press "Check weaknesses". Right under the profile the card
 "Where it breaks down" names what currently holds the account back: interaction, reach, cadence, original sound and
 a thin data base, most urgent first. Each point names the number behind it and, under "Do this instead", the next
-concrete step. The server derives all of it from the scraped numbers, no AI involved.
+concrete step. The server derives all of it from the scanned numbers, no AI involved.
 
 ![Scan view with profile card, video check and metrics](docs/screenshots/scan-en.png)
 
@@ -151,7 +151,7 @@ views and posts per week a target needs and shows how many followers came in sin
 
 ### AI studio
 Seven workbooks: 30-day strategy, profile audit, video ideas, captions, hooks, 7-day plan and hashtags. The AI works
-from the scraped numbers, not from generic advice. Any OpenAI-compatible provider works, Gemini, Groq and OpenRouter
+from the scanned numbers, not from generic advice. Any OpenAI-compatible provider works, Gemini, Groq and OpenRouter
 start free with your own key.
 
 ![AI studio with its seven workbooks](docs/screenshots/studio-en.png)
@@ -213,7 +213,7 @@ third parties. Use is at your own responsibility and must comply with TikTok's T
 
 ```
 src/            React-Oberfläche (Web/Desktop)
-server/         Express-Server, Scraping, Kennzahlen, KI, Plan, Updates
+server/         Express-Server, Scanner, Kennzahlen, KI, Plan, Updates
 electron/       Desktop-Hülle
 docs/screenshots  Bilder für diese README
 release/        gebaute exe

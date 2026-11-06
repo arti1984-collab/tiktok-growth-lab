@@ -161,8 +161,8 @@ const CHAPTERS: Chapter[] = [
   {
     title: ["KI-Studio", "AI studio"],
     intro: [
-      "Schreibt Texte und Strategie auf Basis deiner gescrapten Zahlen. Ohne Scan antwortet die KI allgemein.",
-      "Writes copy and strategy based on your scraped numbers. Without a scan the AI answers in general terms.",
+      "Schreibt Texte und Strategie auf Basis deiner gescannten Zahlen. Ohne Scan antwortet die KI allgemein.",
+      "Writes copy and strategy based on your scanned numbers. Without a scan the AI answers in general terms.",
     ],
     points: [
       {
@@ -226,8 +226,8 @@ const CHAPTERS: Chapter[] = [
   {
     title: ["Einstellungen", "Settings"],
     intro: [
-      "Sprache, KI-Zugang und Scraper. Alles bleibt lokal auf diesem Rechner.",
-      "Language, AI access and the scraper. Everything stays local on this computer.",
+      "Sprache, KI-Zugang und Scanner. Alles bleibt lokal auf diesem Rechner.",
+      "Language, AI access and the scanner. Everything stays local on this computer.",
     ],
     points: [
       {
@@ -263,7 +263,7 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
-        label: ["Scraper", "Scraper"],
+        label: ["Scanner", "Scanner"],
         text: [
           "Pause zwischen zwei TikTok-Anfragen, Zeitzone für die Zeitfenster und optional ein Session-Cookie für mehr als 15 Videos.",
           "Pause between two TikTok requests, timezone for the time windows and optionally a session cookie for more than 15 videos.",

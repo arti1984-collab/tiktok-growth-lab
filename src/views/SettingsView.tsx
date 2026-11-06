@@ -679,7 +679,7 @@ export function SettingsView({
       </Section>
 
       <Section
-        title={t("Scraper", "Scraper")}
+        title={t("Scanner", "Scanner")}
         subtitle={t("Höflich bleiben: TikTok sperrt IPs, die zu schnell anfragen.", "Stay polite: TikTok blocks IPs that request too fast.")}
       >
         <div className="grid-two">
@@ -742,7 +742,7 @@ export function SettingsView({
               <strong>{status.ai.configured ? `${status.ai.model} @ ${status.ai.baseUrl}` : t("nicht konfiguriert", "not configured")}</strong>
             </li>
             <li>
-              <span>{t("Scraper", "Scraper")}</span>
+              <span>{t("Scanner", "Scanner")}</span>
               <strong>
                 {formatDecimal(status.scraping.minDelayMs / 1000, 1)} s {t("Abstand", "delay")} · Cookie{" "}
                 {status.scraping.cookieSet ? t("aktiv", "active") : t("inaktiv", "inactive")} · {status.scraping.cacheEntries}{" "}

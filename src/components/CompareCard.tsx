@@ -6,7 +6,7 @@ import { Section } from "./ui";
 
 /**
  * Vergleich von zwei bis drei Accounts aus der Watchlist. Alles kommt aus den
- * gespeicherten Messpunkten, es wird nichts zusätzlich gescrapt.
+ * gespeicherten Messpunkten, es wird nichts zusätzlich gescannt.
  */
 
 export function CompareCard({ accounts }: { accounts: Account[] }) {

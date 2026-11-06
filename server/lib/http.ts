@@ -18,7 +18,7 @@ export class HttpError extends Error {
 /**
  * Serializes every TikTok request and keeps a minimum gap between them.
  * TikTok answers with "ratelimit triggered" (or plain 429) when hammered,
- * so the whole scraper may only ever run one request at a time.
+ * so the whole scanner may only ever run one request at a time.
  */
 class RateLimiter {
   private queue: Promise<unknown> = Promise.resolve();

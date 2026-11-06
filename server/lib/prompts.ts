@@ -38,7 +38,7 @@ Kommentare und Completion-Rate; Follower-Conversion entsteht über Wiedererkennu
 Regeln:
 - Antworte ausschließlich auf Deutsch.
 - Antworte ausschließlich mit gültigem JSON, exakt nach dem vorgegebenen Schema. Kein Markdown, keine Erklärungen außerhalb des JSON.
-- Arbeite mit den gelieferten, gescrapten Daten. Erfinde keine Zahlen. Wenn Daten fehlen, sag es im dafür vorgesehenen Feld.
+- Arbeite mit den gelieferten, gescannten Daten. Erfinde keine Zahlen. Wenn Daten fehlen, sag es im dafür vorgesehenen Feld.
 - Sei radikal konkret: echte Hooks in natürlicher Sprache, echte Uhrzeiten, echte Captions. Keine Floskeln wie "sei authentisch".
 - Jeder Tipp muss in einem TikTok-Video umsetzbar sein, ohne Equipment-Käufe.
 - Zahlen in JSON-Feldern als echte Zahlen, keine Strings mit Einheiten.`,
@@ -48,7 +48,7 @@ completion rate; follower conversion comes from recognition, recurring formats a
 Rules:
 - Answer exclusively in English.
 - Answer with valid JSON only, exactly in the given schema. No markdown, no explanations outside the JSON.
-- Work with the scraped data you receive. Never invent numbers. If data is missing, say so in the field meant for it.
+- Work with the scanned data you receive. Never invent numbers. If data is missing, say so in the field meant for it.
 - Be radically concrete: real hooks in natural language, real times of day, real captions. No filler like "be authentic".
 - Every tip must be doable in a TikTok video without buying equipment.
 - The JSON keys stay as given; every text value inside them is in English, including weekdays.
@@ -58,7 +58,7 @@ Rules:
 
 function contextBlock(context: ScanContext | undefined): string {
   if (!context) {
-    return "KEIN GESCRAPTER KONTEXT: Der Nutzer hat noch keinen Scan durchgeführt. Arbeite nur mit den Angaben aus der Anfrage und markiere Annahmen klar.";
+    return "KEIN GESCANNTER KONTEXT: Der Nutzer hat noch keinen Scan durchgeführt. Arbeite nur mit den Angaben aus der Anfrage und markiere Annahmen klar.";
   }
   const { profile, metrics, videos } = context;
   const lines: string[] = [];
@@ -70,7 +70,7 @@ function contextBlock(context: ScanContext | undefined): string {
   if (profile.bio) lines.push(`BIO: ${profile.bio.slice(0, 200)}`);
 
   if (metrics.hasData) {
-    lines.push(`METRIKEN aus ${metrics.sampleSize} gescrapten Videos:`);
+    lines.push(`METRIKEN aus ${metrics.sampleSize} gescannten Videos:`);
     lines.push(`- Growth-Score: ${metrics.score}/100`);
     lines.push(
       `- Ø Views ${metrics.avgViews} · Median ${metrics.medianViews} · Views pro Follower ${(metrics.viewsPerFollower ?? 0).toFixed(2)}`,
@@ -114,7 +114,7 @@ function contextBlock(context: ScanContext | undefined): string {
   }
 
   if (videos.length > 0) {
-    lines.push("GESCRAPTE VIDEOS (neueste zuerst):");
+    lines.push("GESCANNTE VIDEOS (neueste zuerst):");
     videos.slice(0, 10).forEach((video, index) => {
       lines.push(
         `${index + 1}. "${(video.desc || "(ohne Caption)").slice(0, 90)}" · ${video.views} Views · ${video.likes} Likes · ${video.comments} Kommentare · ${
@@ -203,7 +203,7 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
     case "audit":
       return `Mache ein schonungsloses Profil-Audit. Bewerte Score 0-100 auf Basis der gelieferten Daten. Nenne die 3 Maßnahmen mit dem besten Wirkung/Aufwand-Verhältnis zuerst.`;
     case "ideas":
-      return `Entwickle ${count} Video-Ideen, die auf den Mustern der besten gescrapten Videos aufbauen. Jede Idee braucht ein Drehbuch in Sekunden-Abschnitten.`;
+      return `Entwickle ${count} Video-Ideen, die auf den Mustern der besten gescannten Videos aufbauen. Jede Idee braucht ein Drehbuch in Sekunden-Abschnitten.`;
     case "caption":
       return `Schreibe 3 Caption-Varianten zum Thema. Jede Caption: erste Zeile = Hook, dann 2-4 kurze Zeilen, dann CTA. Genau 5 Hashtags pro Variante (Mix aus Nische und Reichweite).`;
     case "hooks":
@@ -232,7 +232,7 @@ export async function generate(
     "ANGABEN DES NUTZERS:",
     payloadBlock(payload),
     "",
-    "GESCRAPTE TIKTOK-DATEN:",
+    "GESCANNTE TIKTOK-DATEN:",
     contextBlock(context),
     ...(resultBlock ? ["", "ERGEBNIS-CHECK DER EIGENEN POSTS:", resultBlock] : []),
     "",
