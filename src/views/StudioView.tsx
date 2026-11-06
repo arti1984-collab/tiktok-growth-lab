@@ -105,8 +105,8 @@ export function StudioView({ scan, status, initialMode }: { scan: ScanResult | n
       <Section
         title={t("KI-Studio", "AI studio")}
         subtitle={t(
-          "Texte und Strategie auf Basis deiner gescrapten TikTok-Zahlen",
-          "Copy and strategy based on your scraped TikTok numbers",
+          "Texte und Strategie auf Basis deiner gescannten TikTok-Zahlen",
+          "Copy and strategy based on your scanned TikTok numbers",
         )}
       >
         <div className={`context-banner ${scan?.metrics.hasData ? "ok" : "missing"}`}>

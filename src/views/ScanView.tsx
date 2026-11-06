@@ -275,7 +275,7 @@ export function ScanView({
 
               <Section
                 title={t("Was die Daten sagen", "What the data says")}
-                subtitle={t("Automatisch berechnet aus den gescrapten Videos", "Calculated automatically from the scraped videos")}
+                subtitle={t("Automatisch berechnet aus den gescannten Videos", "Calculated automatically from the scanned videos")}
               >
                 <div className="insight-list">
                   {metrics.insights.map((insight) => (
@@ -347,8 +347,8 @@ export function ScanView({
               <Section
                 title={t("Top-Videos", "Top videos")}
                 subtitle={t(
-                  `${scan.videos.length} Videos gescrapt · bewertet gegen Median ${formatCompact(metrics.medianViews)} Views`,
-                  `${scan.videos.length} videos scraped · compared to the median of ${formatCompact(metrics.medianViews)} views`,
+                  `${scan.videos.length} Videos gescannt · bewertet gegen Median ${formatCompact(metrics.medianViews)} Views`,
+                  `${scan.videos.length} videos scanned · compared to the median of ${formatCompact(metrics.medianViews)} views`,
                 )}
                 actions={
                   <button className="btn btn-ghost" onClick={() => onOpenStudio("audit")}>
@@ -383,7 +383,7 @@ export function ScanView({
                 </div>
               </Section>
 
-              <Section title={t("Alle gescrapten Videos", "All scraped videos")} subtitle={t("Rohdaten direkt aus TikTok", "Raw data straight from TikTok")} className="collapsible">
+              <Section title={t("Alle gescannten Videos", "All scanned videos")} subtitle={t("Rohdaten direkt aus TikTok", "Raw data straight from TikTok")} className="collapsible">
                 <details>
                   <summary>
                     {t("Tabellenansicht", "Table view")} ({scan.videos.length})

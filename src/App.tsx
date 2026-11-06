@@ -106,8 +106,8 @@ export default function App() {
               <h1>TikTok Growth Lab</h1>
               <p className="muted small">
                 {t(
-                  "Scraping-Dashboard + KI-Coach für mehr Follower und Reichweite",
-                  "Scraping dashboard + AI coach for more followers and reach",
+                  "Scanner für TikTok-Profile, Kennzahlen und KI-Coach für mehr Follower und Reichweite",
+                  "Scanner for TikTok profiles, metrics and an AI coach for more followers and reach",
                 )}
               </p>
             </div>

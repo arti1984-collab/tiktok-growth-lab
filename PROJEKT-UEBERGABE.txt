@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 06.11.2026, Version 2.24.0, Branch main
+Stand: 06.11.2026, Version 2.25.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -47,7 +47,7 @@ Befehle (Projektwurzel):
 server/
   index.ts          Alle HTTP-Routen, Scan-Ablauf, KI-Aufruf, Watchlist
   config.ts         ROOT, PORT, HOST, .env-Werte, APP_VERSION aus package.json
-  lib/tiktok.ts     Scraping: Profil, Video-Detail, item_list, Fehlerklassen
+  lib/tiktok.ts     Scanner: Profil, Video-Detail, item_list, Fehlerklassen
   lib/metrics.ts    Kennzahlen, Score, Zeitfenster, Laengen, Hashtags, Ausreisser
   lib/prompts.ts    AI_MODES, System- und Nutzerprompt je Modus, JSON-Schema
   lib/ai.ts         OpenAI-kompatible Clients, Modellliste, Fehler mit Hinweis
@@ -97,7 +97,7 @@ KI-Aufruf:
   parsed=false heisst: kein reines JSON, die Antwort wird als Text angezeigt.
 
 Wichtige Routen (Details in server/index.ts):
-  GET  /api/status         Version, Zeitzone, KI-Zustand, Scraper-Zustand
+  GET  /api/status         Version, Zeitzone, KI-Zustand, Scanner-Zustand
   POST /api/scan           Account scannen
   GET  /api/last-scan      letzter Scan im Speicher (nach Neustart leer)
   POST /api/ai             KI-Antwort erzeugen
@@ -212,6 +212,15 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.25.0 Scanner statt Scraping: Die Unterzeile im Kopf heisst jetzt
+       "Scanner fuer TikTok-Profile, Kennzahlen und KI-Coach fuer mehr
+       Follower und Reichweite", die Karten sprechen von gescannten Videos
+       und Zahlen (Scan-Ansicht, KI-Studio, Anleitung), die Einstellungen und
+       die Anleitung nennen den Bereich Scanner, auch der KI-Fehlertext und
+       die Prompts. README und die GitHub-Beschreibung wurden mitgezogen, die
+       sechs README-Bilder neu aufgenommen. Interne Namen (scrapeVideos,
+       scrapedAt, status.scraping, SCRAPE_*-Variablen, test/scrape.test.ts)
+       bleiben, weil sie nirgends sichtbar sind. Version 2.25.0.
 2.24.0 Wachstums-Tracking steht oben: Der Reiter Wachstum beginnt mit der
        Karte "Wachstums-Tracking" (Alle messen, Account hinzufuegen) und der
        Tabelle "x getrackte Accounts". Wochenplan, Ziel-Rechner und Vergleich
@@ -284,7 +293,7 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
 2.16.0 Quelltext im Archiv statt daneben:
        - electron-builder packt die App jetzt als app.asar (build.asar true
          in package.json). Vorher lag resources/app entpackt daneben, damit
-         war build/server/index.mjs mit dem kompletten Scraper lesbar.
+         war build/server/index.mjs mit dem kompletten Scanner lesbar.
        - build:server laeuft mit --minify. Der Server-Bundle ist kleiner und
          nicht mehr im Klartext lesbar.
        - README und LICENSE sagen jetzt, dass der Quelltext nicht
@@ -292,8 +301,7 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
          Releases ist fuer andere erreichbar.
        - Grenze der Massnahme: asar ist kein Kopierschutz. Wer die exe
          entpackt, kommt weiterhin an den Code. Es erschwert das Nachbauen,
-         es verhindert es nicht. Wirklich schuetzen wuerde nur, den Scraper
-         auszulagern.
+         es verhindert es nicht. Wirklich schuetzen wuerde nur,den Scanner auszulagern.
        Version 2.16.0.
 2.15.0 Profil-Check nach dem Scan:
        - Das Eingabefeld heisst jetzt "Link oder Name des Profils", der Knopf
@@ -303,7 +311,7 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
          zuerst. Jeder Punkt nennt die Zahl, das Problem und unter "Besser
          machen" den naechsten Schritt. Passt alles, sagt die Karte das.
        - Berechnet in server/lib/metrics.ts (Typ Weakness, Feld
-         metrics.weaknesses), ohne KI, nur aus den gescrapten Zahlen.
+         metrics.weaknesses), ohne KI, nur aus den gescannten Zahlen.
        - Neue Tests in test/metrics.test.ts: schwache Daten ergeben
          dringende Punkte, starke Daten keinen dringenden Punkt, ohne
          Videos bleibt die Liste leer.

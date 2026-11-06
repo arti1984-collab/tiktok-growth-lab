@@ -1,9 +1,9 @@
 {
   "name": "tiktok-growth-lab",
-  "version": "2.24.0",
+  "version": "2.25.0",
   "private": true,
   "type": "module",
-  "description": "TikTok Growth Lab – Scraping-Dashboard mit KI-Coach für mehr Follower und Reichweite",
+  "description": "TikTok Growth Lab – Scanner für TikTok-Profile mit Kennzahlen und KI-Coach",
   "main": "electron/main.mjs",
   "scripts": {
     "dev": "tsx watch server/dev.ts",
