@@ -76,10 +76,6 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
 
   return (
     <div className="stack">
-      <PlanCard scan={scan} />
-      <GoalCard scan={scan} accounts={accounts} />
-      <CompareCard accounts={accounts} />
-
       <Section
         title={t("Wachstums-Tracking", "Growth tracking")}
         subtitle={t(
@@ -221,6 +217,10 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
           </p>
         </Section>
       )}
+
+      <PlanCard scan={scan} />
+      <GoalCard scan={scan} accounts={accounts} />
+      <CompareCard accounts={accounts} />
 
       {detailAccount && (
         <AccountDetails
