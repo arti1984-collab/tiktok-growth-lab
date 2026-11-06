@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 05.11.2026, Version 2.23.0, Branch main
+Stand: 06.11.2026, Version 2.24.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.24.0 Wachstums-Tracking steht oben: Der Reiter Wachstum beginnt mit der
+       Karte "Wachstums-Tracking" (Alle messen, Account hinzufuegen) und der
+       Tabelle "x getrackte Accounts". Wochenplan, Ziel-Rechner und Vergleich
+       folgen darunter (views/WatchView.tsx). Version 2.24.0.
 2.23.0 README-Bilder ohne echten Account: Die Screenshots in
        docs/screenshots (scan, wachstum, studio, jeweils deutsch und
        englisch) zeigen ein erfundenes Profil mit leerem Avatar und
