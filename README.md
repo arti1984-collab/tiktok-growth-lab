@@ -233,10 +233,10 @@ update check on api.github.com (with a token, otherwise anonymous).
 
 ## Lizenz / License
 
-Der Quelltext ist einsehbar: Ändern, Kopieren und Weitergeben sind nicht erlaubt, die offiziellen Dateien aus den
+Der Quelltext ist nicht veröffentlicht: Ändern und Weitergeben sind nicht erlaubt, die offiziellen Dateien aus den
 Releases darf jede und jeder für sich nutzen. Einzelheiten stehen in [LICENSE](LICENSE). Am Code ändert allein der
 Rechteinhaber etwas, fremde Beiträge werden nicht angenommen.
 
-The source is public to read: changing, copying and redistributing it are not allowed, while anyone may use the
-official files from the releases. Details are in [LICENSE](LICENSE). Only the copyright holder changes the code, outside
+The source is not published: changing and redistributing it are not allowed, while anyone may use the official files
+from the releases. Details are in [LICENSE](LICENSE). Only the copyright holder changes the code, outside
 contributions are not accepted.
