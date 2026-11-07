@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.31.0, Branch main
+Stand: 07.11.2026, Version 2.32.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.32.0 Namen in der Schnellwahl loeschen: Jeder Name im Scan-Feld hat ein
+       kleines x. Bei getrackten Konten ruft es DELETE /api/watchlist/:handle
+       auf (Messpunkte bleiben in der Datendatei), beim zuletzt gescannten
+       Namen loescht es nur die Erinnerung in localStorage. Version 2.32.0.
 2.31.0 Vergleich entfernt: Der Bereich "Vergleich" im Reiter Wachstum ist
        weg. Kontoknoepfe und Tabelle (components/CompareCard.tsx) sind
        geloescht, Anleitung und README nennen ihn nicht mehr. Die
