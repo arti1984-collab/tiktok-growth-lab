@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.28.0, Branch main
+Stand: 07.11.2026, Version 2.28.1, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,11 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.28.1 Update ohne Token: Texte in update.ts, den Einstellungen und der
+       README sagen jetzt, dass die Pruefung anonym laeuft und kein Token
+       braucht. Ein Token bleibt optional fuer ein privates Repo oder gegen
+       Drosselung. Am Verhalten aendert sich nichts, nur die Aussagen waren
+       noch auf das private Repo gemuenzt. Version 2.28.1.
 2.28.0 Repo ist wieder oeffentlich: arti1984-collab/tiktok-growth-lab steht
        wieder auf public, damit alle Installationen die Update-Pruefung ohne
        Token lesen koennen. LICENSE und README beschreiben den Quelltext

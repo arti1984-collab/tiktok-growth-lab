@@ -224,7 +224,7 @@ release/        gebaute exe
 Es gibt keinen Account und keine Telemetrie. Alle Berechnungen laufen lokal, ohne Proxy und ohne eigenes Backend.
 Gelesen werden ausschließlich öffentliche TikTok-Webseiten, ein Login ist nicht nötig. Gespeichert werden Profile,
 Messpunkte, Plan und Einstellungen in `data/store.json`. Nach außen gehen nur die Anfragen an tiktok.com, an deinen
-KI-Anbieter (nur mit hinterlegtem Key) und die Update-Prüfung an api.github.com (mit Token, sonst anonym).
+KI-Anbieter (nur mit hinterlegtem Key) und die Update-Prüfung an api.github.com, die anonym läuft und kein Token braucht.
 
 No account, no telemetry. All computation runs locally, with no proxy and no backend of our own. Only public TikTok
 web pages are read, no login is required. Profiles, measurements, the plan and the settings live in

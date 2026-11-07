@@ -3,11 +3,13 @@ import { tr } from "./lang.ts";
 import { effectiveSettings } from "./store.ts";
 
 /**
- * Fragt die neueste Veroeffentlichung auf GitHub ab. Ist das Repo privat,
- * braucht die Abfrage ein Token (Einstellungen oder GITHUB_TOKEN), sonst
- * antwortet GitHub mit 404. Das Ergebnis wird kurz zwischengespeichert, damit
- * nicht jeder Seitenaufruf eine Anfrage kostet; ohne Netz bleibt die App bei
- * "kein Update" statt zu haengen.
+ * Fragt die neueste Veroeffentlichung auf GitHub ab. Das Repo ist oeffentlich,
+ * die Abfrage laeuft anonym und braucht kein Token. Ein Token aus den
+ * Einstellungen oder GITHUB_TOKEN wird weiter mitgeschickt, wenn eins
+ * hinterlegt ist: es hebt die Drosselung der API an und deckt ein privates
+ * Repo ab. Das Ergebnis wird kurz zwischengespeichert, damit nicht jeder
+ * Seitenaufruf eine Anfrage kostet; ohne Netz bleibt die App bei "kein Update"
+ * statt zu haengen.
  */
 
 const REPO = (process.env.UPDATE_REPO || "arti1984-collab/tiktok-growth-lab").trim();
@@ -112,8 +114,8 @@ function probeMessage(kind: ProbeKind, tokenUsed: boolean): string {
             "No access to the repo. Check that the token is valid for this repo and may read contents.",
           )
         : tr(
-            "Ohne Token bleibt ein privates Repo unsichtbar. Token eintragen oder GITHUB_TOKEN in der .env setzen.",
-            "Without a token a private repo stays invisible. Add a token or set GITHUB_TOKEN in the .env.",
+            "Unter diesem Namen ist kein oeffentliches Repo erreichbar. Repo-Namen pruefen; ist es privat, braucht die Pruefung ein Token.",
+            "No public repo is reachable under that name. Check the repo name; if it is private, the check needs a token.",
           );
     default:
       return tr(
@@ -280,8 +282,8 @@ export async function checkForUpdate(force = false): Promise<UpdateInfo> {
                 "Repository or release not found. Check the repo name and the token in the settings.",
               )
             : tr(
-                "Kein Release gefunden. Ist das Repo privat, braucht die Prüfung ein Token in den Einstellungen.",
-                "No release found. If the repo is private, the check needs a token in the settings.",
+                "Kein Release gefunden. Das oeffentliche Repo antwortet, es fehlt nur eine Veroeffentlichung.",
+                "No release found. The public repo answers, it just has no release yet.",
               )
           : /HTTP 401/.test(message)
             ? tr("Das GitHub-Token wurde abgelehnt.", "GitHub rejected the token.")
