@@ -308,7 +308,7 @@ export function SettingsView({
 
         <label className="field">
           <span>
-            {t("GitHub-Token (nur bei privatem Repo)", "GitHub token (private repo only)")}{" "}
+            {t("GitHub-Token (optional)", "GitHub token (optional)")}{" "}
             {settings?.hasGithubToken && (
               <Badge tone="good">
                 {t("gesetzt", "set")} · {settings.githubTokenSource}
@@ -329,8 +329,8 @@ export function SettingsView({
           />
           <small className="muted">
             {t(
-              "Fein abgestuftes Token mit Lesezugriff auf Contents. Bleibt lokal in der Datendatei. Ohne Token findet die Prüfung in einem privaten Repo nichts.",
-              "Fine-grained token with read access to contents. Stays local in the data file. Without a token the check finds nothing in a private repo.",
+              "Nicht nötig: das Repo ist öffentlich, die Prüfung läuft ohne Token. Nur eintragen, wenn das Repo wieder privat gestellt wird oder GitHub drosselt. Bleibt lokal in der Datendatei.",
+              "Not needed: the repo is public, the check runs without a token. Only add one if the repo becomes private again or GitHub throttles. Stays local in the data file.",
             )}
           </small>
         </label>
