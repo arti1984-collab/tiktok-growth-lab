@@ -39,6 +39,9 @@ Befehle (Projektwurzel):
   npm run build:server   Server fuer Electron nach build/server/index.mjs
   npm run dist           Web + Server + portable exe nach release/ + Signatur
   npm run typecheck      tsc --noEmit
+  npm run screenshots -- "<Befehl>"
+                         Screenshot-Lauf: sichert data/store.json und .bak,
+                         nutzt data/screenshot-demo statt der echten Daten
   npm test               Tests fuer Score, Schema, JSON-Rettung, Scan-Eingabe
 
 
@@ -538,4 +541,7 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
 - Jede Aenderung an der Oberflaeche wird gebaut, die Datei im Release
   ersetzt, committet, gepusht.
 - Jede Auslieferung bekommt eine hoehere Nummer, danach Tag und Release.
+- Screenshot-Laeufe nur ueber npm run screenshots: Das sichert data/store.json
+  und .bak nach data/screenshot-backups, prueft die Kopien per SHA-256 und
+  setzt APP_DATA_DIR auf data/screenshot-demo. Port 8787 muss frei sein.
 - Sprache Deutsch, kein Gedankenstrich in eigener Textausgabe.
