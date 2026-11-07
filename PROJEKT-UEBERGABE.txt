@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 06.11.2026, Version 2.27.0, Branch main
+Stand: 07.11.2026, Version 2.28.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -22,7 +22,7 @@ keine Telemetrie. Nach aussen gehen nur drei Dinge: Anfragen an tiktok.com,
 Anfragen an den KI-Anbieter, dessen Key der Nutzer selbst eintraegt, und die
 Update-Pruefung an api.github.com.
 
-Das Projekt liegt privat auf GitHub: arti1984-collab/tiktok-growth-lab
+Das Projekt liegt oeffentlich auf GitHub: arti1984-collab/tiktok-growth-lab
 
 
 2. TECHNIK
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.28.0 Repo ist wieder oeffentlich: arti1984-collab/tiktok-growth-lab steht
+       wieder auf public, damit alle Installationen die Update-Pruefung ohne
+       Token lesen koennen. LICENSE und README beschreiben den Quelltext
+       wieder als einsehbar. Version 2.28.0.
 2.27.0 Repo wieder privat: arti1984-collab/tiktok-growth-lab steht wieder
        auf private. Die Update-Pruefung braucht damit erneut ein Token
        (Einstellungen oder GITHUB_TOKEN), sonst antwortet GitHub mit 404.
