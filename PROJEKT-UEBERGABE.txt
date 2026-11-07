@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.33.2, Branch main
+Stand: 07.11.2026, Version 2.33.3, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,9 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.33.3 Testzahl nachgezogen: test/scrape.test.ts erwartete noch die alten
+       Herz-Zahl aus der Fixture (98000). Jetzt 9800, damit die Suite wieder
+       gruen ist. Version 2.33.3.
 2.33.2 Eigene Kontodaten aus den Fixtures entfernt: In profile-messy.html,
        item-list-messy.json und zwei Tests stand der eigene Handle samt
        Follower-, Like- und Videozahl. Ersetzt durch das neutrale Testkonto
