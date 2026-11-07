@@ -41,6 +41,7 @@ Regeln:
 - Arbeite mit den gelieferten, gescannten Daten. Erfinde keine Zahlen. Wenn Daten fehlen, sag es im dafür vorgesehenen Feld.
 - Sei radikal konkret: echte Hooks in natürlicher Sprache, echte Uhrzeiten, echte Captions. Keine Floskeln wie "sei authentisch".
 - Jeder Tipp muss in einem TikTok-Video umsetzbar sein, ohne Equipment-Käufe.
+- Jeder Hook, jede Idee und jede Caption muss zum gescannten Account passen: gleiche Nische, gleiche Sprache, gleiche Zielgruppe. Ein Satz, den man unter jedes beliebige Profil setzen könnte, ist ein Fehler.
 - Zahlen in JSON-Feldern als echte Zahlen, keine Strings mit Einheiten.`,
     `You are a TikTok growth strategist for the German-speaking market (Germany, Austria, Switzerland).
 You know the 2026 TikTok algorithm: watch time and retention in the first 3 seconds matter most, then shares, saves, comments and
@@ -50,7 +51,7 @@ Rules:
 - Answer with valid JSON only, exactly in the given schema. No markdown, no explanations outside the JSON.
 - Work with the scanned data you receive. Never invent numbers. If data is missing, say so in the field meant for it.
 - Be radically concrete: real hooks in natural language, real times of day, real captions. No filler like "be authentic".
-- Every tip must be doable in a TikTok video without buying equipment.
+- Every hook, idea and caption must fit the scanned account: same niche, same language, same audience. A line that could sit under any profile is a defect.
 - The JSON keys stay as given; every text value inside them is in English, including weekdays.
 - Numbers in JSON fields are real numbers, not strings with units.`,
   );
@@ -68,6 +69,8 @@ function contextBlock(context: ScanContext | undefined): string {
     } · Region: ${profile.region || "unbekannt"}`,
   );
   if (profile.bio) lines.push(`BIO: ${profile.bio.slice(0, 200)}`);
+  const topics = [...new Set(videos.flatMap((video) => video.hashtags.map((tag) => tag.toLowerCase())))].slice(0, 10);
+  if (topics.length > 0) lines.push(`THEMEN AUS DEN VIDEOS: ${topics.map((tag) => `#${tag}`).join(", ")}`);
 
   if (metrics.hasData) {
     lines.push(`METRIKEN aus ${metrics.sampleSize} gescannten Videos:`);
@@ -207,7 +210,14 @@ function modeInstruction(mode: AiMode, payload: AiPayload): string {
     case "caption":
       return `Schreibe 3 Caption-Varianten zum Thema. Jede Caption: erste Zeile = Hook, dann 2-4 kurze Zeilen, dann CTA. Genau 5 Hashtags pro Variante (Mix aus Nische und Reichweite).`;
     case "hooks":
-      return `Schreibe ${Math.max(8, count)} Hooks für die ersten 2 Sekunden. Unterschiedliche Typen, kurz, sprechbar, ohne Clickbait-Lügen.`;
+      return `Schreibe ${Math.max(8, count)} Hooks für die ersten 2 Sekunden, die ausschließlich zu diesem Account passen.
+- Grundlage sind BIO, THEMEN AUS DEN VIDEOS, GESCANNTE VIDEOS und Hashtags aus dem Kontext. Jeder Hook greift ein Thema auf, das dort wirklich vorkommt.
+- Kein Hook, den man unter jedes beliebige Profil setzen könnte. Spricht der Account etwa über Holzarbeit, darf kein Hook über Fitness, Kochen oder Finanzen entstehen.
+- Nische, Sprache und Zielgruppe des Accounts bleiben erhalten. Steht im Feld Nische/Thema etwas anderes, verbinde es mit dem Account, statt ihn zu verlassen.
+- Steht ein konkretes Thema im Feld, zahlt jeder Hook darauf ein.
+- Im Feld "warum" steht der Beleg: welches Video, welche Bio-Zeile oder welcher Hashtag den Hook begründet.
+- Unterschiedliche Typen, kurz, sprechbar, ohne Clickbait-Lügen.
+- Fehlen Scan und Nische, schreibe in "hinweis", welche Angaben fehlen, und erfinde keine Account-Themen.`;
     case "calendar":
       return `Erstelle einen 7-Tage-Content-Plan mit konkreten Uhrzeiten (nutze die besten Zeitfenster aus den Metriken, sonst 11:30 / 17:30 / 20:00).`;
     case "hashtags":
@@ -251,7 +261,7 @@ export async function generate(
       json: true,
       // Ein 28-Tage-Plan passt nicht in die Standardgrenze, sonst bricht die Antwort ab.
       maxTokens: mode === "strategy" ? 8000 : 3000,
-      temperature: mode === "hooks" || mode === "ideas" ? 0.85 : 0.7,
+      temperature: mode === "hooks" ? 0.7 : mode === "ideas" ? 0.85 : 0.7,
     },
   );
 
