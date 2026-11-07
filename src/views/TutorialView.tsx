@@ -96,8 +96,8 @@ const CHAPTERS: Chapter[] = [
   {
     title: ["Wachstum", "Growth"],
     intro: [
-      "Follower-Verlauf für deine eigenen Accounts und für die, die du beobachten willst, dazu Wochenplan, Ziel-Rechner und Vergleich.",
-      "Follower history for your own accounts and the ones you want to watch, plus the weekly plan, the goal calculator and the comparison.",
+      "Follower-Verlauf für deine eigenen Accounts und für die, die du beobachten willst, dazu Wochenplan und Ziel-Rechner.",
+      "Follower history for your own accounts and the ones you want to watch, plus the weekly plan and the goal calculator.",
     ],
     points: [
       {
@@ -140,13 +140,6 @@ const CHAPTERS: Chapter[] = [
         text: [
           "Zuerst das Profil wählen, dann Ziel-Follower und Datum eintragen. „Ziel speichern“ rechnet: wie viele Follower noch fehlen, wie viele pro Tag und pro Woche nötig sind und wie viele Posts und Views daraus folgen. Jedes Profil hat sein eigenes Ziel, und der Startpunkt bleibt gespeichert: darunter steht, wie viele Follower seit dem Zielstart dazugekommen sind. Grundlage der Post-Zahlen ist dein Schnitt an Views je Video aus dem letzten Scan. Zuklappen geht an zwei Stellen: der Titel der Karte legt die ganze Karte weg, die Zeile mit dem gewählten Account nur die Werte, während Profil, Ziel und Datum stehen bleiben. Ein zweiter Klick holt sie jeweils zurück.",
           "Pick the profile first, then enter target followers and a date. “Save goal” works out how many followers are missing, how many per day and per week that needs, and how many posts and views follow from it. Every profile keeps its own goal, and the starting point stays stored: underneath you see how many followers came in since the goal started. The post numbers are based on your average views per video from the last scan. Two places fold: the card title puts the whole card away, the line with the selected account only the values, while the profile, target and date stay in place. A second click brings them back.",
-        ],
-      },
-      {
-        label: ["Vergleich", "Comparison"],
-        text: [
-          "Hakt zwei bis drei Accounts an, dann stehen sie nebeneinander: Follower, plus oder minus der letzten sieben Tage, Summe seit der ersten Messung, Videos, Engagement, Score und Anzahl der Messpunkte. Der stärkste Zuwachs der Woche steht darunter.",
-          "Tick two or three accounts and they line up side by side: followers, plus or minus of the last seven days, the sum since the first measurement, videos, engagement, score and the number of measurements. The strongest gain of the week is named underneath.",
         ],
       },
       {

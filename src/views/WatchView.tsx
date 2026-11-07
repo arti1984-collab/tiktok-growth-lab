@@ -5,7 +5,6 @@ import { useT } from "../lang";
 import type { Account, ScanResult } from "../types";
 import { PlanCard } from "../components/PlanCard";
 import { GoalCard } from "../components/GoalCard";
-import { CompareCard } from "../components/CompareCard";
 import { Alert, EmptyState, Section, Sparkline, Spinner } from "../components/ui";
 import { AccountDetails, type MetricKey } from "../components/AccountDetails";
 
@@ -220,7 +219,6 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
 
       <PlanCard scan={scan} />
       <GoalCard scan={scan} accounts={accounts} />
-      <CompareCard accounts={accounts} />
 
       {detailAccount && (
         <AccountDetails
