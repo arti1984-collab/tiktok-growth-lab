@@ -79,6 +79,12 @@ als Systemmeldung, sobald sie in den nächsten zwei Stunden fällig sind.
 
 ![Einstellungen mit Sprache, Updates und KI-Anbieter](docs/screenshots/einstellungen.png)
 
+### Anleitung
+Die Anleitung im Programm erklärt jeden Tab und jede Schaltfläche, in derselben Reihenfolge wie die Arbeit: erst
+scannen, dann im Wachstum verfolgen, dann im KI-Studio die passende Aufgabe wählen. Sie ändert nichts, sie erklärt nur.
+
+![Anleitung mit den wichtigsten Begriffen je Tab](docs/screenshots/anleitung.png)
+
 ## Installieren
 
 **Windows:** `TikTok-Growth-Lab.exe` herunterladen, starten, fertig. Portabel, keine Admin-Rechte. Beim ersten Start
@@ -189,6 +195,12 @@ versions in the background (against the GitHub releases, no setup needed) and sw
 enough. Planned posts show up as a bar and as a system message once they are due within the next two hours.
 
 ![Settings with language, updates and AI providers](docs/screenshots/einstellungen-en.png)
+
+### Guide
+The in-app guide explains every tab and control in the order you work: scan first, follow the account under growth,
+then pick the fitting task in the AI studio. It changes nothing, it only explains.
+
+![Guide with the key terms for each tab](docs/screenshots/anleitung-en.png)
 
 ## Install
 
