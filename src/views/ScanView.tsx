@@ -94,6 +94,30 @@ export function ScanView({
 
   const estimatedSeconds = Math.round(((videoUrls.length + 2) * (status?.scraping.minDelayMs ?? 1200)) / 1000) + 2;
 
+  /** Nimmt den Namen aus der Schnellwahl: getrackte Konten aus dem Tracking, sonst nur die Erinnerung. */
+  async function removeQuickPick(name: string) {
+    const key = name.toLowerCase();
+    const isTracked = tracked.some((entry) => entry.toLowerCase() === key);
+    if (recent.toLowerCase() === key) {
+      setRecent("");
+      try {
+        window.localStorage.removeItem(RECENT_KEY);
+      } catch {
+        // Nothing to clean up without storage.
+      }
+    }
+    if (!isTracked) return;
+    try {
+      const data = await api.untrack(name);
+      setTracked(data.accounts.map((account) => account.handle));
+    } catch (caught) {
+      setError({
+        message: (caught as ApiError).message ?? t("Entfernen fehlgeschlagen.", "Removing failed."),
+        hint: "",
+      });
+    }
+  }
+
   // Der zuletzt gescannte Name zuerst, dann die getrackten Konten; der Name im Feld fällt raus.
   const quickPicks = useMemo(() => {
     const current = nameFromInput(handle).toLowerCase();
@@ -151,15 +175,20 @@ export function ScanView({
                 <div className="row gap-sm wrap">
                   <span className="muted small">{t("Schnell wählen:", "Quick pick:")}</span>
                   {quickPicks.map((name) => (
-                    <button
-                      key={name}
-                      type="button"
-                      className="chip-btn"
-                      onClick={() => setHandle(`@${name}`)}
-                      title={t(`@${name} einsetzen`, `Use @${name}`)}
-                    >
-                      {name === recent ? `${t("Zuletzt", "Last")}: @${name}` : `@${name}`}
-                    </button>
+                    <span className="quick-chip" key={name}>
+                      <button type="button" onClick={() => setHandle(`@${name}`)} title={t(`@${name} einsetzen`, `Use @${name}`)}>
+                        {name === recent ? `${t("Zuletzt", "Last")}: @${name}` : `@${name}`}
+                      </button>
+                      <button
+                        type="button"
+                        className="quick-chip-remove"
+                        onClick={() => removeQuickPick(name)}
+                        title={t(`@${name} entfernen`, `Remove @${name}`)}
+                        aria-label={t(`@${name} entfernen`, `Remove @${name}`)}
+                      >
+                        ×
+                      </button>
+                    </span>
                   ))}
                 </div>
               )}
