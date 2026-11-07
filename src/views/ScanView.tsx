@@ -7,6 +7,17 @@ import { Alert, Badge, EmptyState, ProgressBar, Section, Spinner, Stat } from ".
 import { VideoCheck } from "../components/VideoCheck";
 import { ReportOverlay } from "../components/ReportOverlay";
 
+/** Memoriert den zuletzt gescannten Namen, damit das Feld nach einem Neustart nicht leer ist. */
+const RECENT_KEY = "scan.recentHandle";
+
+/** Zieht den Namen aus "@name", einem Profil-Link oder einem Video-Link. */
+function nameFromInput(value: string): string {
+  const trimmed = value.trim();
+  const at = trimmed.match(/@([A-Za-z0-9._]+)/);
+  if (at) return at[1].replace(/\.+$/, "");
+  return /^[A-Za-z0-9._]+$/.test(trimmed) ? trimmed : "";
+}
+
 export function ScanView({
   scan,
   onScan,
@@ -20,6 +31,13 @@ export function ScanView({
 }) {
   const t = useT();
   const [handle, setHandle] = useState("");
+  const [recent, setRecent] = useState(() => {
+    try {
+      return window.localStorage.getItem(RECENT_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [reportOpen, setReportOpen] = useState(false);
   const [videoInput, setVideoInput] = useState("");
   const [track, setTrack] = useState(true);
@@ -36,6 +54,22 @@ export function ScanView({
     [videoInput],
   );
 
+  function remember(value: string) {
+    const name = nameFromInput(value);
+    if (!name) return;
+    setRecent(name);
+    try {
+      window.localStorage.setItem(RECENT_KEY, name);
+    } catch {
+      // Without storage the name still stays in this window.
+    }
+  }
+
+  // Nach einem Neustart hält der Server den letzten Scan noch vor, also ist der Name sofort da.
+  useEffect(() => {
+    if (scan?.profile.handle) remember(scan.profile.handle);
+  }, [scan?.profile.handle]);
+
   useEffect(() => {
     if (!loading) return;
     const started = Date.now();
@@ -48,6 +82,7 @@ export function ScanView({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (loading) return;
+    remember(handle);
     setLoading(true);
     setError(null);
     setElapsed(0);
@@ -85,6 +120,16 @@ export function ScanView({
                 spellCheck={false}
                 required
               />
+              {recent && recent.toLowerCase() !== nameFromInput(handle).toLowerCase() && (
+                <button
+                  type="button"
+                  className="chip-btn"
+                  onClick={() => setHandle(`@${recent}`)}
+                  title={t(`@${recent} einsetzen`, `Use @${recent}`)}
+                >
+                  {t("Zuletzt", "Last")}: @{recent}
+                </button>
+              )}
             </label>
             <label className="field">
               <span>{t("Video-Links (optional, je Zeile einer)", "Video links (optional, one per line)")}</span>

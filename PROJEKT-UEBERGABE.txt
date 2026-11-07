@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.28.1, Branch main
+Stand: 07.11.2026, Version 2.29.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,11 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.29.0 Scan-Feld mit letztem Namen: Unter dem Namensfeld in "Account
+       scannen" steht ein kleiner Knopf "Zuletzt: @name", der den Namen
+       einsetzt. Der Name kommt aus dem letzten Scan und bleibt in
+       localStorage (scan.recentHandle) ueber Neustarts erhalten. Version
+       2.29.0.
 2.28.1 Update ohne Token: Texte in update.ts, den Einstellungen und der
        README sagen jetzt, dass die Pruefung anonym laeuft und kein Token
        braucht. Ein Token bleibt optional fuer ein privates Repo oder gegen
