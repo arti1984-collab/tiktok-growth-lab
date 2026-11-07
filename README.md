@@ -11,7 +11,7 @@ daraus schreiben. Alles läuft auf dem eigenen Rechner, ohne Konto und ohne Clou
 | Windows | `TikTok-Growth-Lab.exe`, portabel, kein Installer |
 | Web | lokaler Server, `npm start`, dann <http://localhost:8787> |
 | Sprachen | Deutsch und Englisch, umschaltbar in den Einstellungen |
-| Daten | nur lokal in `data/store.json` |
+| Daten | lokal in `data/store.json` und `secrets.dat` |
 
 ## Was es kann
 
@@ -131,7 +131,7 @@ from it. Everything runs on your own machine, no account, no cloud.
 | Windows | `TikTok-Growth-Lab.exe`, portable, no installer |
 | Web | local server, `npm start`, then <http://localhost:8787> |
 | Languages | German and English, switchable in the settings |
-| Data | local only in `data/store.json` |
+| Data | local in `data/store.json` and `secrets.dat` |
 
 ## What it does
 
@@ -173,7 +173,8 @@ Put accounts on a watchlist, every scan and every refresh adds a point to the hi
 out no follower history: the curve comes from your own measurements.
 
 ### Weekly report
-A printable view with the key numbers, the best videos and the recommendations. The browser turns it into a PDF.
+An overlay with the key numbers, the best videos and the recommendations. "Copy text" puts the same summary on the
+clipboard.
 
 ### Data safety
 "Export data" in the settings writes accounts, measurements, the weekly plan, goals and the last scans to a JSON

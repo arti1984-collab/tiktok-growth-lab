@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.34.0, Branch main
+Stand: 07.11.2026, Version 2.34.1, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,11 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.34.1 Aussagen gegen die App geprueft: Wochenbericht ist ein Overlay mit
+       Kopierfunktion, kein PDF. Update-Ablauf richtiggestellt: Download im
+       Hintergrund, Tausch beim Beenden, Sofort-Neustart in der Windows-App.
+       Systemstatus nennt jetzt die tatsaechlichen Felder. Auch die
+       Android-Anleitung verspricht keinen PDF-Bericht mehr. Version 2.34.1.
 2.34.0 Anleitung auf Deutsch und Englisch ergaenzt: Schnellwahl mit x, Strg +
        Enter, gespeicherte Scans, Datensicherung mit Export und Import, dazu
        der verschluesselte Key in secrets.dat. README: veralteter Vergleich im

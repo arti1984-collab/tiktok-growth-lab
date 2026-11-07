@@ -101,8 +101,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Wochenbericht", "Weekly report"],
         text: [
-          "Der Knopf im Profilfeld öffnet den Bericht: Follower, Score, Engagement, Views je Video, Posts pro Woche, die stärksten Videos und die Hinweise. „Text kopieren“ legt dieselbe Zusammenfassung in die Zwischenablage.",
-          "The button in the profile card opens the report: followers, score, engagement, views per video, posts per week, the strongest videos and the notes. “Copy text” puts the same summary on the clipboard.",
+          "Der Knopf neben dem Score öffnet den Bericht: Follower, Score, Engagement, Views je Video, Posts pro Woche, die Videos im Sample, die stärksten Videos und die Hinweise. „Text kopieren“ legt dieselbe Zusammenfassung in die Zwischenablage.",
+          "The button next to the score opens the report: followers, score, engagement, views per video, posts per week, the videos in the sample, the strongest videos and the notes. “Copy text” puts the same summary on the clipboard.",
         ],
       },
       {
@@ -286,8 +286,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Updates", "Updates"],
         text: [
-          "„Nach Updates suchen“ fragt die Releases auf GitHub ab und zeigt, welche Version installiert ist und welche zuletzt erschienen ist. Die Prüfung läuft beim Start und danach alle fünf Minuten von selbst, ohne Einrichtung. Der Hinweis erscheint oben auf jeder Seite. Die App tauscht sich nicht selbst aus.",
-          "“Check for updates” asks the releases on GitHub and shows which version is installed and which one came out last. The check runs on start and every five minutes after that, without any setup. The notice appears on top of every page. The app never replaces itself.",
+          "„Nach Updates suchen“ fragt die Releases auf GitHub ab und zeigt, welche Version installiert ist und welche zuletzt erschienen ist. Die Prüfung läuft beim Start und danach alle fünf Minuten von selbst, ohne Einrichtung. Der Hinweis erscheint oben auf jeder Seite. In der Windows-App lädt die neue Datei im Hintergrund und ersetzt die alte beim Beenden, „Jetzt neu starten“ macht das sofort. In der Web-Version führt der Hinweis nur zur Release-Seite.",
+          "“Check for updates” asks the releases on GitHub and shows which version is installed and which one came out last. The check runs on start and every five minutes after that, without any setup. The notice appears on top of every page. In the Windows app the new file downloads in the background and replaces the old one when the app quits, “Restart now” does it right away. In the web version the notice only links to the release page.",
         ],
       },
       {
@@ -314,8 +314,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Systemstatus", "System status"],
         text: [
-          "Version, Speicherort der Daten, Anzahl der Cache-Einträge und ob ein KI-Key gesetzt ist.",
-          "Version, where the data lives, how many cache entries exist and whether an AI key is set.",
+          "Version, Anbieter und Modell, Abstand und Cookie-Status des Scanners, Anzahl der Cache-Einträge, Zeitzone und Erreichbarkeit.",
+          "Version, provider and model, the scanner delay and cookie status, how many cache entries exist, timezone and reachability.",
         ],
       },
     ],
