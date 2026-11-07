@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.29.0, Branch main
+Stand: 07.11.2026, Version 2.30.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.30.0 Getrackte Konten im Scan-Feld: Unter dem Namensfeld stehen alle
+       Konten aus dem Wachstums-Tracking als kleine Knoepfe, vorne der
+       zuletzt gescannte Name. Die Liste kommt aus GET /api/watchlist und
+       wird nach jedem Scan neu geladen. Version 2.30.0.
 2.29.0 Scan-Feld mit letztem Namen: Unter dem Namensfeld in "Account
        scannen" steht ein kleiner Knopf "Zuletzt: @name", der den Namen
        einsetzt. Der Name kommt aus dem letzten Scan und bleibt in

@@ -38,6 +38,7 @@ export function ScanView({
       return "";
     }
   });
+  const [tracked, setTracked] = useState<string[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const [videoInput, setVideoInput] = useState("");
   const [track, setTrack] = useState(true);
@@ -70,6 +71,20 @@ export function ScanView({
     if (scan?.profile.handle) remember(scan.profile.handle);
   }, [scan?.profile.handle]);
 
+  // Wächst mit jedem Scan, damit ein neu aufgenommenes Konto sofort als Knopf auftaucht.
+  useEffect(() => {
+    let active = true;
+    api
+      .watchlist()
+      .then((data) => {
+        if (active) setTracked(data.accounts.map((account) => account.handle));
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [scan?.scannedAt]);
+
   useEffect(() => {
     if (!loading) return;
     const started = Date.now();
@@ -78,6 +93,18 @@ export function ScanView({
   }, [loading]);
 
   const estimatedSeconds = Math.round(((videoUrls.length + 2) * (status?.scraping.minDelayMs ?? 1200)) / 1000) + 2;
+
+  // Der zuletzt gescannte Name zuerst, dann die getrackten Konten; der Name im Feld fällt raus.
+  const quickPicks = useMemo(() => {
+    const current = nameFromInput(handle).toLowerCase();
+    const seen = new Set<string>();
+    return [recent, ...tracked].filter((name) => {
+      const key = name.toLowerCase();
+      if (!key || key === current || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [recent, tracked, handle]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -120,15 +147,21 @@ export function ScanView({
                 spellCheck={false}
                 required
               />
-              {recent && recent.toLowerCase() !== nameFromInput(handle).toLowerCase() && (
-                <button
-                  type="button"
-                  className="chip-btn"
-                  onClick={() => setHandle(`@${recent}`)}
-                  title={t(`@${recent} einsetzen`, `Use @${recent}`)}
-                >
-                  {t("Zuletzt", "Last")}: @{recent}
-                </button>
+              {quickPicks.length > 0 && (
+                <div className="row gap-sm wrap">
+                  <span className="muted small">{t("Schnell wählen:", "Quick pick:")}</span>
+                  {quickPicks.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="chip-btn"
+                      onClick={() => setHandle(`@${name}`)}
+                      title={t(`@${name} einsetzen`, `Use @${name}`)}
+                    >
+                      {name === recent ? `${t("Zuletzt", "Last")}: @${name}` : `@${name}`}
+                    </button>
+                  ))}
+                </div>
               )}
             </label>
             <label className="field">
