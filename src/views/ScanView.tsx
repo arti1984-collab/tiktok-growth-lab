@@ -160,7 +160,17 @@ export function ScanView({
           "Enter your profile link or name. Below the profile you then see where it breaks down and what to do better.",
         )}
       >
-        <form className="scan-form" onSubmit={submit}>
+        <form
+          className="scan-form"
+          onSubmit={submit}
+          onKeyDown={(event) => {
+            // Strg und Enter startet den Scan, ohne zur Maus zu greifen.
+            if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.requestSubmit();
+            }
+          }}
+        >
           <div className="grid-two">
             <label className="field">
               <span>{t("Link oder Name des Profils", "Profile link or name")}</span>
@@ -216,7 +226,12 @@ export function ScanView({
               <input type="checkbox" checked={track} onChange={(event) => setTrack(event.target.checked)} />
               <span>{t("In Wachstums-Tracking aufnehmen", "Add to growth tracking")}</span>
             </label>
-            <button className="btn btn-primary" type="submit" disabled={loading || !handle.trim()}>
+            <button
+              className="btn btn-primary"
+              type="submit"
+              disabled={loading || !handle.trim()}
+              title={t("Strg + Enter startet den Scan", "Ctrl + Enter starts the scan")}
+            >
               {loading ? <Spinner label={`${t("Scanne…", "Scanning…")} ${elapsed}s`} /> : t("Schwächen prüfen", "Check weaknesses")}
             </button>
           </div>

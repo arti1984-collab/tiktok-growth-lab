@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "../api";
 import { formatCompact, formatDateTime, formatSigned, formatNumber } from "../format";
 import { useT } from "../lang";
-import type { Account, ScanResult } from "../types";
+import type { Account, ScanEntry, ScanResult } from "../types";
 import { PlanCard } from "../components/PlanCard";
 import { GoalCard } from "../components/GoalCard";
 import { Alert, EmptyState, Section, Sparkline, Spinner } from "../components/ui";
@@ -16,6 +16,7 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<{ handle: string; metric: MetricKey } | null>(null);
+  const [scanned, setScanned] = useState<ScanEntry[]>([]);
 
   useEffect(() => {
     api
@@ -23,7 +24,21 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
       .then((data) => setAccounts(data.accounts))
       .catch((caught: ApiError) => setError(caught.message))
       .finally(() => setLoading(false));
+    // Frisch gescannte Konten, die noch nicht getrackt sind, als Schnellwahl.
+    api
+      .scans()
+      .then((data) => setScanned(data.scans))
+      .catch(() => undefined);
   }, []);
+
+  const quickPicks = useMemo(() => {
+    const typed = handle.trim().replace(/^@/, "").toLowerCase();
+    return scanned.filter((entry) => {
+      const key = entry.handle.toLowerCase();
+      if (key === typed) return false;
+      return !accounts.some((account) => account.handle.toLowerCase() === key);
+    });
+  }, [scanned, accounts, handle]);
 
   // Keep the open detail in sync after a refresh.
   const detailAccount = detail ? accounts.find((account) => account.handle === detail.handle) ?? null : null;
@@ -36,6 +51,7 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
     try {
       const data = await api.track(handle.trim());
       setAccounts(data.accounts);
+      setScanned((entries) => entries.filter((entry) => entry.handle.toLowerCase() !== data.account.handle.toLowerCase()));
       setHandle("");
     } catch (caught) {
       setError((caught as ApiError).message);
@@ -99,6 +115,22 @@ export function WatchView({ scan }: { scan: ScanResult | null }) {
             {busy === "add" ? <Spinner label={t("Lade…", "Loading…")} /> : t("Hinzufügen", "Add")}
           </button>
         </form>
+        {quickPicks.length > 0 && (
+          <div className="row gap-sm wrap">
+            <span className="muted small">{t("Zuletzt gescannt:", "Recently scanned:")}</span>
+            {quickPicks.map((entry) => (
+              <button
+                key={entry.handle}
+                type="button"
+                className="chip-btn"
+                onClick={() => setHandle(`@${entry.handle}`)}
+                title={t(`@${entry.handle} einsetzen`, `Use @${entry.handle}`)}
+              >
+                @{entry.handle}
+              </button>
+            ))}
+          </div>
+        )}
         {error && <Alert kind="error">{error}</Alert>}
       </Section>
 

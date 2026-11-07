@@ -3,7 +3,7 @@ import { ApiError, api } from "../api";
 import { useT } from "../lang";
 import type { FreeScan, Provider, PublicSettings, Status, TokenProbe, UpdateInfo } from "../types";
 import { Alert, Badge, Section, Spinner } from "../components/ui";
-import { formatDecimal } from "../format";
+import { formatDateTime, formatDecimal } from "../format";
 
 const normalizeUrl = (value: string) => value.trim().replace(/\/+$/, "").toLowerCase();
 
@@ -246,6 +246,57 @@ export function SettingsView({
       onStatusChange();
     } catch (caught) {
       setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function exportData() {
+    setBusy("export");
+    setMessage(null);
+    try {
+      const data = await api.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `tiktok-growth-lab-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setMessage({ kind: "success", text: t("Export erstellt.", "Export created.") });
+    } catch (caught) {
+      setMessage({ kind: "error", text: (caught as ApiError).message });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function importDataFile(file: File) {
+    setBusy("import");
+    setMessage(null);
+    try {
+      const raw = await file.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        throw new ApiError(t("Die Datei ist kein gültiges JSON.", "The file is not valid JSON."));
+      }
+      const data = await api.importData(parsed);
+      setSettings(data.settings);
+      setMessage({
+        kind: "success",
+        text: t(
+          `${data.accounts} Konten, ${data.plan} Termine und ${data.scans} Scans übernommen.`,
+          `${data.accounts} accounts, ${data.plan} slots and ${data.scans} scans imported.`,
+        ),
+      });
+      onStatusChange();
+    } catch (caught) {
+      const error = caught as ApiError;
+      setMessage({ kind: "error", text: `${error.message} ${error.hint ?? ""}`.trim() });
     } finally {
       setBusy(null);
     }
@@ -731,6 +782,88 @@ export function SettingsView({
           {t("Key & Cookie löschen", "Delete key & cookie")}
         </button>
       </div>
+
+      <Section
+        title={t("Datensicherung", "Data safety")}
+        subtitle={t(
+          "Alle Messreihen liegen in einer Datei auf diesem Rechner. Jede Änderung legt vorher den alten Stand als Sicherung daneben.",
+          "All measurements live in one file on this computer. Every change copies the previous state next to it as a backup.",
+        )}
+        actions={
+          <button className="btn" onClick={() => void exportData()} disabled={busy !== null}>
+            {busy === "export" ? <Spinner label={t("Erstelle…", "Creating…")} /> : t("Daten exportieren", "Export data")}
+          </button>
+        }
+      >
+        <p className="muted small">
+          {t(
+            "Der Export enthält Konten, Messpunkte, Wochenplan und die letzten Scans. API-Key, TikTok-Cookies und GitHub-Token bleiben außen vor.",
+            "The export holds accounts, measurements, the weekly plan and the last scans. The API key, TikTok cookies and the GitHub token stay out.",
+          )}
+        </p>
+        {status?.storage && (
+          <ul className="kv">
+            <li>
+              <span>{t("Datei", "File")}</span>
+              <strong className="small">{status.storage.file}</strong>
+            </li>
+            <li>
+              <span>{t("Sicherung", "Backup")}</span>
+              <strong className="small">
+                {status.storage.backupAt
+                  ? `${formatDateTime(status.storage.backupAt)} · ${status.storage.backup}`
+                  : t("noch keine", "none yet")}
+              </strong>
+            </li>
+            <li>
+              <span>{t("Inhalt", "Contents")}</span>
+              <strong>
+                {status.storage.accounts} {t("Konten", "accounts")} · {status.storage.measurements}{" "}
+                {t("Messpunkte", "measurements")} · {status.storage.plan} {t("Termine", "slots")} · {status.storage.scans}{" "}
+                {t("Scans", "scans")}
+              </strong>
+            </li>
+          </ul>
+        )}
+        {status?.storage?.recoveredFromBackup && (
+          <Alert kind="warn">
+            {t(
+              `Die Datendatei war unlesbar, die App hat die Sicherung geladen. Die alte Datei liegt unter ${status.storage.brokenFile ?? "store.json.broken"}.`,
+              `The data file was unreadable, the app loaded the backup. The old file sits at ${status.storage.brokenFile ?? "store.json.broken"}.`,
+            )}
+          </Alert>
+        )}
+        <label className="field">
+          <span>{t("Sicherung einlesen", "Load a backup")}</span>
+          <input
+            type="file"
+            accept="application/json,.json"
+            disabled={busy !== null}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              if (
+                !window.confirm(
+                  t(
+                    "Die Datei ersetzt Konten, Messreihen, Plan und Scans. Der bisherige Stand bleibt als .bak erhalten. Fortfahren?",
+                    "The file replaces accounts, measurements, plan and scans. The previous state stays as .bak. Continue?",
+                  ),
+                )
+              ) {
+                return;
+              }
+              void importDataFile(file);
+            }}
+          />
+          <small className="muted">
+            {t(
+              "Nur Exportdateien dieser App. Vor dem Einlesen wird der aktuelle Stand gesichert.",
+              "Only export files from this app. The current state is backed up before reading.",
+            )}
+          </small>
+        </label>
+      </Section>
 
       {message && <Alert kind={message.kind}>{message.text}</Alert>}
 

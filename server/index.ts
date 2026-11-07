@@ -25,10 +25,16 @@ import {
   addSnapshot,
   deletePlanEntry,
   effectiveSettings,
+  exportData,
+  importData,
+  ImportError,
   listPlan,
   updatePlanEntry,
   listAccounts,
+  listStoredScans,
   publicSettings,
+  saveStoredScan,
+  storeInfo,
   trackAccount,
   untrackAccount,
   updateSettings,
@@ -71,6 +77,39 @@ app.use((req, res, next) => {
   next();
 });
 
+/**
+ * Nur der eigene Ursprung darf schreiben: eine beliebige Seite im Browser
+ * koennte sonst Konten anlegen oder Einstellungen aendern. Anfragen ohne
+ * Origin-Kopf (curl, Skripte auf diesem Rechner) bleiben erlaubt.
+ */
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+app.use((req, res, next) => {
+  if (!MUTATING_METHODS.has(req.method)) {
+    next();
+    return;
+  }
+  const origin = req.headers.origin;
+  if (!origin) {
+    next();
+    return;
+  }
+  let hostname = "";
+  try {
+    hostname = new URL(origin).hostname.toLowerCase();
+  } catch {
+    hostname = "";
+  }
+  if (ALLOWED_HOSTNAMES.has(hostname)) {
+    next();
+    return;
+  }
+  res.status(403).json({
+    error: tr("Anfrage von einer fremden Seite abgelehnt.", "Request from a foreign site rejected."),
+    code: "FOREIGN_ORIGIN",
+    hint: tr("Nur die geöffnete App darf den Server ändern.", "Only the opened app may change the server."),
+  });
+});
+
 type ScanResult = {
   profile: Profile;
   videos: Video[];
@@ -83,6 +122,10 @@ type ScanResult = {
 
 /** Last scan per handle – used to ground the AI in real numbers. */
 const lastScans = new Map<string, ScanResult>();
+// Die Datendatei haelt die letzten Scans, damit ein Neustart die Analyse nicht loescht.
+for (const stored of listStoredScans()) {
+  lastScans.set(stored.profile.handle.toLowerCase(), stored);
+}
 
 /** Der juengste Scan ist die Messlatte fuer die eigenen Posts. */
 function newestScan(): ScanResult | null {
@@ -186,6 +229,7 @@ app.get("/api/status", (_req, res) => {
       browserFallback: browserFallbackAvailable(),
     },
     diagnostics: diagnostics(),
+    storage: storeInfo(),
   });
 });
 
@@ -333,6 +377,7 @@ app.post(
       timezone,
     };
     lastScans.set(profile.handle.toLowerCase(), result);
+    saveStoredScan(result);
 
     // Erledigte Plan-Posts im Hintergrund nachmessen; der Scan wartet nicht darauf.
     void refreshPlanResults().catch(() => undefined);
@@ -483,6 +528,49 @@ app.delete("/api/watchlist/:handle", (req, res) => {
   if (!removed)
     return res.status(404).json({ error: tr("Account ist nicht in der Watchlist.", "This account is not on the watchlist.") });
   res.json({ accounts: listAccounts().map(accountView) });
+});
+
+/** Die gespeicherten Scans ohne Rohdaten: Name, Follower und Zeitpunkt. */
+app.get("/api/scans", (_req, res) => {
+  res.json({
+    scans: listStoredScans().map((scan) => ({
+      handle: scan.profile.handle,
+      nickname: scan.profile.nickname,
+      followers: scan.profile.followers,
+      scannedAt: scan.scannedAt,
+    })),
+  });
+});
+
+/* -------------------------------------------------------------------- data */
+
+app.get("/api/data/export", (_req, res) => {
+  const name = `tiktok-growth-lab-${new Date().toISOString().slice(0, 10)}.json`;
+  res.setHeader("content-disposition", `attachment; filename="${name}"`);
+  res.json(exportData());
+});
+
+/**
+ * Ersetzt Messreihen, Plan und Scans. Schluessel und Cookies bleiben, wie sie
+ * sind; vorher sichert der Speicher den alten Stand als .bak.
+ */
+app.post("/api/data/import", (req, res) => {
+  try {
+    const counts = importData(req.body?.data ?? req.body);
+    res.json({ ...counts, settings: publicSettings(), storage: storeInfo() });
+  } catch (error) {
+    const message =
+      error instanceof ImportError
+        ? tr(error.message, "The file is not a TikTok Growth Lab export.")
+        : tr("Import fehlgeschlagen.", "Import failed.");
+    res.status(400).json({
+      error: message,
+      hint: tr(
+        "In den Einstellungen unter Datensicherung eine Exportdatei wählen.",
+        "Pick an export file under Data safety in the settings.",
+      ),
+    });
+  }
 });
 
 /* ------------------------------------------------------------------- video */

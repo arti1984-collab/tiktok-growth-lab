@@ -8,8 +8,10 @@ import type {
   PlanStatus,
   Provider,
   PublicSettings,
+  ScanEntry,
   ScanResult,
   Status,
+  StorageInfo,
   TokenProbe,
   UpdateInfo,
   Video,
@@ -132,6 +134,18 @@ export const api = {
 
   untrack: (handle: string) =>
     request<{ accounts: Account[] }>(`/api/watchlist/${encodeURIComponent(handle)}`, { method: "DELETE" }),
+
+  /** Die gespeicherten Scans, neueste zuerst. */
+  scans: () => request<{ scans: ScanEntry[] }>("/api/scans"),
+
+  /** Vollstaendige Sicherung der eigenen Daten, ohne Schluessel und Cookies. */
+  exportData: () => request<Record<string, unknown>>("/api/data/export"),
+
+  importData: (data: unknown) =>
+    request<{ accounts: number; plan: number; scans: number; settings: PublicSettings; storage: StorageInfo }>(
+      "/api/data/import",
+      { method: "POST", body: JSON.stringify({ data }) },
+    ),
 
   settings: () => request<PublicSettings>("/api/settings"),
 

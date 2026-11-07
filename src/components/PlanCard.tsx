@@ -172,7 +172,7 @@ export function PlanCard({ scan }: { scan: ScanResult | null }) {
             />
             <Stat
               label={t("Über deinem Median", "Above your median")}
-              value={`${feedback.overMedian} von ${feedback.measured}`}
+              value={t(`${feedback.overMedian} von ${feedback.measured}`, `${feedback.overMedian} of ${feedback.measured}`)}
               tone={feedback.overMedian * 2 > feedback.measured ? "good" : "warn"}
               hint={t("gegen den Median des letzten Scans", "against the median of the last scan")}
             />

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, dialog, shell } from "electron";
+import { app, BrowserWindow, Menu, dialog, shell, safeStorage } from "electron";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import net from "node:net";
@@ -12,9 +12,11 @@ const SERVER_ENTRY = path.join(ROOT, "build", "server", "index.mjs");
  * Fixed folder name: Electron would otherwise derive it from package.json ("tiktok-growth-lab")
  * while the window and the .exe are called "TikTok Growth Lab".
  */
-const DATA_DIR = app.isPackaged
-  ? path.join(app.getPath("appData"), "TikTok Growth Lab", "data")
-  : path.join(ROOT, "data");
+const DATA_DIR = (process.env.APP_DATA_DIR || "").trim()
+  ? path.resolve(process.env.APP_DATA_DIR)
+  : app.isPackaged
+    ? path.join(app.getPath("appData"), "TikTok Growth Lab", "data")
+    : path.join(ROOT, "data");
 const ICON = path.join(ROOT, "build", "icon.ico");
 
 let mainWindow = null;
@@ -208,6 +210,41 @@ async function boot() {
   }
 
   fs.mkdirSync(DATA_DIR, { recursive: true });
+
+  /**
+   * Der API-Key liegt verschluesselt per Windows-DPAPI neben der Datendatei.
+   * Ohne diesen Empfaenger (Web-Betrieb) bleibt er in store.json.
+   */
+  const SECRETS_FILE = path.join(DATA_DIR, "secrets.dat");
+  globalThis.__tiktokSecrets = {
+    read: () => {
+      try {
+        return safeStorage.decryptString(fs.readFileSync(SECRETS_FILE));
+      } catch {
+        return "";
+      }
+    },
+    write: (value) => {
+      try {
+        if (!safeStorage.isEncryptionAvailable()) {
+          log("secrets: encryption not available");
+          return false;
+        }
+        fs.writeFileSync(SECRETS_FILE, safeStorage.encryptString(value));
+        return true;
+      } catch (error) {
+        log(`secrets write error: ${error?.message || error}`);
+        return false;
+      }
+    },
+    clear: () => {
+      try {
+        fs.rmSync(SECRETS_FILE, { force: true });
+      } catch {
+        // Es lag nichts da.
+      }
+    },
+  };
 
   const port = await findFreePort();
   const url = `http://127.0.0.1:${port}`;

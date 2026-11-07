@@ -114,6 +114,19 @@ export type ScanResult = {
   timezone: string;
 };
 
+export type StorageInfo = {
+  file: string;
+  backup: string;
+  backupAt: number | null;
+  size: number;
+  recoveredFromBackup: boolean;
+  brokenFile: string | null;
+  accounts: number;
+  measurements: number;
+  plan: number;
+  scans: number;
+};
+
 export type Status = {
   ok: boolean;
   version: string;
@@ -122,6 +135,15 @@ export type Status = {
   ai: { configured: boolean; baseUrl: string; model: string };
   server: { host: string; localOnly: boolean };
   scraping: { minDelayMs: number; cookieSet: boolean; cacheEntries: number };
+  storage?: StorageInfo;
+};
+
+/** Ein gespeicherter Scan, ohne Rohdaten: genug fuer die Schnellwahl. */
+export type ScanEntry = {
+  handle: string;
+  nickname: string;
+  followers: number;
+  scannedAt: number;
 };
 
 export type PlanStatus = "planned" | "done" | "skipped";

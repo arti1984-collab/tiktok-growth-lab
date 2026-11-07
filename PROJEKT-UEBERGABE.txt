@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.32.0, Branch main
+Stand: 07.11.2026, Version 2.33.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,24 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.33.0 Sechs Nachbesserungen:
+       - Datensicherung: storeFile.ts schreibt erst in eine Temp-Datei,
+         legt den alten Stand als store.json.bak ab und laedt bei
+         unlesbarer Hauptdatei die Sicherung; die kaputte Datei bleibt als
+         store.json.broken-<zeit> erhalten. Neu: GET /api/data/export,
+         POST /api/data/import und eine Karte "Datensicherung" in den
+         Einstellungen.
+       - Letzte Scans liegen in der Datendatei (max. 5), damit Analyse,
+         Wochenplan und KI-Kontext einen Neustart ueberleben.
+       - Schreibende Anfragen mit fremdem Origin-Kopf werden mit 403 und
+         Code FOREIGN_ORIGIN abgelehnt.
+       - API-Key verschluesselt per safeStorage in secrets.dat (Electron),
+         alte Keys wandern beim Start dorthin; Web-Betrieb bleibt bei
+         store.json.
+       - Tests fuer Datendatei und Speicher (test/storeFile.test.ts,
+         test/store.test.ts).
+       - Strg+Enter startet den Scan im Scan-Feld, gespeicherte Scans
+         erscheinen im Wachstums-Reiter als Schnellwahl. Version 2.33.0.
 2.32.0 Namen in der Schnellwahl loeschen: Jeder Name im Scan-Feld hat ein
        kleines x. Bei getrackten Konten ruft es DELETE /api/watchlist/:handle
        auf (Messpunkte bleiben in der Datendatei), beim zuletzt gescannten
