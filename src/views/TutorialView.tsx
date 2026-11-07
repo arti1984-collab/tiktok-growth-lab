@@ -22,6 +22,27 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
+        label: ["Schnellwahl", "Quick pick"],
+        text: [
+          "Unter dem Feld stehen der zuletzt gescannte Name und die getrackten Konten. Ein Klick setzt den Namen ein. Das × daneben nimmt ihn aus der Liste: ein getracktes Konto verschwindet dabei auch aus der Watchlist, der zuletzt gescannte Name nur aus der Erinnerung.",
+          "Below the field sit the last scanned name and your tracked accounts. One click fills the name in. The × next to it removes it from the list: a tracked account also leaves the watchlist, the last scanned name only loses the reminder.",
+        ],
+      },
+      {
+        label: ["Strg + Enter", "Ctrl + Enter"],
+        text: [
+          "Startet den Scan direkt aus dem Feld, ohne Maus.",
+          "Starts the scan straight from the field, without the mouse.",
+        ],
+      },
+      {
+        label: ["Gespeicherte Scans", "Stored scans"],
+        text: [
+          "Die letzten fünf Scans bleiben in der Datendatei. Nach einem Neustart stehen Analyse, Video-Check und der Kontext der KI für diese Konten wieder bereit, ohne erneuten Scan.",
+          "The last five scans stay in the data file. After a restart, analysis, video check and the AI context for those accounts are available again without a new scan.",
+        ],
+      },
+      {
         label: ["Scannen", "Scanning"],
         text: [
           "Startet die Abfrage. Profil, Follower und die Videos kommen von TikTok, jede Rechnung passiert danach lokal auf deinem Rechner.",
@@ -251,8 +272,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["API-Key", "API key"],
         text: [
-          "Liegt in der Datendatei und wird nie an den Browser zurückgegeben. Ein gespeicherter Key erscheint nur noch als Maske.",
-          "Lives in the data file and is never sent back to the browser. A stored key only appears as a mask.",
+          "In der Desktop-App liegt er verschlüsselt über Windows-DPAPI in secrets.dat neben der Datendatei, in der Web-Version in store.json. Zurück an den Browser geht er nie, ein gespeicherter Key erscheint nur als Maske.",
+          "In the desktop app it sits encrypted through Windows DPAPI in secrets.dat next to the data file, in the web version in store.json. It never goes back to the browser, a stored key only appears as a mask.",
         ],
       },
       {
@@ -284,6 +305,13 @@ const CHAPTERS: Chapter[] = [
         ],
       },
       {
+        label: ["Datensicherung", "Data safety"],
+        text: [
+          "„Daten exportieren“ schreibt Konten, Messpunkte, Wochenplan, Ziele und die letzten Scans als JSON-Datei. API-Key, TikTok-Cookie und GitHub-Token sind nicht enthalten. „Sicherung einlesen“ ersetzt diese Bereiche nach einer Rückfrage, der bisherige Stand bleibt als store.json.bak liegen. Bei jedem Speichern legt die App ohnehin eine Sicherung an; ist die Datendatei unlesbar, lädt sie die Sicherung und legt die kaputte Datei mit Zeitstempel daneben.",
+          "“Export data” writes accounts, measurements, the weekly plan, goals and the last scans to a JSON file. The API key, TikTok cookie and GitHub token are not included. “Load a backup” replaces those areas after a confirmation, the previous state stays as store.json.bak. Every save already copies the previous state as a backup; if the data file is unreadable, the app loads the backup and moves the broken file aside with a timestamp.",
+        ],
+      },
+      {
         label: ["Systemstatus", "System status"],
         text: [
           "Version, Speicherort der Daten, Anzahl der Cache-Einträge und ob ein KI-Key gesetzt ist.",
@@ -299,8 +327,8 @@ const CHAPTERS: Chapter[] = [
       {
         label: ["Web und Desktop", "Web and desktop"],
         text: [
-          "data/store.json im Projektordner, in der Desktop-App unter %APPDATA%\\TikTok Growth Lab\\data.",
-          "data/store.json in the project folder, in the desktop app under %APPDATA%\\TikTok Growth Lab\\data.",
+          "data/store.json im Projektordner, in der Desktop-App unter %APPDATA%\\TikTok Growth Lab\\data. Daneben liegen store.json.bak als Sicherung und, in der Desktop-App, secrets.dat mit dem verschlüsselten API-Key.",
+          "data/store.json in the project folder, in the desktop app under %APPDATA%\\TikTok Growth Lab\\data. Next to it sit store.json.bak as the backup and, in the desktop app, secrets.dat with the encrypted API key.",
         ],
       },
       {

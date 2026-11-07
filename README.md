@@ -20,7 +20,9 @@ Profil und die neuesten 15 Videos werden beim Scan von tiktok.com gelesen: Views
 Länge, Sound, Hashtags und Uhrzeit. Daraus entstehen Engagement-Rate, Views pro Follower, Median, Posting-Rhythmus,
 ein Growth-Score von 0 bis 100, die besten Zeitfenster und automatisch formulierte Empfehlungen.
 
-Ein Feld reicht: Link oder Name des Profils eintragen, "Schwächen prüfen" starten. Direkt unter dem Profil steht die
+Ein Feld reicht: Link oder Name des Profils eintragen, "Schwächen prüfen" starten, alternativ Strg + Enter. Unter dem
+Feld stehen die zuletzt gescannten und die getrackten Konten als Schnellwahl, das × daneben entfernt einen Namen. Die
+letzten fünf Scans bleiben gespeichert, ein Neustart verliert die Analyse also nicht. Direkt unter dem Profil steht die
 Karte "Wo es hakt": Interaktion, Reichweite, Rhythmus, Originalton und eine zu dünne Datenbasis, dringende Punkte
 zuerst. Jeder Punkt nennt die Zahl dahinter und unter "Besser machen" den konkreten nächsten Schritt. Das rechnet
 der Server aus den gescannten Zahlen, ohne KI.
@@ -61,6 +63,13 @@ selbst keine Follower-Historie herausgibt: die Kurve entsteht aus den eigenen Me
 ### Wochenbericht
 Die wichtigsten Zahlen, die besten Videos und die Empfehlungen in einem Blatt, das sich als Text in die
 Zwischenablage kopieren lässt.
+
+### Datensicherung
+"Daten exportieren" in den Einstellungen schreibt Konten, Messpunkte, Wochenplan, Ziele und die letzten Scans als
+JSON-Datei. API-Key, TikTok-Cookie und GitHub-Token sind nicht enthalten. "Sicherung einlesen" ersetzt diese Bereiche
+nach einer Rückfrage, der bisherige Stand bleibt als `store.json.bak` liegen. Bei jedem Speichern legt die App ohnehin
+eine Sicherung an; ist die Datendatei unlesbar, lädt sie die Sicherung und legt die kaputte Datei mit Zeitstempel
+daneben. In der Desktop-App liegt der API-Key verschlüsselt in `secrets.dat`, nicht in der Datendatei.
 
 ### Sprache, Updates, Erinnerung
 Deutsch und Englisch für Oberfläche, Anleitung, Zahlenformate und KI-Texte. Neue Versionen lädt die Windows-App im
@@ -136,16 +145,19 @@ One field is enough: enter the profile link or name and press "Check weaknesses"
 a thin data base, most urgent first. Each point names the number behind it and, under "Do this instead", the next
 concrete step. The server derives all of it from the scanned numbers, no AI involved.
 
+Under the field, recently scanned and tracked accounts appear as quick picks, the × next to one removes it. The last
+five scans stay stored, so a restart keeps the analysis. Ctrl + Enter starts a scan from the field.
+
 ![Scan view with profile card, video check and metrics](docs/screenshots/scan-en.png)
 
 ### Video check
 Paste a single video URL and compare it with your median, your engagement, your length windows and your best times.
 It answers why one video worked and another did not.
 
-### Weekly plan, goal calculator, comparison
+### Weekly plan and goal calculator
 The scan finds your strong times, the plan turns them into real slots with an idea, a status and a video URL. Once
 posted, the number appears next to the slot. The goal calculator belongs to a profile: it says how many followers,
-views and posts per week a target needs and shows how many followers came in since the goal started. The comparison puts two or three watchlist accounts side by side.
+views and posts per week a target needs and shows how many followers came in since the goal started.
 
 ![Growth view with weekly plan and goal calculator](docs/screenshots/wachstum-en.png)
 
@@ -162,6 +174,13 @@ out no follower history: the curve comes from your own measurements.
 
 ### Weekly report
 A printable view with the key numbers, the best videos and the recommendations. The browser turns it into a PDF.
+
+### Data safety
+"Export data" in the settings writes accounts, measurements, the weekly plan, goals and the last scans to a JSON
+file. The API key, TikTok cookie and GitHub token are not included. "Load a backup" replaces those areas after a
+confirmation, the previous state stays as `store.json.bak`. Every save already copies the previous state as a
+backup; if the data file is unreadable, the app loads the backup and moves the broken file aside with a timestamp.
+In the desktop app the API key sits encrypted in `secrets.dat`, not in the data file.
 
 ### Language, updates, reminders
 German and English for the interface, the guide, number formats and the AI texts. The Windows app downloads new
@@ -223,13 +242,15 @@ release/        gebaute exe
 
 Es gibt keinen Account und keine Telemetrie. Alle Berechnungen laufen lokal, ohne Proxy und ohne eigenes Backend.
 Gelesen werden ausschließlich öffentliche TikTok-Webseiten, ein Login ist nicht nötig. Gespeichert werden Profile,
-Messpunkte, Plan und Einstellungen in `data/store.json`. Nach außen gehen nur die Anfragen an tiktok.com, an deinen
+Messpunkte, Plan und Einstellungen in `data/store.json`, der API-Key in der Desktop-App verschlüsselt in
+`secrets.dat`. Exporte enthalten weder Key noch Cookie. Nach außen gehen nur die Anfragen an tiktok.com, an deinen
 KI-Anbieter (nur mit hinterlegtem Key) und die Update-Prüfung an api.github.com, die anonym läuft und kein Token braucht.
 
 No account, no telemetry. All computation runs locally, with no proxy and no backend of our own. Only public TikTok
 web pages are read, no login is required. Profiles, measurements, the plan and the settings live in
-`data/store.json`. The only outbound requests go to tiktok.com, to your AI provider (only with a key) and to the
-update check on api.github.com (with a token, otherwise anonymous).
+`data/store.json`, while the API key sits encrypted in `secrets.dat` in the desktop app. The only outbound requests go
+to tiktok.com, to your AI provider (only with a key) and to the update check on api.github.com (anonymous unless you
+store a token).
 
 ## Lizenz / License
 

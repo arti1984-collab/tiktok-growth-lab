@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.33.3, Branch main
+Stand: 07.11.2026, Version 2.34.0, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,10 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.34.0 Anleitung auf Deutsch und Englisch ergaenzt: Schnellwahl mit x, Strg +
+       Enter, gespeicherte Scans, Datensicherung mit Export und Import, dazu
+       der verschluesselte Key in secrets.dat. README: veralteter Vergleich im
+       englischen Teil entfernt. Version 2.34.0.
 2.33.3 Testzahl nachgezogen: test/scrape.test.ts erwartete noch die alten
        Herz-Zahl aus der Fixture (98000). Jetzt 9800, damit die Suite wieder
        gruen ist. Version 2.33.3.
