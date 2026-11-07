@@ -1,6 +1,6 @@
 TIKTOK GROWTH LAB
 Uebergabedatei fuer eine andere KI
-Stand: 07.11.2026, Version 2.33.1, Branch main
+Stand: 07.11.2026, Version 2.33.2, Branch main
 
 
 1. WAS DAS PROJEKT IST
@@ -212,6 +212,12 @@ Release mit der exe. Ein Upload mit gleicher Nummer gilt nicht.
        1180, Videoseite in beiden Sprachen, oEmbed nur als
        Existenzpruefung), Browser-Notausgang nur in der Desktop-App
        (Electron-Fenster mit Partition persist:tiktok-fallback).
+2.33.2 Eigene Kontodaten aus den Fixtures entfernt: In profile-messy.html,
+       item-list-messy.json und zwei Tests stand der eigene Handle samt
+       Follower-, Like- und Videozahl. Ersetzt durch das neutrale Testkonto
+       mit erfundenen Zahlen. Die alten Staende liegen weiter in der
+       Historie; deren Bereinigung braucht ein Umschreiben mit Force-Push.
+       Version 2.33.2.
 2.33.1 Hooks passen zum Account: Der Hook-Prompt bekommt die Themen aus
        den Video-Hashtags als eigene Zeile, jeder Hook muss an Bio, Videos
        oder Hashtags anknuepfen, und "warum" nennt den Beleg. Generische
