@@ -1,6 +1,6 @@
 {
   "name": "tiktok-growth-lab",
-  "version": "2.27.0",
+  "version": "2.28.0",
   "private": true,
   "type": "module",
   "description": "TikTok Growth Lab – Scanner für TikTok-Profile mit Kennzahlen und KI-Coach",
